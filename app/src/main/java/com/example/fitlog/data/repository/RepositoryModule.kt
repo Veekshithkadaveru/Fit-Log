@@ -1,6 +1,7 @@
 package com.example.fitlog.data.repository
 
 import com.example.fitlog.domain.repository.ExerciseRepository
+import com.example.fitlog.domain.repository.WorkoutRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -16,5 +17,11 @@ abstract class RepositoryModule {
     abstract fun bindExerciseRepository(
         exerciseRepositoryImpl: ExerciseRepositoryImpl
     ): ExerciseRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindWorkoutRepository(
+        workoutRepositoryImpl: WorkoutRepositoryImpl
+    ): WorkoutRepository
 }
 
