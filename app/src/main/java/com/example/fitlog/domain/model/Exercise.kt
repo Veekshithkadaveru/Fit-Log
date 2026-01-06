@@ -30,7 +30,8 @@ enum class MuscleGroup(val displayName: String) {
     CORE("Core"),
     FOREARMS("Forearms"),
     TRAPS("Traps"),
-    LATS("Lats");
+    LATS("Lats"),
+    REAR_DELTS("Rear Delts");
 
     companion object {
         fun fromString(value: String): MuscleGroup {

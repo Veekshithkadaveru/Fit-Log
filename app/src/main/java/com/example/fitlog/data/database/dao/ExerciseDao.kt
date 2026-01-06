@@ -66,5 +66,8 @@ interface ExerciseDao {
 
     @Query("SELECT COUNT(*) FROM exercises")
     suspend fun getExerciseCount(): Int
+
+    @Query("DELETE FROM exercises")
+    suspend fun deleteAll()
 }
 
