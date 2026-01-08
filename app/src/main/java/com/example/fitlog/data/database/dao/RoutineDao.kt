@@ -74,5 +74,12 @@ interface RoutineDao {
             updateExerciseOrder(id, index)
         }
     }
+    
+    // Delete all methods for database clearing
+    @Query("DELETE FROM routines")
+    suspend fun deleteAllRoutines()
+    
+    @Query("DELETE FROM routine_exercises")
+    suspend fun deleteAllRoutineExercises()
 }
 
