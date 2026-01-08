@@ -9,6 +9,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.example.fitlog.data.database.dao.ExerciseDao
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -20,7 +21,7 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(na
 @Singleton
 class DatabaseInitializer @Inject constructor(
     private val exerciseDao: ExerciseDao,
-    private val context: Context
+    @ApplicationContext private val context: Context
 ) {
     
     companion object {
