@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.preferencesDataStore
 import com.example.fitlog.data.database.dao.ExerciseDao
+import com.example.fitlog.data.database.dao.RoutineDao
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -21,6 +22,7 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(na
 @Singleton
 class DatabaseInitializer @Inject constructor(
     private val exerciseDao: ExerciseDao,
+    private val routineDao: RoutineDao,
     @ApplicationContext private val context: Context
 ) {
     
@@ -39,6 +41,7 @@ class DatabaseInitializer @Inject constructor(
             
         if (!isInitialized) {
             seedExercises()
+            seedRoutineTemplates()
             markDatabaseAsInitialized()
         }
     }
@@ -49,6 +52,7 @@ class DatabaseInitializer @Inject constructor(
     suspend fun forceInitializeDatabase() {
         clearDatabase()
         seedExercises()
+        seedRoutineTemplates()
         markDatabaseAsInitialized()
     }
     
@@ -65,10 +69,33 @@ class DatabaseInitializer @Inject constructor(
     }
     
     /**
+     * Seed the database with routine template data
+     */
+    private suspend fun seedRoutineTemplates() {
+        try {
+            // Insert routine templates first
+            for (routine in SeedData.routineTemplates) {
+                routineDao.insertRoutine(routine)
+            }
+            
+            // Then insert routine exercises
+            routineDao.insertRoutineExercises(SeedData.routineExercises)
+        } catch (e: Exception) {
+            // Log error but don't crash the app
+            e.printStackTrace()
+        }
+    }
+    
+    /**
      * Clear all database tables (for re-seeding)
      */
     private suspend fun clearDatabase() {
         try {
+            // Clear routine tables first (due to foreign key constraints)
+            routineDao.deleteAllRoutineExercises()
+            routineDao.deleteAllRoutines()
+            
+            // Clear exercise table
             exerciseDao.deleteAll()
         } catch (e: Exception) {
             e.printStackTrace()
