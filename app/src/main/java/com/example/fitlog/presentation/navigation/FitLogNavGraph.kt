@@ -8,6 +8,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.fitlog.presentation.screens.PlaceholderScreen
+import com.example.fitlog.presentation.screens.exercises.ExerciseDetailScreen
+import com.example.fitlog.presentation.screens.exercises.ExerciseLibraryScreen
 
 /**
  * Main navigation graph for the FitLog app
@@ -33,7 +35,11 @@ fun FitLogNavGraph(
         }
         
         composable(FitLogDestinations.EXERCISES) {
-            PlaceholderScreen(title = "Exercise Library", navController = navController)
+            ExerciseLibraryScreen(
+                onExerciseClick = { exerciseId ->
+                    navController.navigate(FitLogRoutes.exerciseDetail(exerciseId))
+                }
+            )
         }
         
         composable(FitLogDestinations.HISTORY) {
@@ -54,10 +60,9 @@ fun FitLogNavGraph(
             )
         ) { backStackEntry ->
             val exerciseId = backStackEntry.arguments?.getInt(FitLogDestinations.Args.EXERCISE_ID) ?: 0
-            PlaceholderScreen(
-                title = "Exercise Detail",
-                subtitle = "Exercise ID: $exerciseId",
-                navController = navController
+            ExerciseDetailScreen(
+                exerciseId = exerciseId,
+                onNavigateBack = { navController.popBackStack() }
             )
         }
         
