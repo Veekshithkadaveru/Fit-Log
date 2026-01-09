@@ -68,5 +68,20 @@ fun PlaceholderScreen(
                 Text("View Workout Detail (ID: 1)")
             }
         }
+
+        if (title == "Workout") {
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(onClick = { navController.navigate("routine_list") }) {
+                Text("Go to Routine List")
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(onClick = { navController.navigate(FitLogRoutes.routineEditor(0)) }) {
+                Text("Go to Routine Editor (New)")
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(onClick = { navController.navigate("template_picker") }) {
+                Text("Go to Template Picker")
+            }
+        }
     }
 }
