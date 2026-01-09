@@ -3,6 +3,7 @@ package com.example.fitlog.di
 import android.content.Context
 import com.example.fitlog.data.database.DatabaseInitializer
 import com.example.fitlog.data.database.dao.ExerciseDao
+import com.example.fitlog.data.database.dao.RoutineDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -21,8 +22,9 @@ object AppModule {
     @Singleton
     fun provideDatabaseInitializer(
         exerciseDao: ExerciseDao,
+        routineDao: RoutineDao,
         @ApplicationContext context: Context
     ): DatabaseInitializer {
-        return DatabaseInitializer(exerciseDao, context)
+        return DatabaseInitializer(exerciseDao, routineDao, context)
     }
 }

@@ -89,11 +89,37 @@ fun FitLogNavGraph(
         }
         
         composable(FitLogDestinations.ROUTINE_LIST) {
-            PlaceholderScreen(title = "Routine List", navController = navController)
+            com.example.fitlog.presentation.screens.routines.RoutineListScreen(
+                navController = navController,
+                onRoutineClick = { routineId ->
+                    navController.navigate(FitLogRoutes.routineEditor(routineId))
+                }
+            )
         }
         
-        composable(FitLogDestinations.ROUTINE_EDITOR) {
-            PlaceholderScreen(title = "Routine Editor", navController = navController)
+        composable(
+            route = FitLogDestinations.ROUTINE_EDITOR,
+            arguments = listOf(
+                navArgument(FitLogDestinations.Args.ROUTINE_ID) {
+                    type = NavType.IntType
+                    defaultValue = 0
+                }
+            )
+        ) { backStackEntry ->
+            val routineId = backStackEntry.arguments?.getInt(FitLogDestinations.Args.ROUTINE_ID) ?: 0
+            com.example.fitlog.presentation.screens.routines.RoutineEditorScreen(
+                navController = navController,
+                routineId = routineId
+            )
+        }
+
+        composable(FitLogDestinations.TEMPLATE_PICKER) {
+            com.example.fitlog.presentation.screens.routines.TemplatePickerScreen(
+                navController = navController,
+                onTemplateClick = { templateId ->
+                    // Logic to copy template to new routine and edit
+                }
+            )
         }
         
         composable(FitLogDestinations.CALENDAR_VIEW) {
