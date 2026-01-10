@@ -27,6 +27,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.fitlog.domain.model.Routine
+import com.example.fitlog.presentation.navigation.FitLogDestinations
 import com.example.fitlog.presentation.navigation.FitLogRoutes
 import com.example.fitlog.presentation.screens.routines.components.RoutineItem
 import com.example.fitlog.presentation.viewmodel.RoutineViewModel
@@ -53,7 +55,7 @@ fun RoutineListScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { navController.navigate("template_picker") },
+                onClick = { navController.navigate(FitLogDestinations.TEMPLATE_PICKER) },
                 containerColor = MaterialTheme.colorScheme.primary
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Create Routine")

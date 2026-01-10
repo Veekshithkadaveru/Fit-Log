@@ -672,5 +672,54 @@ object SeedData {
         RoutineExerciseEntity(routineId = 26, exerciseId = 40, targetSets = 3, targetReps = "10-12", orderIndex = 4), // Dumbbell Curls
         RoutineExerciseEntity(routineId = 26, exerciseId = 44, targetSets = 3, targetReps = "8-10", orderIndex = 5), // Overhead Tricep Extension
         RoutineExerciseEntity(routineId = 26, exerciseId = 50, targetSets = 3, targetReps = "15-20", orderIndex = 6), // Russian Twists
+
+        // Template 3: Bro Split - Day 1: Chest (Routine ID: 11)
+        RoutineExerciseEntity(routineId = 11, exerciseId = 1, targetSets = 4, targetReps = "8-10", orderIndex = 0), // Barbell Bench Press
+        RoutineExerciseEntity(routineId = 11, exerciseId = 4, targetSets = 3, targetReps = "8-10", orderIndex = 1), // Incline Dumbbell Press
+        RoutineExerciseEntity(routineId = 11, exerciseId = 6, targetSets = 3, targetReps = "10-12", orderIndex = 2), // Cable Chest Flyes
+        
+         // Template 3: Bro Split - Day 2: Back (Routine ID: 12)
+        RoutineExerciseEntity(routineId = 12, exerciseId = 9, targetSets = 4, targetReps = "5", orderIndex = 0), // Deadlift
+        RoutineExerciseEntity(routineId = 12, exerciseId = 10, targetSets = 3, targetReps = "MAX", orderIndex = 1), // Pull-Ups
+        RoutineExerciseEntity(routineId = 12, exerciseId = 11, targetSets = 3, targetReps = "8-10", orderIndex = 2), // Barbell Rows
+
+        // Template 3: Bro Split - Day 3: Shoulders (Routine ID: 13)
+        RoutineExerciseEntity(routineId = 13, exerciseId = 19, targetSets = 4, targetReps = "8-10", orderIndex = 0), // Overhead Press
+        RoutineExerciseEntity(routineId = 13, exerciseId = 21, targetSets = 4, targetReps = "12-15", orderIndex = 1), // Lateral Raises
+        RoutineExerciseEntity(routineId = 13, exerciseId = 16, targetSets = 3, targetReps = "12-15", orderIndex = 2), // Face Pulls
+
+        // Template 3: Bro Split - Day 4: Legs (Routine ID: 14)
+        RoutineExerciseEntity(routineId = 14, exerciseId = 27, targetSets = 4, targetReps = "6-8", orderIndex = 0), // Squats
+        RoutineExerciseEntity(routineId = 14, exerciseId = 30, targetSets = 3, targetReps = "10-12", orderIndex = 1), // Leg Press
+        RoutineExerciseEntity(routineId = 14, exerciseId = 32, targetSets = 3, targetReps = "12-15", orderIndex = 2), // Leg Curls
+
+        // Template 3: Bro Split - Day 5: Arms (Routine ID: 15)
+        RoutineExerciseEntity(routineId = 15, exerciseId = 39, targetSets = 3, targetReps = "10-12", orderIndex = 0), // Barbell Curls
+        RoutineExerciseEntity(routineId = 15, exerciseId = 42, targetSets = 3, targetReps = "8-10", orderIndex = 1), // Close-Grip Bench
+        RoutineExerciseEntity(routineId = 15, exerciseId = 41, targetSets = 3, targetReps = "10-12", orderIndex = 2), // Hammer Curls
+
+         // Template 4: PPL Hybrid - Day 1: Push (Routine ID: 16)
+        RoutineExerciseEntity(routineId = 16, exerciseId = 1, targetSets = 3, targetReps = "8", orderIndex = 0),
+        
+         // Template 4: PPL Hybrid - Day 2: Pull (Routine ID: 17)
+        RoutineExerciseEntity(routineId = 17, exerciseId = 11, targetSets = 3, targetReps = "8", orderIndex = 0),
+
+         // Template 4: PPL Hybrid - Day 3: Legs (Routine ID: 18)
+        RoutineExerciseEntity(routineId = 18, exerciseId = 27, targetSets = 3, targetReps = "8", orderIndex = 0),
+
+         // Template 4: PPL Hybrid - Day 4: Upper (Routine ID: 19)
+        RoutineExerciseEntity(routineId = 19, exerciseId = 19, targetSets = 3, targetReps = "10", orderIndex = 0),
+
+         // Template 4: PPL Hybrid - Day 5: Lower (Routine ID: 20)
+        RoutineExerciseEntity(routineId = 20, exerciseId = 28, targetSets = 3, targetReps = "10", orderIndex = 0),
+
+        // Template 5: Push-Pull-Cardio - Day 1: Push (Routine ID: 21)
+        RoutineExerciseEntity(routineId = 21, exerciseId = 7, targetSets = 3, targetReps = "MAX", orderIndex = 0),
+
+        // Template 5: Push-Pull-Cardio - Day 2: Pull (Routine ID: 22)
+        RoutineExerciseEntity(routineId = 22, exerciseId = 10, targetSets = 3, targetReps = "MAX", orderIndex = 0),
+
+        // Template 5: Push-Pull-Cardio - Day 3: Full Body (Routine ID: 23)
+        RoutineExerciseEntity(routineId = 23, exerciseId = 27, targetSets = 3, targetReps = "10", orderIndex = 0)
     )
 }
