@@ -31,7 +31,12 @@ fun FitLogNavGraph(
         }
         
         composable(FitLogDestinations.WORKOUT) {
-            PlaceholderScreen(title = "Workout", navController = navController)
+            com.example.fitlog.presentation.screens.routines.RoutineListScreen(
+                navController = navController,
+                onRoutineClick = { routineId ->
+                    navController.navigate(FitLogRoutes.routineEditor(routineId))
+                }
+            )
         }
         
         composable(FitLogDestinations.EXERCISES) {
@@ -88,14 +93,6 @@ fun FitLogNavGraph(
             PlaceholderScreen(title = "Active Workout", navController = navController)
         }
         
-        composable(FitLogDestinations.ROUTINE_LIST) {
-            com.example.fitlog.presentation.screens.routines.RoutineListScreen(
-                navController = navController,
-                onRoutineClick = { routineId ->
-                    navController.navigate(FitLogRoutes.routineEditor(routineId))
-                }
-            )
-        }
         
         composable(
             route = FitLogDestinations.ROUTINE_EDITOR,

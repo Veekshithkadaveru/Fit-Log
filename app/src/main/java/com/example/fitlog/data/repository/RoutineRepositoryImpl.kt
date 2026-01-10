@@ -45,13 +45,19 @@ class RoutineRepositoryImpl @Inject constructor(
 
     override fun getUserRoutines(): Flow<List<Routine>> {
         return routineDao.getUserRoutines().map { entities ->
-            entities.toRoutineDomainModels()
+            entities.map { entity ->
+                val exercises = routineDao.getExercisesForRoutineOnce(entity.id).toRoutineExerciseDomainModels()
+                entity.toDomainModel(exercises = exercises)
+            }
         }
     }
 
     override fun getTemplateRoutines(): Flow<List<Routine>> {
         return routineDao.getTemplateRoutines().map { entities ->
-            entities.toRoutineDomainModels()
+            entities.map { entity ->
+                val exercises = routineDao.getExercisesForRoutineOnce(entity.id).toRoutineExerciseDomainModels()
+                entity.toDomainModel(exercises = exercises)
+            }
         }
     }
 

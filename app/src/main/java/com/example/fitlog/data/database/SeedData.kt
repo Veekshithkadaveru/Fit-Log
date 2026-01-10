@@ -517,6 +517,9 @@ object SeedData {
     // ROUTINE TEMPLATES - 6 Professional Workout Programs
     val routineTemplates = listOf(
         
+        // Sample User Routine (for demonstration)
+        RoutineEntity(id = 100, name = "My Morning Workout", isTemplate = false, dayOrder = 0),
+
         // Template 1: Push/Pull/Legs (6-day)
         RoutineEntity(id = 1, name = "Push/Pull/Legs - Day 1: Push", isTemplate = true, dayOrder = 1),
         RoutineEntity(id = 2, name = "Push/Pull/Legs - Day 2: Pull", isTemplate = true, dayOrder = 2),
@@ -558,6 +561,10 @@ object SeedData {
 
     val routineExercises = listOf(
         
+        // Sample User Routine (Routine ID: 100)
+        RoutineExerciseEntity(routineId = 100, exerciseId = 7, targetSets = 3, targetReps = "10", orderIndex = 0), // Push-Ups
+        RoutineExerciseEntity(routineId = 100, exerciseId = 27, targetSets = 3, targetReps = "10", orderIndex = 1), // Squats
+
         // Template 1: Push/Pull/Legs - Day 1: Push (Routine ID: 1)
         RoutineExerciseEntity(routineId = 1, exerciseId = 1, targetSets = 4, targetReps = "6-8", orderIndex = 0), // Barbell Bench Press
         RoutineExerciseEntity(routineId = 1, exerciseId = 4, targetSets = 3, targetReps = "8-10", orderIndex = 1), // Incline Dumbbell Press
