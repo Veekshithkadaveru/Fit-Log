@@ -22,7 +22,8 @@ fun FitLogNavGraph(
 ) {
     NavHost(
         navController = navController,
-        startDestination = startDestination
+        startDestination = startDestination,
+        modifier = modifier
     ) {
         
         // Bottom Navigation Screens
