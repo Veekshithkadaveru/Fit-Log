@@ -70,6 +70,7 @@ fun TemplatePickerScreen(
                         popUpTo(FitLogRoutes.routineEditor(0)) { inclusive = true } // Optional cleanup
                     }
                 }
+                else -> {}
             }
         }
     }

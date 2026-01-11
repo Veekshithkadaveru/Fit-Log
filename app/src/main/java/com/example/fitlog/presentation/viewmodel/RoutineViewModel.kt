@@ -86,6 +86,100 @@ class RoutineViewModel @Inject constructor(
             }
         }
     }
+
+    // Editor State
+    private val _editorUiState = MutableStateFlow(RoutineEditorUiState())
+    val editorUiState: StateFlow<RoutineEditorUiState> = _editorUiState.asStateFlow()
+
+    fun loadRoutine(routineId: Int) {
+        if (routineId == 0) {
+             // New routine from scratch
+            _editorUiState.value = RoutineEditorUiState(
+                routine = Routine(
+                    id = 0,
+                    name = "",
+                    isTemplate = false,
+                    dayOrder = 0,
+                    exercises = emptyList()
+                )
+            )
+            return
+        }
+
+        viewModelScope.launch {
+            _editorUiState.value = _editorUiState.value.copy(isLoading = true)
+            try {
+                val routine = routineRepository.getRoutineById(routineId)
+                if (routine != null) {
+                    // Fetch exercises for this routine to ensure we have them
+                    val exercises = routineRepository.getExercisesForRoutineOnce(routineId)
+                    val fullRoutine = routine.copy(exercises = exercises)
+                    _editorUiState.value = RoutineEditorUiState(routine = fullRoutine)
+                }
+            } catch (e: Exception) {
+                // error
+            } finally {
+                _editorUiState.value = _editorUiState.value.copy(isLoading = false)
+            }
+        }
+    }
+
+    fun updateRoutineName(name: String) {
+        val current = _editorUiState.value.routine ?: return
+        _editorUiState.value = _editorUiState.value.copy(
+            routine = current.copy(name = name)
+        )
+    }
+
+    fun updateRoutineDayOrder(dayOrder: Int) {
+        val current = _editorUiState.value.routine ?: return
+        _editorUiState.value = _editorUiState.value.copy(
+            routine = current.copy(dayOrder = dayOrder)
+        )
+    }
+
+    fun updateExerciseTarget(routineExerciseId: Int, sets: Int?, reps: String?) {
+        val currentRoutine = _editorUiState.value.routine ?: return
+        val updatedExercises = currentRoutine.exercises.map {
+            if (it.id == routineExerciseId) {
+                it.copy(
+                    targetSets = sets ?: it.targetSets,
+                    targetReps = reps ?: it.targetReps
+                )
+            } else {
+                it
+            }
+        }
+        _editorUiState.value = _editorUiState.value.copy(
+            routine = currentRoutine.copy(exercises = updatedExercises)
+        )
+    }
+
+    fun saveRoutine() {
+        viewModelScope.launch {
+            val currentRoutine = _editorUiState.value.routine ?: return@launch
+            _editorUiState.value = _editorUiState.value.copy(isSaving = true)
+            try {
+                if (currentRoutine.id == 0) {
+                    // Insert New
+                    val newId = routineRepository.insertRoutine(currentRoutine)
+                    _navigationEvent.send(RoutineNavigationEvent.NavigateBack)
+                } else {
+                    // Update Existing
+                    routineRepository.updateRoutine(currentRoutine)
+                    // Update all exercises
+                    currentRoutine.exercises.forEach {
+                        routineRepository.updateRoutineExercise(it)
+                    }
+                    _navigationEvent.send(RoutineNavigationEvent.NavigateBack)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                _editorUiState.value = _editorUiState.value.copy(isSaving = false)
+            }
+        }
+    }
 }
 
 data class RoutineUiState(
@@ -93,6 +187,13 @@ data class RoutineUiState(
     val selectedRoutine: Routine? = null
 )
 
+data class RoutineEditorUiState(
+    val isLoading: Boolean = false,
+    val isSaving: Boolean = false,
+    val routine: Routine? = null
+)
+
 sealed class RoutineNavigationEvent {
     data class NavigateToEditor(val routineId: Int) : RoutineNavigationEvent()
+    object NavigateBack : RoutineNavigationEvent()
 }
