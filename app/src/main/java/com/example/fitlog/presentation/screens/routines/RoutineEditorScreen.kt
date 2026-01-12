@@ -157,12 +157,33 @@ fun RoutineEditorScreen(
                         // Add Exercise Button
                         item {
                             Button(
-                                onClick = { /* TODO: Open Exercise Picker */ },
+                                onClick = { 
+                                    if (routineId != 0) {
+                                        navController.navigate(com.example.fitlog.presentation.navigation.FitLogRoutes.exercisePicker(routineId))
+                                    } else {
+                                        // If creating new routine, we must save first? 
+                                        // Or better, we save draft immediately?
+                                        // For now, let's just show a toast or require save.
+                                        // Actually, user likely expects it to just work. 
+                                        // Saving a draft "New Routine" is a common pattern.
+                                        // I'll skip complex draft logic for now and disable button if ID is 0?
+                                        // Or better: Auto-save the routine structure first? 
+                                        // Let's Disable for ID 0 with a note to "Save first to add exercises" if convenient, 
+                                        // or better, implement auto-save.
+                                        
+                                        // Current approach: Disable button or show alert. 
+                                        // Ideally passing ID 0 to picker is invalid because we need a real FK.
+                                        // So, simply:
+                                        /* Must save routine first */
+                                        // I'll leave the TODO comment.
+                                    }
+                                },
+                                enabled = routineId != 0, // Require generic save first
                                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
                             ) {
                                 Icon(Icons.Default.Add, contentDescription = null)
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("Add Exercise")
+                                Text(if (routineId == 0) "Save first to add exercises" else "Add Exercise")
                             }
                         }
                     }

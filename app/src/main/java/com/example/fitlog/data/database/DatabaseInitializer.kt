@@ -27,7 +27,7 @@ class DatabaseInitializer @Inject constructor(
 ) {
     
     companion object {
-        private val DATABASE_INITIALIZED = booleanPreferencesKey("database_initialized_v3")
+        private val DATABASE_INITIALIZED = booleanPreferencesKey("database_initialized_v4")
     }
     
     /**
@@ -76,6 +76,8 @@ class DatabaseInitializer @Inject constructor(
             // Insert routine templates first
             for (routine in SeedData.routineTemplates) {
                 routineDao.insertRoutine(routine)
+                // Clear existing exercises for this template to avoid duplicates on re-seed
+                routineDao.deleteAllExercisesFromRoutine(routine.id)
             }
             
             // Then insert routine exercises

@@ -42,4 +42,6 @@ interface RoutineRepository {
     suspend fun getExerciseCountForRoutine(routineId: Int): Int
 
     suspend fun reorderExercises(routineId: Int, exerciseIds: List<Int>)
+
+    fun getAllExercises(): Flow<List<com.example.fitlog.domain.model.Exercise>>
 }

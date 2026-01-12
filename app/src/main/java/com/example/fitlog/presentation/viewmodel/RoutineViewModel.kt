@@ -180,6 +180,31 @@ class RoutineViewModel @Inject constructor(
             }
         }
     }
+
+    fun addExerciseToRoutine(routineId: Int, exerciseId: Int) {
+        viewModelScope.launch {
+            try {
+                // Determine order
+                val count = routineRepository.getExerciseCountForRoutine(routineId)
+                val newOrder = count + 1
+                
+                val joinEntity = RoutineExercise(
+                    id = 0,
+                    routineId = routineId,
+                    exerciseId = exerciseId,
+                    orderIndex = newOrder, // Correct parameter name
+                    targetSets = 3, // Default
+                    targetReps = "8-12" // Default
+                )
+                routineRepository.insertRoutineExercise(joinEntity)
+                
+                // Refresh editor to show new exercise
+                loadRoutine(routineId)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
 }
 
 data class RoutineUiState(

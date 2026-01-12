@@ -11,12 +11,14 @@ import com.example.fitlog.domain.model.RoutineExercise
 import com.example.fitlog.domain.repository.RoutineRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import com.example.fitlog.data.mapper.toRoutineExerciseWithDetailsDomainModels
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class RoutineRepositoryImpl @Inject constructor(
-    private val routineDao: RoutineDao
+    private val routineDao: RoutineDao,
+    private val exerciseDao: com.example.fitlog.data.database.dao.ExerciseDao
 ) : RoutineRepository {
 
     override suspend fun insertRoutine(routine: Routine): Long {
@@ -33,7 +35,8 @@ class RoutineRepositoryImpl @Inject constructor(
 
     override suspend fun getRoutineById(id: Int): Routine? {
         val entity = routineDao.getRoutineById(id) ?: return null
-        val exercises = routineDao.getExercisesForRoutineOnce(id).toRoutineExerciseDomainModels()
+        // Fix: Fetch exercises with details using Relation
+        val exercises = routineDao.getRoutineExercisesWithDetails(id).toRoutineExerciseWithDetailsDomainModels()
         return entity.toDomainModel(exercises = exercises)
     }
 
@@ -46,7 +49,7 @@ class RoutineRepositoryImpl @Inject constructor(
     override fun getUserRoutines(): Flow<List<Routine>> {
         return routineDao.getUserRoutines().map { entities ->
             entities.map { entity ->
-                val exercises = routineDao.getExercisesForRoutineOnce(entity.id).toRoutineExerciseDomainModels()
+                val exercises = routineDao.getRoutineExercisesWithDetails(entity.id).toRoutineExerciseWithDetailsDomainModels()
                 entity.toDomainModel(exercises = exercises)
             }
         }
@@ -55,7 +58,7 @@ class RoutineRepositoryImpl @Inject constructor(
     override fun getTemplateRoutines(): Flow<List<Routine>> {
         return routineDao.getTemplateRoutines().map { entities ->
             entities.map { entity ->
-                val exercises = routineDao.getExercisesForRoutineOnce(entity.id).toRoutineExerciseDomainModels()
+                val exercises = routineDao.getRoutineExercisesWithDetails(entity.id).toRoutineExerciseWithDetailsDomainModels()
                 entity.toDomainModel(exercises = exercises)
             }
         }
@@ -63,7 +66,10 @@ class RoutineRepositoryImpl @Inject constructor(
 
     override fun getAllRoutines(): Flow<List<Routine>> {
         return routineDao.getAllRoutines().map { entities ->
-            entities.toRoutineDomainModels()
+            entities.map { entity ->
+                val exercises = routineDao.getRoutineExercisesWithDetails(entity.id).toRoutineExerciseWithDetailsDomainModels()
+                entity.toDomainModel(exercises = exercises)
+            }
         }
     }
 
@@ -94,7 +100,7 @@ class RoutineRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getExercisesForRoutineOnce(routineId: Int): List<RoutineExercise> {
-        return routineDao.getExercisesForRoutineOnce(routineId).toRoutineExerciseDomainModels()
+        return routineDao.getRoutineExercisesWithDetails(routineId).toRoutineExerciseWithDetailsDomainModels()
     }
 
     override suspend fun getExerciseCountForRoutine(routineId: Int): Int {
@@ -103,6 +109,12 @@ class RoutineRepositoryImpl @Inject constructor(
 
     override suspend fun reorderExercises(routineId: Int, exerciseIds: List<Int>) {
         routineDao.reorderExercises(routineId, exerciseIds)
+    }
+
+    override fun getAllExercises(): Flow<List<com.example.fitlog.domain.model.Exercise>> {
+        return exerciseDao.getAllExercises().map { entities ->
+            entities.map { it.toDomainModel() }
+        }
     }
 }
 
