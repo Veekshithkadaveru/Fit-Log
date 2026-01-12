@@ -111,6 +111,22 @@ fun FitLogNavGraph(
             )
         }
 
+        composable(
+            route = FitLogDestinations.EXERCISE_PICKER,
+            arguments = listOf(
+                navArgument(FitLogDestinations.Args.ROUTINE_ID) {
+                    type = NavType.IntType
+                }
+            )
+        ) { backStackEntry ->
+            val routineId = backStackEntry.arguments?.getInt(FitLogDestinations.Args.ROUTINE_ID) ?: 0
+            com.example.fitlog.presentation.screens.exercises.ExercisePickerScreen(
+                navController = navController,
+                routineId = routineId
+            )
+        }
+
+
         composable(FitLogDestinations.TEMPLATE_PICKER) {
             com.example.fitlog.presentation.screens.routines.TemplatePickerScreen(
                 navController = navController,

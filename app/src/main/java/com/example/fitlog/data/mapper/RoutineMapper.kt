@@ -61,3 +61,25 @@ fun List<RoutineExercise>.toRoutineExerciseEntities(): List<RoutineExerciseEntit
     return map { it.toEntity() }
 }
 
+fun List<com.example.fitlog.data.database.entity.RoutineExerciseWithDetails>.toRoutineExerciseWithDetailsDomainModels(): List<RoutineExercise> {
+    return map {
+        val domainExercise = it.exercise?.let { entity ->
+            com.example.fitlog.domain.model.Exercise(
+                id = entity.id,
+                name = entity.name,
+                primaryMuscle = com.example.fitlog.domain.model.MuscleGroup.fromString(entity.primaryMuscle),
+                secondaryMuscles = entity.secondaryMuscles.split(",").mapNotNull { 
+                    if (it.isBlank()) null else com.example.fitlog.domain.model.MuscleGroup.fromString(it.trim()) 
+                },
+                category = com.example.fitlog.domain.model.ExerciseCategory.fromString(entity.category),
+                equipment = com.example.fitlog.domain.model.Equipment.fromString(entity.equipment),
+                thumbnailRes = entity.thumbnailRes
+            )
+        }
+        
+        it.routineExercise.toDomainModel().copy(
+            exercise = domainExercise
+        )
+    }
+}
+

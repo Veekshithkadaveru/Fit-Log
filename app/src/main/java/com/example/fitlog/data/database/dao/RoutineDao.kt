@@ -61,6 +61,10 @@ interface RoutineDao {
     @Query("SELECT * FROM routine_exercises WHERE routineId = :routineId ORDER BY orderIndex ASC")
     suspend fun getExercisesForRoutineOnce(routineId: Int): List<RoutineExerciseEntity>
 
+    @Transaction
+    @Query("SELECT * FROM routine_exercises WHERE routineId = :routineId ORDER BY orderIndex ASC")
+    suspend fun getRoutineExercisesWithDetails(routineId: Int): List<com.example.fitlog.data.database.entity.RoutineExerciseWithDetails>
+
     @Query("SELECT COUNT(*) FROM routine_exercises WHERE routineId = :routineId")
     suspend fun getExerciseCountForRoutine(routineId: Int): Int
 

@@ -5,6 +5,7 @@ import com.example.fitlog.data.mapper.toDomainModel
 import com.example.fitlog.data.mapper.toEntity
 import com.example.fitlog.data.mapper.toRoutineDomainModels
 import com.example.fitlog.data.mapper.toRoutineExerciseDomainModels
+import com.example.fitlog.data.mapper.toRoutineExerciseWithDetailsDomainModels
 import com.example.fitlog.data.mapper.toRoutineExerciseEntities
 import com.example.fitlog.domain.model.Routine
 import com.example.fitlog.domain.model.RoutineExercise
@@ -33,7 +34,7 @@ class RoutineRepositoryImpl @Inject constructor(
 
     override suspend fun getRoutineById(id: Int): Routine? {
         val entity = routineDao.getRoutineById(id) ?: return null
-        val exercises = routineDao.getExercisesForRoutineOnce(id).toRoutineExerciseDomainModels()
+        val exercises = routineDao.getRoutineExercisesWithDetails(id).toRoutineExerciseWithDetailsDomainModels()
         return entity.toDomainModel(exercises = exercises)
     }
 
@@ -94,7 +95,7 @@ class RoutineRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getExercisesForRoutineOnce(routineId: Int): List<RoutineExercise> {
-        return routineDao.getExercisesForRoutineOnce(routineId).toRoutineExerciseDomainModels()
+        return routineDao.getRoutineExercisesWithDetails(routineId).toRoutineExerciseWithDetailsDomainModels()
     }
 
     override suspend fun getExerciseCountForRoutine(routineId: Int): Int {

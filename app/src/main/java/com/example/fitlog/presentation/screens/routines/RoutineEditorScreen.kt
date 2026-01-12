@@ -13,11 +13,16 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -82,6 +87,11 @@ fun RoutineEditorScreen(
                     }
                 },
                 actions = {
+                    if (routineId != 0) {
+                        IconButton(onClick = { viewModel.deleteRoutine() }) {
+                            Icon(Icons.Default.Delete, contentDescription = "Delete Routine")
+                        }
+                    }
                     IconButton(onClick = { viewModel.saveRoutine() }) {
                         if (editorState.isSaving) {
                             CircularProgressIndicator(
@@ -118,14 +128,17 @@ fun RoutineEditorScreen(
                                     onValueChange = { viewModel.updateRoutineName(it) },
                                     label = { Text("Routine Name") },
                                     modifier = Modifier.weight(0.7f),
-                                    singleLine = true
+                                    singleLine = true,
+                                    isError = editorState.nameError != null,
+                                    supportingText = {
+                                        if (editorState.nameError != null) {
+                                            Text(editorState.nameError!!)
+                                        }
+                                    }
                                 )
                                 OutlinedTextField(
                                     value = if (routine.dayOrder > 0) routine.dayOrder.toString() else "",
                                     onValueChange = { 
-                                        // Simple day updates - handled via VM (need to add function)
-                                        // For now just allow editing if function exists, else read-only visuals or ignore
-                                        // I will add updateDayOrder to VM next.
                                         viewModel.updateRoutineDayOrder(it.toIntOrNull() ?: 0)
                                     },
                                     label = { Text("Day #") },
@@ -145,24 +158,33 @@ fun RoutineEditorScreen(
                         }
 
                         // Exercise List
-                        items(routine.exercises) { routineExercise ->
+                        itemsIndexed(routine.exercises) { index, routineExercise ->
                             RoutineExerciseEditorItem(
                                 routineExercise = routineExercise,
+                                isFirst = index == 0,
+                                isLast = index == routine.exercises.lastIndex,
                                 onUpdateTarget = { sets, reps ->
                                     viewModel.updateExerciseTarget(routineExercise.id, sets, reps)
-                                }
+                                },
+                                onMoveUp = { viewModel.moveExercise(index, index - 1) },
+                                onMoveDown = { viewModel.moveExercise(index, index + 1) },
+                                onRemove = { viewModel.removeExercise(routineExercise) }
                             )
                         }
 
                         // Add Exercise Button
                         item {
+                            val canAdd = routine.id != 0
                             Button(
-                                onClick = { /* TODO: Open Exercise Picker */ },
+                                onClick = { 
+                                    if (canAdd) navController.navigate(com.example.fitlog.presentation.navigation.FitLogRoutes.exercisePicker(routine.id))
+                                },
+                                enabled = canAdd,
                                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
                             ) {
                                 Icon(Icons.Default.Add, contentDescription = null)
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("Add Exercise")
+                                Text(if (canAdd) "Add Exercise" else "Save routine first to add exercises")
                             }
                         }
                     }
@@ -177,7 +199,12 @@ fun RoutineEditorScreen(
 @Composable
 fun RoutineExerciseEditorItem(
     routineExercise: RoutineExercise,
-    onUpdateTarget: (Int?, String?) -> Unit
+    isFirst: Boolean,
+    isLast: Boolean,
+    onUpdateTarget: (Int?, String?) -> Unit,
+    onMoveUp: () -> Unit,
+    onMoveDown: () -> Unit,
+    onRemove: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -185,12 +212,30 @@ fun RoutineExerciseEditorItem(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // Exercise Name Header
-            Text(
-                text = routineExercise.exercise?.name ?: "Unknown Exercise",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
+            // Header Row: Name + Actions
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = routineExercise.exercise?.name ?: "Unknown Exercise",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f)
+                )
+
+                // Actions
+                IconButton(onClick = onMoveUp, enabled = !isFirst) {
+                    Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Move Up")
+                }
+                IconButton(onClick = onMoveDown, enabled = !isLast) {
+                    Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Move Down")
+                }
+                IconButton(onClick = onRemove) {
+                    Icon(Icons.Default.Close, contentDescription = "Remove")
+                }
+            }
+            
             Spacer(modifier = Modifier.height(8.dp))
 
             // Inputs Row

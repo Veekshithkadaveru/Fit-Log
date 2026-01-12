@@ -18,6 +18,7 @@ object FitLogDestinations {
     // Workout Destinations
     const val ACTIVE_WORKOUT = "active_workout"
     const val ROUTINE_EDITOR = "routine_editor/{routineId}"
+    const val EXERCISE_PICKER = "exercise_picker/{routineId}"
     const val ROUTINE_LIST = "routine_list"
     const val TEMPLATE_PICKER = "template_picker"
     
@@ -52,5 +53,9 @@ object FitLogRoutes {
 
     fun routineEditor(routineId: Int): String {
         return "routine_editor/$routineId"
+    }
+
+    fun exercisePicker(routineId: Int): String {
+        return "exercise_picker/$routineId"
     }
 }
