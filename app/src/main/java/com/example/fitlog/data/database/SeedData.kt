@@ -677,49 +677,82 @@ object SeedData {
         RoutineExerciseEntity(routineId = 11, exerciseId = 1, targetSets = 4, targetReps = "8-10", orderIndex = 0), // Barbell Bench Press
         RoutineExerciseEntity(routineId = 11, exerciseId = 4, targetSets = 3, targetReps = "8-10", orderIndex = 1), // Incline Dumbbell Press
         RoutineExerciseEntity(routineId = 11, exerciseId = 6, targetSets = 3, targetReps = "10-12", orderIndex = 2), // Cable Chest Flyes
+        RoutineExerciseEntity(routineId = 11, exerciseId = 43, targetSets = 3, targetReps = "8-12", orderIndex = 3), // Tricep Dips (Chest focus)
+        RoutineExerciseEntity(routineId = 11, exerciseId = 8, targetSets = 3, targetReps = "10-12", orderIndex = 4), // Decline Bench Press
         
          // Template 3: Bro Split - Day 2: Back (Routine ID: 12)
-        RoutineExerciseEntity(routineId = 12, exerciseId = 9, targetSets = 4, targetReps = "5", orderIndex = 0), // Deadlift
+        RoutineExerciseEntity(routineId = 12, exerciseId = 9, targetSets = 4, targetReps = "5-6", orderIndex = 0), // Deadlift
         RoutineExerciseEntity(routineId = 12, exerciseId = 10, targetSets = 3, targetReps = "MAX", orderIndex = 1), // Pull-Ups
         RoutineExerciseEntity(routineId = 12, exerciseId = 11, targetSets = 3, targetReps = "8-10", orderIndex = 2), // Barbell Rows
+        RoutineExerciseEntity(routineId = 12, exerciseId = 13, targetSets = 3, targetReps = "10-12", orderIndex = 3), // Lat Pulldowns
+        RoutineExerciseEntity(routineId = 12, exerciseId = 14, targetSets = 3, targetReps = "10-12", orderIndex = 4), // Cable Rows
 
         // Template 3: Bro Split - Day 3: Shoulders (Routine ID: 13)
         RoutineExerciseEntity(routineId = 13, exerciseId = 19, targetSets = 4, targetReps = "8-10", orderIndex = 0), // Overhead Press
         RoutineExerciseEntity(routineId = 13, exerciseId = 21, targetSets = 4, targetReps = "12-15", orderIndex = 1), // Lateral Raises
         RoutineExerciseEntity(routineId = 13, exerciseId = 16, targetSets = 3, targetReps = "12-15", orderIndex = 2), // Face Pulls
+        RoutineExerciseEntity(routineId = 13, exerciseId = 22, targetSets = 3, targetReps = "12-15", orderIndex = 3), // Front Raises
+        RoutineExerciseEntity(routineId = 13, exerciseId = 17, targetSets = 3, targetReps = "12-15", orderIndex = 4), // Shrugs
 
         // Template 3: Bro Split - Day 4: Legs (Routine ID: 14)
         RoutineExerciseEntity(routineId = 14, exerciseId = 27, targetSets = 4, targetReps = "6-8", orderIndex = 0), // Squats
         RoutineExerciseEntity(routineId = 14, exerciseId = 30, targetSets = 3, targetReps = "10-12", orderIndex = 1), // Leg Press
-        RoutineExerciseEntity(routineId = 14, exerciseId = 32, targetSets = 3, targetReps = "12-15", orderIndex = 2), // Leg Curls
+        RoutineExerciseEntity(routineId = 14, exerciseId = 28, targetSets = 3, targetReps = "8-10", orderIndex = 2), // RDLs
+        RoutineExerciseEntity(routineId = 14, exerciseId = 32, targetSets = 3, targetReps = "12-15", orderIndex = 3), // Leg Curls
+        RoutineExerciseEntity(routineId = 14, exerciseId = 33, targetSets = 3, targetReps = "12-15", orderIndex = 4), // Leg Extensions
+        RoutineExerciseEntity(routineId = 14, exerciseId = 34, targetSets = 4, targetReps = "15-20", orderIndex = 5), // Calf Raises
 
         // Template 3: Bro Split - Day 5: Arms (Routine ID: 15)
         RoutineExerciseEntity(routineId = 15, exerciseId = 39, targetSets = 3, targetReps = "10-12", orderIndex = 0), // Barbell Curls
         RoutineExerciseEntity(routineId = 15, exerciseId = 42, targetSets = 3, targetReps = "8-10", orderIndex = 1), // Close-Grip Bench
         RoutineExerciseEntity(routineId = 15, exerciseId = 41, targetSets = 3, targetReps = "10-12", orderIndex = 2), // Hammer Curls
+        RoutineExerciseEntity(routineId = 15, exerciseId = 45, targetSets = 3, targetReps = "12-15", orderIndex = 3), // Tricep Pushdowns
+        RoutineExerciseEntity(routineId = 15, exerciseId = 46, targetSets = 3, targetReps = "10-12", orderIndex = 4), // Preacher Curls
+        RoutineExerciseEntity(routineId = 15, exerciseId = 44, targetSets = 3, targetReps = "10-12", orderIndex = 5), // Overhead Tricep Ext
 
          // Template 4: PPL Hybrid - Day 1: Push (Routine ID: 16)
-        RoutineExerciseEntity(routineId = 16, exerciseId = 1, targetSets = 3, targetReps = "8", orderIndex = 0),
+        RoutineExerciseEntity(routineId = 16, exerciseId = 1, targetSets = 4, targetReps = "6-8", orderIndex = 0), // Bench Press
+        RoutineExerciseEntity(routineId = 16, exerciseId = 4, targetSets = 3, targetReps = "8-10", orderIndex = 1), // Incline DB Press
+        RoutineExerciseEntity(routineId = 16, exerciseId = 19, targetSets = 3, targetReps = "8-10", orderIndex = 2), // OHP
+        RoutineExerciseEntity(routineId = 16, exerciseId = 45, targetSets = 3, targetReps = "12-15", orderIndex = 3), // Tricep Pushdowns
         
          // Template 4: PPL Hybrid - Day 2: Pull (Routine ID: 17)
-        RoutineExerciseEntity(routineId = 17, exerciseId = 11, targetSets = 3, targetReps = "8", orderIndex = 0),
-
+        RoutineExerciseEntity(routineId = 17, exerciseId = 9, targetSets = 3, targetReps = "5-6", orderIndex = 0), // Deadlift
+        RoutineExerciseEntity(routineId = 17, exerciseId = 11, targetSets = 3, targetReps = "8-10", orderIndex = 1), // BB Rows
+        RoutineExerciseEntity(routineId = 17, exerciseId = 10, targetSets = 3, targetReps = "MAX", orderIndex = 2), // Pullups
+        RoutineExerciseEntity(routineId = 17, exerciseId = 39, targetSets = 3, targetReps = "10-12", orderIndex = 3), // Curls
+        
          // Template 4: PPL Hybrid - Day 3: Legs (Routine ID: 18)
-        RoutineExerciseEntity(routineId = 18, exerciseId = 27, targetSets = 3, targetReps = "8", orderIndex = 0),
+        RoutineExerciseEntity(routineId = 18, exerciseId = 27, targetSets = 4, targetReps = "6-8", orderIndex = 0), // Squats
+        RoutineExerciseEntity(routineId = 18, exerciseId = 28, targetSets = 3, targetReps = "8-10", orderIndex = 1), // RDL
+        RoutineExerciseEntity(routineId = 18, exerciseId = 30, targetSets = 3, targetReps = "10-12", orderIndex = 2), // Leg Press
+        RoutineExerciseEntity(routineId = 18, exerciseId = 34, targetSets = 4, targetReps = "15-20", orderIndex = 3), // Calves
 
          // Template 4: PPL Hybrid - Day 4: Upper (Routine ID: 19)
-        RoutineExerciseEntity(routineId = 19, exerciseId = 19, targetSets = 3, targetReps = "10", orderIndex = 0),
+        RoutineExerciseEntity(routineId = 19, exerciseId = 2, targetSets = 3, targetReps = "8-10", orderIndex = 0), // DB Bench
+        RoutineExerciseEntity(routineId = 19, exerciseId = 12, targetSets = 3, targetReps = "8-10", orderIndex = 1), // DB Row
+        RoutineExerciseEntity(routineId = 19, exerciseId = 19, targetSets = 3, targetReps = "8-10", orderIndex = 2), // OHP
+        RoutineExerciseEntity(routineId = 19, exerciseId = 13, targetSets = 3, targetReps = "10-12", orderIndex = 3), // Lat Pulldown
 
          // Template 4: PPL Hybrid - Day 5: Lower (Routine ID: 20)
-        RoutineExerciseEntity(routineId = 20, exerciseId = 28, targetSets = 3, targetReps = "10", orderIndex = 0),
+        RoutineExerciseEntity(routineId = 20, exerciseId = 27, targetSets = 3, targetReps = "8-10", orderIndex = 0), // Squats
+        RoutineExerciseEntity(routineId = 20, exerciseId = 28, targetSets = 3, targetReps = "8-10", orderIndex = 1), // RDL
+        RoutineExerciseEntity(routineId = 20, exerciseId = 31, targetSets = 3, targetReps = "12-15", orderIndex = 2), // Lunges
+        RoutineExerciseEntity(routineId = 20, exerciseId = 49, targetSets = 3, targetReps = "60s", orderIndex = 3), // Planks
 
         // Template 5: Push-Pull-Cardio - Day 1: Push (Routine ID: 21)
-        RoutineExerciseEntity(routineId = 21, exerciseId = 7, targetSets = 3, targetReps = "MAX", orderIndex = 0),
-
+        RoutineExerciseEntity(routineId = 21, exerciseId = 7, targetSets = 3, targetReps = "MAX", orderIndex = 0), // Pushup
+        RoutineExerciseEntity(routineId = 21, exerciseId = 19, targetSets = 3, targetReps = "10", orderIndex = 1), // OHP
+        RoutineExerciseEntity(routineId = 21, exerciseId = 43, targetSets = 3, targetReps = "10", orderIndex = 2), // Dips
+        
         // Template 5: Push-Pull-Cardio - Day 2: Pull (Routine ID: 22)
-        RoutineExerciseEntity(routineId = 22, exerciseId = 10, targetSets = 3, targetReps = "MAX", orderIndex = 0),
+        RoutineExerciseEntity(routineId = 22, exerciseId = 10, targetSets = 3, targetReps = "MAX", orderIndex = 0), // Pullups
+        RoutineExerciseEntity(routineId = 22, exerciseId = 12, targetSets = 3, targetReps = "10", orderIndex = 1), // DB Row
+        RoutineExerciseEntity(routineId = 22, exerciseId = 39, targetSets = 3, targetReps = "12", orderIndex = 2), // Curls
 
         // Template 5: Push-Pull-Cardio - Day 3: Full Body (Routine ID: 23)
-        RoutineExerciseEntity(routineId = 23, exerciseId = 27, targetSets = 3, targetReps = "10", orderIndex = 0)
+        RoutineExerciseEntity(routineId = 23, exerciseId = 27, targetSets = 3, targetReps = "10", orderIndex = 0), // Squat
+        RoutineExerciseEntity(routineId = 23, exerciseId = 49, targetSets = 3, targetReps = "60s", orderIndex = 1), // Plank
+        RoutineExerciseEntity(routineId = 23, exerciseId = 52, targetSets = 1, targetReps = "15 min", orderIndex = 2) // Mountain Climbers (as cardio)
     )
 }

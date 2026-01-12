@@ -10,4 +10,5 @@ data class RoutineExerciseWithDetails(
         entityColumn = "id"
     )
     val exercise: ExerciseEntity?
+    val exercise: ExerciseEntity
 )

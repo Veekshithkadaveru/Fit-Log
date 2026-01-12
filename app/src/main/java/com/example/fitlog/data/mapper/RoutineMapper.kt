@@ -81,5 +81,13 @@ fun List<com.example.fitlog.data.database.entity.RoutineExerciseWithDetails>.toR
             exercise = domainExercise
         )
     }
+fun com.example.fitlog.data.database.entity.RoutineExerciseWithDetails.toDomainModel(): RoutineExercise {
+    return routineExercise.toDomainModel().copy(
+        exercise = exercise.toDomainModel()
+    )
+}
+
+fun List<com.example.fitlog.data.database.entity.RoutineExerciseWithDetails>.toRoutineExerciseWithDetailsDomainModels(): List<RoutineExercise> {
+    return map { it.toDomainModel() }
 }
 
