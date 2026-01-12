@@ -3,67 +3,98 @@ package com.example.fitlog.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fitlog.domain.model.Exercise
+import com.example.fitlog.domain.repository.ExerciseRepository
 import com.example.fitlog.domain.repository.RoutineRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class ExerciseViewModel @Inject constructor(
-    private val repository: RoutineRepository
+    private val routineRepository: RoutineRepository,
+    private val exerciseRepository: ExerciseRepository
 ) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
-    val searchQuery: StateFlow<String> = _searchQuery
+    private val _selectedMuscle = MutableStateFlow<String?>(null)
+    private val _isLoading = MutableStateFlow(false)
 
-    private val _selectedMuscle = MutableStateFlow<com.example.fitlog.domain.model.MuscleGroup?>(null)
-    val selectedMuscle: StateFlow<com.example.fitlog.domain.model.MuscleGroup?> = _selectedMuscle
-
-    private val allExercises = repository.getAllExercises()
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList()
-        )
-
-    val filteredExercises = combine(
-        allExercises,
+    // Combined state for UI
+    val uiState: StateFlow<ExercisePickerUiState> = combine(
         _searchQuery,
-        _selectedMuscle
-    ) { exercises, query, muscle ->
-        exercises.filter { exercise ->
-            val matchesQuery = exercise.name.contains(query, ignoreCase = true)
-            val matchesMuscle = muscle == null || exercise.primaryMuscle == muscle
-            matchesQuery && matchesMuscle
-        }
+        _selectedMuscle,
+        _isLoading,
+        exerciseRepository.getAllExercises()
+    ) { query, muscle, loading, allExercises ->
+         val filtered = allExercises.filter { exercise ->
+             val matchesQuery = exercise.name.contains(query, ignoreCase = true)
+             val matchesMuscle = muscle == null || exercise.primaryMuscle.displayName.equals(muscle, ignoreCase = true)
+             matchesQuery && matchesMuscle
+         }
+         ExercisePickerUiState(
+             exercises = filtered,
+             searchQuery = query,
+             selectedMuscle = muscle,
+             isLoading = loading
+         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
+        initialValue = ExercisePickerUiState(isLoading = true)
     )
 
-    // Distinct muscles for filter chips, derived from all exercises to avoid extra DB calls
-    val muscleGroups = allExercises.combine(MutableStateFlow(Unit)) { exercises, _ ->
-        exercises.map { it.primaryMuscle }.distinct().sortedBy { it.displayName }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
+    private val _navigationEvent = Channel<Unit>()
+    val navigationEvent = _navigationEvent.receiveAsFlow()
 
-    fun onSearchQueryChange(query: String) {
+    fun updateSearchQuery(query: String) {
         _searchQuery.value = query
     }
 
-    fun onMuscleSelect(muscle: com.example.fitlog.domain.model.MuscleGroup?) {
-        if (_selectedMuscle.value == muscle) {
-            _selectedMuscle.value = null // Toggle off
-        } else {
-            _selectedMuscle.value = muscle
+    fun updateMuscleFilter(muscle: String?) {
+        _selectedMuscle.value = muscle
+    }
+
+    fun addExerciseToRoutine(routineId: Int, exerciseId: Int) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                // Add exercise logic
+                // 1. Get current max order
+                val count = routineRepository.getExerciseCountForRoutine(routineId)
+                val newOrder = count + 1
+                
+                // 2. Insert RoutineExercise
+                val joinEntity = com.example.fitlog.domain.model.RoutineExercise(
+                    id = 0,
+                    routineId = routineId,
+                    exerciseId = exerciseId,
+                    orderIndex = newOrder,
+                    targetSets = 3,
+                    targetReps = "8-12"
+                )
+                routineRepository.insertRoutineExercise(joinEntity)
+                
+                // 3. Navigate back
+                _navigationEvent.send(Unit)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                _isLoading.value = false
+            }
         }
     }
 }
+
+data class ExercisePickerUiState(
+    val exercises: List<Exercise> = emptyList(),
+    val searchQuery: String = "",
+    val selectedMuscle: String? = null,
+    val isLoading: Boolean = false
+)

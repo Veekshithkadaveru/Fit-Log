@@ -181,27 +181,59 @@ class RoutineViewModel @Inject constructor(
         }
     }
 
-    fun addExerciseToRoutine(routineId: Int, exerciseId: Int) {
+    fun deleteRoutine() {
+        viewModelScope.launch {
+            val current = _editorUiState.value.routine ?: return@launch
+            _editorUiState.value = _editorUiState.value.copy(isSaving = true)
+            try {
+                if (current.id != 0) {
+                    routineRepository.deleteRoutine(current)
+                }
+                _navigationEvent.send(RoutineNavigationEvent.NavigateBack)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                _editorUiState.value = _editorUiState.value.copy(isSaving = false)
+            }
+        }
+    }
+
+    fun removeExercise(routineExercise: RoutineExercise) {
         viewModelScope.launch {
             try {
-                // Determine order
-                val count = routineRepository.getExerciseCountForRoutine(routineId)
-                val newOrder = count + 1
-                
-                val joinEntity = RoutineExercise(
-                    id = 0,
-                    routineId = routineId,
-                    exerciseId = exerciseId,
-                    orderIndex = newOrder, // Correct parameter name
-                    targetSets = 3, // Default
-                    targetReps = "8-12" // Default
-                )
-                routineRepository.insertRoutineExercise(joinEntity)
-                
-                // Refresh editor to show new exercise
+                // Delete from DB which handles list removal
+                routineRepository.deleteRoutineExercise(routineExercise)
+                // Reload to refresh list and order
+                val routineId = _editorUiState.value.routine?.id ?: return@launch
                 loadRoutine(routineId)
             } catch (e: Exception) {
                 e.printStackTrace()
+            }
+        }
+    }
+
+    fun moveExercise(fromIndex: Int, toIndex: Int) {
+        viewModelScope.launch {
+            val currentRoutine = _editorUiState.value.routine ?: return@launch
+            val exercises = currentRoutine.exercises.toMutableList()
+            if (fromIndex !in exercises.indices || toIndex !in exercises.indices) return@launch
+
+            val item = exercises.removeAt(fromIndex)
+            exercises.add(toIndex, item)
+            
+            // Optimistic Update UI
+            _editorUiState.value = _editorUiState.value.copy(
+                routine = currentRoutine.copy(exercises = exercises)
+            )
+
+            try {
+                // Persist new order
+                val orderedIds = exercises.map { it.id }
+                routineRepository.reorderExercises(currentRoutine.id, orderedIds)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                // Revert or reload on error
+                loadRoutine(currentRoutine.id)
             }
         }
     }
@@ -215,6 +247,7 @@ data class RoutineUiState(
 data class RoutineEditorUiState(
     val isLoading: Boolean = false,
     val isSaving: Boolean = false,
+    val nameError: String? = null,
     val routine: Routine? = null
 )
 

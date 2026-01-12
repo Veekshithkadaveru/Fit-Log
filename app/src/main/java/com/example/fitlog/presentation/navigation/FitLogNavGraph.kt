@@ -111,21 +111,11 @@ fun FitLogNavGraph(
             )
         }
 
-        composable(FitLogDestinations.TEMPLATE_PICKER) {
-            com.example.fitlog.presentation.screens.routines.TemplatePickerScreen(
-                navController = navController,
-                onTemplateClick = { templateId ->
-                    // Logic to copy template to new routine and edit
-                }
-            )
-        }
-
         composable(
             route = FitLogDestinations.EXERCISE_PICKER,
             arguments = listOf(
                 navArgument(FitLogDestinations.Args.ROUTINE_ID) {
                     type = NavType.IntType
-                    defaultValue = 0
                 }
             )
         ) { backStackEntry ->
@@ -135,6 +125,17 @@ fun FitLogNavGraph(
                 routineId = routineId
             )
         }
+
+
+        composable(FitLogDestinations.TEMPLATE_PICKER) {
+            com.example.fitlog.presentation.screens.routines.TemplatePickerScreen(
+                navController = navController,
+                onTemplateClick = { templateId ->
+                    // Logic to copy template to new routine and edit
+                }
+            )
+        }
+
         
         composable(FitLogDestinations.CALENDAR_VIEW) {
             PlaceholderScreen(title = "Calendar", navController = navController)

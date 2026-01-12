@@ -5,6 +5,7 @@ import com.example.fitlog.data.mapper.toDomainModel
 import com.example.fitlog.data.mapper.toEntity
 import com.example.fitlog.data.mapper.toRoutineDomainModels
 import com.example.fitlog.data.mapper.toRoutineExerciseDomainModels
+import com.example.fitlog.data.mapper.toRoutineExerciseWithDetailsDomainModels
 import com.example.fitlog.data.mapper.toRoutineExerciseEntities
 import com.example.fitlog.domain.model.Routine
 import com.example.fitlog.domain.model.RoutineExercise

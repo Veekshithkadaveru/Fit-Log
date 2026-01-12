@@ -9,5 +9,5 @@ data class RoutineExerciseWithDetails(
         parentColumn = "exerciseId",
         entityColumn = "id"
     )
-    val exercise: ExerciseEntity
+    val exercise: ExerciseEntity?
 )
