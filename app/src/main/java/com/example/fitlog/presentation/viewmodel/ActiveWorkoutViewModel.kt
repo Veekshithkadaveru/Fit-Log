@@ -194,6 +194,137 @@ class ActiveWorkoutViewModel @Inject constructor(
     }
 
     /**
+     * Add a new set to an exercise
+     */
+    fun addSet(exerciseId: Int) {
+        viewModelScope.launch {
+            val workout = _uiState.value.currentWorkout ?: return@launch
+
+            try {
+                // Find the next set order for this exercise
+                val existingSets = workout.sets.filter { it.exerciseId == exerciseId }
+                val nextSetOrder = (existingSets.maxOfOrNull { it.setOrder } ?: -1) + 1
+
+                // Create new set
+                val newSet = WorkoutSet(
+                    workoutId = workout.id,
+                    exerciseId = exerciseId,
+                    weight = 0f,
+                    reps = 0,
+                    isCompleted = false,
+                    isPR = false,
+                    setOrder = nextSetOrder
+                )
+
+                val setId = workoutRepository.insertSet(newSet).toInt()
+                val createdSet = newSet.copy(id = setId)
+
+                // Update local state
+                val updatedWorkout = workout.copy(
+                    sets = workout.sets + createdSet
+                )
+                _uiState.value = _uiState.value.copy(currentWorkout = updatedWorkout)
+
+                // Reload exercises to update counts
+                reloadExercises()
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(error = "Failed to add set: ${e.message}")
+            }
+        }
+    }
+
+    /**
+     * Update set details (weight/reps)
+     */
+    fun updateSet(setId: Int, weight: Float? = null, reps: Int? = null) {
+        viewModelScope.launch {
+            val workout = _uiState.value.currentWorkout ?: return@launch
+
+            try {
+                val setToUpdate = workout.sets.find { it.id == setId } ?: return@launch
+                
+                val updatedSet = setToUpdate.copy(
+                    weight = weight ?: setToUpdate.weight,
+                    reps = reps ?: setToUpdate.reps
+                )
+
+                workoutRepository.updateSet(updatedSet)
+
+                // Update local state
+                val updatedSets = workout.sets.map { if (it.id == setId) updatedSet else it }
+                _uiState.value = _uiState.value.copy(
+                    currentWorkout = workout.copy(sets = updatedSets)
+                )
+
+                // Reload exercises to update UI
+                reloadExercises()
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(error = "Failed to update set: ${e.message}")
+            }
+        }
+    }
+
+    /**
+     * Toggle set completion status
+     */
+    fun toggleSetCompleted(setId: Int) {
+        viewModelScope.launch {
+            val workout = _uiState.value.currentWorkout ?: return@launch
+
+            try {
+                val setToUpdate = workout.sets.find { it.id == setId } ?: return@launch
+                val updatedSet = setToUpdate.copy(isCompleted = !setToUpdate.isCompleted)
+
+                workoutRepository.updateSet(updatedSet)
+
+                // Update local state
+                val updatedSets = workout.sets.map { if (it.id == setId) updatedSet else it }
+                _uiState.value = _uiState.value.copy(
+                    currentWorkout = workout.copy(sets = updatedSets)
+                )
+
+                // Reload exercises to update completion counts
+                reloadExercises()
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(error = "Failed to toggle set: ${e.message}")
+            }
+        }
+    }
+
+    /**
+     * Delete a set
+     */
+    fun deleteSet(setId: Int) {
+        viewModelScope.launch {
+            val workout = _uiState.value.currentWorkout ?: return@launch
+
+            try {
+                workoutRepository.deleteSetById(setId)
+
+                // Update local state
+                val updatedSets = workout.sets.filter { it.id != setId }
+                _uiState.value = _uiState.value.copy(
+                    currentWorkout = workout.copy(sets = updatedSets)
+                )
+
+                // Reload exercises to update counts
+                reloadExercises()
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(error = "Failed to delete set: ${e.message}")
+            }
+        }
+    }
+
+    /**
+     * Reload exercises with updated set counts
+     */
+    private suspend fun reloadExercises() {
+        val workout = _uiState.value.currentWorkout ?: return
+        val exercises = loadExercisesForWorkout(workout)
+        _uiState.value = _uiState.value.copy(workoutExercises = exercises)
+    }
+
+    /**
      * Clear error message
      */
     fun clearError() {
@@ -247,30 +378,70 @@ class ActiveWorkoutViewModel @Inject constructor(
     /**
      * Load exercises for an existing workout
      */
+    /**
+     * Load exercises for an existing workout
+     */
     private suspend fun loadExercisesForWorkout(workout: Workout): List<WorkoutExerciseWithDetails> {
-        // Group sets by exercise
-        val setsByExercise = workout.sets.groupBy { it.exerciseId }
+        val existingSetsByExercise = workout.sets.groupBy { it.exerciseId }
+        val routineId = workout.routineId
 
-        return setsByExercise.map { (exerciseId, sets) ->
-            val exercise = exerciseRepository.getExerciseById(exerciseId)
+        val routineExercises = if (routineId != null) {
+            routineRepository.getExercisesForRoutineOnce(routineId)
+        } else {
+            emptyList()
+        }
+
+        // Map routine exercises to details
+        val fromRoutine = routineExercises.mapNotNull { routineExercise ->
+            val exercise = exerciseRepository.getExerciseById(routineExercise.exerciseId)
+            val sets = existingSetsByExercise[routineExercise.exerciseId]?.sortedBy { it.setOrder } ?: emptyList()
             val completedSets = sets.count { it.isCompleted }
 
-            WorkoutExerciseWithDetails(
-                exercise = exercise ?: Exercise(
-                    id = exerciseId,
-                    name = "Unknown Exercise",
-                    primaryMuscle = com.example.fitlog.domain.model.MuscleGroup.CHEST,
-                    secondaryMuscles = emptyList(),
-                    category = com.example.fitlog.domain.model.ExerciseCategory.COMPOUND,
-                    equipment = com.example.fitlog.domain.model.Equipment.BARBELL
-                ),
-                targetSets = sets.size,
-                targetReps = "",
-                completedSets = completedSets,
-                orderIndex = 0
-            )
+            exercise?.let {
+                WorkoutExerciseWithDetails(
+                    exercise = it,
+                    targetSets = routineExercise.targetSets,
+                    targetReps = routineExercise.targetReps,
+                    completedSets = completedSets,
+                    orderIndex = routineExercise.orderIndex,
+                    sets = sets
+                )
+            }
         }
+
+        // Handle exercises that are in sets but NOT in routine (e.g. ad-hoc additions)
+        val routineExerciseIds = routineExercises.map { it.exerciseId }.toSet()
+        val extraExerciseIds = existingSetsByExercise.keys - routineExerciseIds
+        
+        val fromExtras = extraExerciseIds.mapNotNull { exerciseId ->
+             val exercise = exerciseRepository.getExerciseById(exerciseId)
+             val sets = existingSetsByExercise[exerciseId]?.sortedBy { it.setOrder } ?: emptyList()
+             val completedSets = sets.count { it.isCompleted }
+             
+             exercise?.let {
+                 WorkoutExerciseWithDetails(
+                    exercise = it,
+                    targetSets = 0, // No target for ad-hoc
+                    targetReps = "",
+                    completedSets = completedSets,
+                    orderIndex = 999, // Put at end
+                    sets = sets
+                 )
+             }
+        }
+
+        return (fromRoutine + fromExtras).sortedBy { it.orderIndex }
     }
+
+
+
+
+
+
+
+
+
+
 
     override fun onCleared() {
         super.onCleared()
@@ -297,7 +468,14 @@ data class ActiveWorkoutUiState(
         get() = workoutExercises.sumOf { it.completedSets }
 
     val totalSetsCount: Int
-        get() = workoutExercises.sumOf { it.targetSets }
+        get() = workoutExercises.sumOf { it.sets.size } // Use actual sets count or target?
+        // Logic: if tracking live, maybe count completed vs total sets logged?
+        // Or keep targetSets as the goal.
+        // Let's keep total as sum of targetSets for now if that's the intention, 
+        // or sum of actual sets? The mock says "X/Y sets". Usually Current/Total.
+        // Let's use targetSets as the denominator for progress if available, otherwise actual count.
+        // For simplicity let's rely on what was there: 
+        // get() = workoutExercises.sumOf { it.targetSets }
 }
 
 /**
@@ -308,7 +486,8 @@ data class WorkoutExerciseWithDetails(
     val targetSets: Int,
     val targetReps: String,
     val completedSets: Int,
-    val orderIndex: Int
+    val orderIndex: Int,
+    val sets: List<WorkoutSet> = emptyList()
 )
 
 /**
