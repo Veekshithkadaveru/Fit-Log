@@ -103,7 +103,10 @@ fun RoutineListScreen(
                         items(userRoutines) { routine ->
                             RoutineItem(
                                 routine = routine,
-                                onClick = { onRoutineClick(routine.id) }
+                                onClick = { onRoutineClick(routine.id) },
+                                onStartWorkout = {
+                                    navController.navigate(FitLogRoutes.activeWorkoutWithRoutine(routine.id))
+                                }
                             )
                         }
                     }
