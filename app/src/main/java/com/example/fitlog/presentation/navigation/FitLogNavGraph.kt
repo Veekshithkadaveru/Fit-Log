@@ -32,11 +32,9 @@ fun FitLogNavGraph(
         }
         
         composable(FitLogDestinations.WORKOUT) {
-            com.example.fitlog.presentation.screens.routines.RoutineListScreen(
+            com.example.fitlog.presentation.screens.workout.ActiveWorkoutScreen(
                 navController = navController,
-                onRoutineClick = { routineId ->
-                    navController.navigate(FitLogRoutes.routineEditor(routineId))
-                }
+                routineId = null
             )
         }
         
@@ -89,12 +87,35 @@ fun FitLogNavGraph(
             )
         }
         
-        // Additional screens (for future implementation)
-        composable(FitLogDestinations.ACTIVE_WORKOUT) {
-            PlaceholderScreen(title = "Active Workout", navController = navController)
+        // Active Workout Screen (with optional routineId query parameter)
+        composable(
+            route = "active_workout?routineId={routineId}",
+            arguments = listOf(
+                navArgument("routineId") {
+                    type = NavType.IntType
+                    defaultValue = -1
+                    nullable = false
+                }
+            )
+        ) { backStackEntry ->
+            val routineId = backStackEntry.arguments?.getInt("routineId")?.takeIf { it != -1 }
+            com.example.fitlog.presentation.screens.workout.ActiveWorkoutScreen(
+                navController = navController,
+                routineId = routineId
+            )
         }
         
         
+        // Routine List Screen
+        composable(FitLogDestinations.ROUTINE_LIST) {
+            com.example.fitlog.presentation.screens.routines.RoutineListScreen(
+                navController = navController,
+                onRoutineClick = { routineId ->
+                    navController.navigate(FitLogRoutes.routineEditor(routineId))
+                }
+            )
+        }
+
         composable(
             route = FitLogDestinations.ROUTINE_EDITOR,
             arguments = listOf(
