@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -14,15 +16,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.fitlog.domain.model.WorkoutSet
 import com.example.fitlog.presentation.viewmodel.WorkoutExerciseWithDetails
 
 /**
- * Placeholder component for displaying exercises in active workout
- * Will be enhanced in PR #2 with set logging grid
+ * Component for displaying exercises in active workout with set logging
  */
 @Composable
 fun ExerciseSection(
     exercise: WorkoutExerciseWithDetails,
+    sets: List<WorkoutSet>,
+    onWeightChange: (setId: Int, weight: String) -> Unit,
+    onRepsChange: (setId: Int, reps: String) -> Unit,
+    onSetCompleted: (setId: Int) -> Unit,
+    onDeleteSet: (setId: Int) -> Unit,
+    onAddSet: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -76,12 +84,17 @@ fun ExerciseSection(
                 }
             }
 
-            // Placeholder text for PR #2
-            Text(
-                text = "Set logging grid will be added in PR #2",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(top = 8.dp)
+            // Divider
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+            // Set Input Grid
+            SetInputGrid(
+                sets = sets,
+                onWeightChange = onWeightChange,
+                onRepsChange = onRepsChange,
+                onSetCompleted = onSetCompleted,
+                onDeleteSet = onDeleteSet,
+                onAddSet = onAddSet
             )
         }
     }

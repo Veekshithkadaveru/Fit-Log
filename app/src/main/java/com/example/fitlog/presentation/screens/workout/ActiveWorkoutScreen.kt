@@ -127,7 +127,16 @@ fun ActiveWorkoutScreen(
                     ActiveWorkoutContent(
                         uiState = uiState,
                         onEndWorkout = { viewModel.endWorkout() },
-                        onDiscardWorkout = { viewModel.discardWorkout() }
+                        onDiscardWorkout = { viewModel.discardWorkout() },
+                        onAddSet = { exerciseId -> viewModel.addSet(exerciseId) },
+                        onUpdateSetWeight = { setId, weight -> 
+                            viewModel.updateSet(setId, weight = weight.toFloatOrNull()) 
+                        },
+                        onUpdateSetReps = { setId, reps -> 
+                            viewModel.updateSet(setId, reps = reps.toIntOrNull()) 
+                        },
+                        onToggleSetCompleted = { setId -> viewModel.toggleSetCompleted(setId) },
+                        onDeleteSet = { setId -> viewModel.deleteSet(setId) }
                     )
                 }
             }
@@ -143,6 +152,11 @@ private fun ActiveWorkoutContent(
     uiState: com.example.fitlog.presentation.viewmodel.ActiveWorkoutUiState,
     onEndWorkout: () -> Unit,
     onDiscardWorkout: () -> Unit,
+    onAddSet: (exerciseId: Int) -> Unit,
+    onUpdateSetWeight: (setId: Int, weight: String) -> Unit,
+    onUpdateSetReps: (setId: Int, reps: String) -> Unit,
+    onToggleSetCompleted: (setId: Int) -> Unit,
+    onDeleteSet: (setId: Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -165,7 +179,15 @@ private fun ActiveWorkoutContent(
                     items = uiState.workoutExercises,
                     key = { it.exercise.id }
                 ) { exercise ->
-                    ExerciseSection(exercise = exercise)
+                    ExerciseSection(
+                        exercise = exercise,
+                        sets = exercise.sets,
+                        onWeightChange = onUpdateSetWeight,
+                        onRepsChange = onUpdateSetReps,
+                        onSetCompleted = onToggleSetCompleted,
+                        onDeleteSet = onDeleteSet,
+                        onAddSet = { onAddSet(exercise.exercise.id) }
+                    )
                 }
             }
         }
