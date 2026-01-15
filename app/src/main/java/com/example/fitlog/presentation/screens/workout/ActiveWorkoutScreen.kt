@@ -128,15 +128,18 @@ fun ActiveWorkoutScreen(
                         uiState = uiState,
                         onEndWorkout = { viewModel.endWorkout() },
                         onDiscardWorkout = { viewModel.discardWorkout() },
-                        onAddSet = { exerciseId -> viewModel.addSet(exerciseId) },
-                        onUpdateSetWeight = { setId, weight -> 
-                            viewModel.updateSet(setId, weight = weight.toFloatOrNull()) 
+                        onAddSet = { exerciseId -> viewModel.addSet(exerciseId, autoFill = false) },
+                        onAddSetWithAutoFill = { exerciseId -> viewModel.addSet(exerciseId, autoFill = true) },
+                        onUpdateSetWeight = { setId, weight ->
+                            viewModel.updateSet(setId, weight = weight.toFloatOrNull())
                         },
-                        onUpdateSetReps = { setId, reps -> 
-                            viewModel.updateSet(setId, reps = reps.toIntOrNull()) 
+                        onUpdateSetReps = { setId, reps ->
+                            viewModel.updateSet(setId, reps = reps.toIntOrNull())
                         },
                         onToggleSetCompleted = { setId -> viewModel.toggleSetCompleted(setId) },
-                        onDeleteSet = { setId -> viewModel.deleteSet(setId) }
+                        onDeleteSet = { setId -> viewModel.deleteSet(setId) },
+                        onDuplicateSet = { setId -> viewModel.duplicateSet(setId) },
+                        
                     )
                 }
             }
@@ -153,10 +156,13 @@ private fun ActiveWorkoutContent(
     onEndWorkout: () -> Unit,
     onDiscardWorkout: () -> Unit,
     onAddSet: (exerciseId: Int) -> Unit,
+    onAddSetWithAutoFill: (exerciseId: Int) -> Unit,
     onUpdateSetWeight: (setId: Int, weight: String) -> Unit,
     onUpdateSetReps: (setId: Int, reps: String) -> Unit,
     onToggleSetCompleted: (setId: Int) -> Unit,
     onDeleteSet: (setId: Int) -> Unit,
+    onDuplicateSet: (setId: Int) -> Unit,
+    
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -186,7 +192,10 @@ private fun ActiveWorkoutContent(
                         onRepsChange = onUpdateSetReps,
                         onSetCompleted = onToggleSetCompleted,
                         onDeleteSet = onDeleteSet,
-                        onAddSet = { onAddSet(exercise.exercise.id) }
+                        onDuplicateSet = onDuplicateSet,
+                        
+                        onAddSet = { onAddSet(exercise.exercise.id) },
+                        onAddSetWithAutoFill = { onAddSetWithAutoFill(exercise.exercise.id) }
                     )
                 }
             }

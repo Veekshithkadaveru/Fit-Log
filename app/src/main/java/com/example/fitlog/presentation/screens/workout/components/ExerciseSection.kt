@@ -30,7 +30,10 @@ fun ExerciseSection(
     onRepsChange: (setId: Int, reps: String) -> Unit,
     onSetCompleted: (setId: Int) -> Unit,
     onDeleteSet: (setId: Int) -> Unit,
+    onDuplicateSet: (setId: Int) -> Unit,
+    
     onAddSet: () -> Unit,
+    onAddSetWithAutoFill: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -94,7 +97,10 @@ fun ExerciseSection(
                 onRepsChange = onRepsChange,
                 onSetCompleted = onSetCompleted,
                 onDeleteSet = onDeleteSet,
-                onAddSet = onAddSet
+                onDuplicateSet = onDuplicateSet,
+                
+                onAddSet = onAddSet,
+                onAddSetWithAutoFill = onAddSetWithAutoFill
             )
         }
     }
