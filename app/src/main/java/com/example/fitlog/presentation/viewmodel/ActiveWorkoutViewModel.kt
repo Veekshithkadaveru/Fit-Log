@@ -194,9 +194,9 @@ class ActiveWorkoutViewModel @Inject constructor(
     }
 
     /**
-     * Add a new set to an exercise
+     * Add a new set to an exercise with optional auto-fill from previous session
      */
-    fun addSet(exerciseId: Int) {
+    fun addSet(exerciseId: Int, autoFill: Boolean = false) {
         viewModelScope.launch {
             val workout = _uiState.value.currentWorkout ?: return@launch
 
@@ -205,12 +205,25 @@ class ActiveWorkoutViewModel @Inject constructor(
                 val existingSets = workout.sets.filter { it.exerciseId == exerciseId }
                 val nextSetOrder = (existingSets.maxOfOrNull { it.setOrder } ?: -1) + 1
 
+                // Get auto-fill data if requested
+                var weight = 0f
+                var reps = 0
+
+                if (autoFill) {
+                    val recentSets = workoutRepository.getRecentSetsForExercise(exerciseId, 5)
+                    if (recentSets.isNotEmpty()) {
+                        // Use average of recent sets
+                        weight = recentSets.map { it.weight }.average().toFloat()
+                        reps = recentSets.map { it.reps }.average().toInt()
+                    }
+                }
+
                 // Create new set
                 val newSet = WorkoutSet(
                     workoutId = workout.id,
                     exerciseId = exerciseId,
-                    weight = 0f,
-                    reps = 0,
+                    weight = weight,
+                    reps = reps,
                     isCompleted = false,
                     isPR = false,
                     setOrder = nextSetOrder
@@ -232,6 +245,49 @@ class ActiveWorkoutViewModel @Inject constructor(
             }
         }
     }
+
+    /**
+     * Duplicate a set (copy weight, reps, notes)
+     */
+    fun duplicateSet(setId: Int) {
+        viewModelScope.launch {
+            val workout = _uiState.value.currentWorkout ?: return@launch
+
+            try {
+                val setToDuplicate = workout.sets.find { it.id == setId } ?: return@launch
+
+                // Find the next set order for this exercise
+                val exerciseSets = workout.sets.filter { it.exerciseId == setToDuplicate.exerciseId }
+                val nextSetOrder = (exerciseSets.maxOfOrNull { it.setOrder } ?: -1) + 1
+
+                // Create duplicate set
+                val newSet = WorkoutSet(
+                    workoutId = workout.id,
+                    exerciseId = setToDuplicate.exerciseId,
+                    weight = setToDuplicate.weight,
+                    reps = setToDuplicate.reps,
+                    isCompleted = false, // New set starts incomplete
+                    isPR = false,
+                    setOrder = nextSetOrder
+                )
+
+                val newSetId = workoutRepository.insertSet(newSet).toInt()
+                val createdSet = newSet.copy(id = newSetId)
+
+                // Update local state
+                val updatedWorkout = workout.copy(
+                    sets = workout.sets + createdSet
+                )
+                _uiState.value = _uiState.value.copy(currentWorkout = updatedWorkout)
+
+                // Reload exercises
+                reloadExercises()
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(error = "Failed to duplicate set: ${e.message}")
+            }
+        }
+    }
+
 
     /**
      * Update set details (weight/reps)
