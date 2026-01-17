@@ -34,6 +34,11 @@ class ActiveWorkoutViewModel @Inject constructor(
     val navigationEvent = _navigationEvent.receiveAsFlow()
 
     private var timerJob: Job? = null
+    private var restTimerJob: Job? = null
+
+    // Rest Timer State
+    private val _restTimerState = MutableStateFlow(RestTimerState())
+    val restTimerState: StateFlow<RestTimerState> = _restTimerState.asStateFlow()
 
     init {
         loadActiveWorkout()
@@ -321,7 +326,7 @@ class ActiveWorkoutViewModel @Inject constructor(
     }
 
     /**
-     * Toggle set completion status
+     * Toggle set completion status and auto-start rest timer
      */
     fun toggleSetCompleted(setId: Int) {
         viewModelScope.launch {
@@ -341,6 +346,11 @@ class ActiveWorkoutViewModel @Inject constructor(
 
                 // Reload exercises to update completion counts
                 reloadExercises()
+
+                // Auto-start rest timer when completing a set (not when uncompleting)
+                if (updatedSet.isCompleted) {
+                    startRestTimer(90) // Default 90 seconds
+                }
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(error = "Failed to toggle set: ${e.message}")
             }
@@ -499,9 +509,77 @@ class ActiveWorkoutViewModel @Inject constructor(
 
 
 
+    /**
+     * Start rest timer with given duration
+     */
+    fun startRestTimer(durationSeconds: Int = 90) {
+        restTimerJob?.cancel()
+        _restTimerState.value = RestTimerState(
+            isActive = true,
+            remainingSeconds = durationSeconds,
+            totalSeconds = durationSeconds,
+            isPaused = false
+        )
+
+        restTimerJob = viewModelScope.launch {
+            while (isActive && _restTimerState.value.remainingSeconds > 0) {
+                delay(1000L)
+                if (!_restTimerState.value.isPaused) {
+                    val newRemaining = _restTimerState.value.remainingSeconds - 1
+                    _restTimerState.value = _restTimerState.value.copy(
+                        remainingSeconds = newRemaining
+                    )
+
+                    // Timer complete
+                    if (newRemaining == 0) {
+                        _restTimerState.value = _restTimerState.value.copy(
+                            isComplete = true
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Pause or resume rest timer
+     */
+    fun pauseResumeRestTimer() {
+        _restTimerState.value = _restTimerState.value.copy(
+            isPaused = !_restTimerState.value.isPaused
+        )
+    }
+
+    /**
+     * Skip/stop rest timer
+     */
+    fun skipRestTimer() {
+        restTimerJob?.cancel()
+        _restTimerState.value = RestTimerState()
+    }
+
+    /**
+     * Add time to rest timer
+     */
+    fun addRestTime(seconds: Int) {
+        val current = _restTimerState.value
+        _restTimerState.value = current.copy(
+            remainingSeconds = current.remainingSeconds + seconds,
+            totalSeconds = current.totalSeconds + seconds
+        )
+    }
+
+    /**
+     * Close rest timer overlay
+     */
+    fun closeRestTimer() {
+        skipRestTimer()
+    }
+
     override fun onCleared() {
         super.onCleared()
         stopWorkoutTimer()
+        restTimerJob?.cancel()
     }
 }
 
@@ -554,3 +632,14 @@ sealed class WorkoutNavigationEvent {
     object NavigateBack : WorkoutNavigationEvent()
     data class NavigateToExerciseDetail(val exerciseId: Int) : WorkoutNavigationEvent()
 }
+
+/**
+ * Rest timer state
+ */
+data class RestTimerState(
+    val isActive: Boolean = false,
+    val remainingSeconds: Int = 0,
+    val totalSeconds: Int = 0,
+    val isPaused: Boolean = false,
+    val isComplete: Boolean = false
+)

@@ -33,6 +33,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.fitlog.presentation.navigation.FitLogDestinations
 import com.example.fitlog.presentation.screens.workout.components.ExerciseSection
+import com.example.fitlog.presentation.screens.workout.components.RestTimerOverlay
 import com.example.fitlog.presentation.screens.workout.components.WorkoutControls
 import com.example.fitlog.presentation.screens.workout.components.WorkoutHeader
 import com.example.fitlog.presentation.viewmodel.ActiveWorkoutViewModel
@@ -49,6 +50,7 @@ fun ActiveWorkoutScreen(
     viewModel: ActiveWorkoutViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val restTimerState by viewModel.restTimerState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
     // Auto-start workout if routineId provided and no active workout
@@ -143,6 +145,18 @@ fun ActiveWorkoutScreen(
                     )
                 }
             }
+
+            // Rest Timer Overlay (on top of everything)
+            RestTimerOverlay(
+                isVisible = restTimerState.isActive,
+                remainingSeconds = restTimerState.remainingSeconds,
+                totalSeconds = restTimerState.totalSeconds,
+                isPaused = restTimerState.isPaused,
+                onPauseResume = { viewModel.pauseResumeRestTimer() },
+                onSkip = { viewModel.skipRestTimer() },
+                onAddTime = { seconds -> viewModel.addRestTime(seconds) },
+                onClose = { viewModel.closeRestTimer() }
+            )
         }
     }
 }
