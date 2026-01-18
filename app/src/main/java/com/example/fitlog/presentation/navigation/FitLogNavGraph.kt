@@ -157,7 +157,13 @@ fun FitLogNavGraph(
             )
         }
 
-        
+        // Active Workout Exercise Picker
+        composable(FitLogDestinations.ACTIVE_WORKOUT_EXERCISE_PICKER) {
+            com.example.fitlog.presentation.screens.workout.ActiveWorkoutExercisePickerScreen(
+                navController = navController
+            )
+        }
+
         composable(FitLogDestinations.CALENDAR_VIEW) {
             PlaceholderScreen(title = "Calendar", navController = navController)
         }

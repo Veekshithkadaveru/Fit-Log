@@ -382,6 +382,37 @@ class ActiveWorkoutViewModel @Inject constructor(
     }
 
     /**
+     * Add an exercise to the active workout
+     * Creates an initial empty set for the exercise
+     */
+    fun addExerciseToWorkout(exerciseId: Int) {
+        viewModelScope.launch {
+            val workout = _uiState.value.currentWorkout ?: return@launch
+
+            try {
+                // Check if exercise already exists in workout
+                val exerciseAlreadyAdded = _uiState.value.workoutExercises
+                    .any { it.exercise.id == exerciseId }
+
+                if (exerciseAlreadyAdded) {
+                    _uiState.value = _uiState.value.copy(
+                        error = "Exercise already added to this workout"
+                    )
+                    return@launch
+                }
+
+                // Add an initial set for this exercise
+                // This will make it appear in the workout
+                addSet(exerciseId, autoFill = false)
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    error = "Failed to add exercise: ${e.message}"
+                )
+            }
+        }
+    }
+
+    /**
      * Reload exercises with updated set counts
      */
     private suspend fun reloadExercises() {
@@ -395,6 +426,15 @@ class ActiveWorkoutViewModel @Inject constructor(
      */
     fun clearError() {
         _uiState.value = _uiState.value.copy(error = null)
+    }
+
+    /**
+     * Navigate to exercise detail screen
+     */
+    fun navigateToExerciseDetail(exerciseId: Int) {
+        viewModelScope.launch {
+            _navigationEvent.send(WorkoutNavigationEvent.NavigateToExerciseDetail(exerciseId))
+        }
     }
 
     /**
@@ -601,15 +641,8 @@ data class ActiveWorkoutUiState(
     val completedSetsCount: Int
         get() = workoutExercises.sumOf { it.completedSets }
 
-    val totalSetsCount: Int
-        get() = workoutExercises.sumOf { it.sets.size } // Use actual sets count or target?
-        // Logic: if tracking live, maybe count completed vs total sets logged?
-        // Or keep targetSets as the goal.
-        // Let's keep total as sum of targetSets for now if that's the intention, 
-        // or sum of actual sets? The mock says "X/Y sets". Usually Current/Total.
-        // Let's use targetSets as the denominator for progress if available, otherwise actual count.
-        // For simplicity let's rely on what was there: 
-        // get() = workoutExercises.sumOf { it.targetSets }
+        val totalSetsCount: Int
+        get() = workoutExercises.sumOf { kotlin.math.max(it.targetSets, it.sets.size) }
 }
 
 /**
