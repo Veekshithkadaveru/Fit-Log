@@ -18,6 +18,7 @@ object FitLogDestinations {
     // Workout Destinations
     const val ACTIVE_WORKOUT = "active_workout"
     const val ACTIVE_WORKOUT_WITH_ROUTINE = "active_workout?routineId={routineId}"
+    const val ACTIVE_WORKOUT_EXERCISE_PICKER = "active_workout_exercise_picker"
     const val ROUTINE_EDITOR = "routine_editor/{routineId}"
     const val EXERCISE_PICKER = "exercise_picker/{routineId}"
     const val ROUTINE_LIST = "routine_list"

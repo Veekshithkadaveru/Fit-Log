@@ -10,10 +10,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -32,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.fitlog.presentation.navigation.FitLogDestinations
+import com.example.fitlog.presentation.navigation.FitLogRoutes
 import com.example.fitlog.presentation.screens.workout.components.ExerciseSection
 import com.example.fitlog.presentation.screens.workout.components.RestTimerOverlay
 import com.example.fitlog.presentation.screens.workout.components.WorkoutControls
@@ -75,7 +78,7 @@ fun ActiveWorkoutScreen(
                     navController.popBackStack()
                 }
                 is WorkoutNavigationEvent.NavigateToExerciseDetail -> {
-                    // Will be implemented in future PRs
+                    navController.navigate(FitLogRoutes.exerciseDetail(event.exerciseId))
                 }
             }
         }
@@ -141,7 +144,12 @@ fun ActiveWorkoutScreen(
                         onToggleSetCompleted = { setId -> viewModel.toggleSetCompleted(setId) },
                         onDeleteSet = { setId -> viewModel.deleteSet(setId) },
                         onDuplicateSet = { setId -> viewModel.duplicateSet(setId) },
-                        
+                        onAddExercise = {
+                            navController.navigate(FitLogDestinations.ACTIVE_WORKOUT_EXERCISE_PICKER)
+                        },
+                        onExerciseClick = { exerciseId ->
+                            viewModel.navigateToExerciseDetail(exerciseId)
+                        }
                     )
                 }
             }
@@ -176,50 +184,70 @@ private fun ActiveWorkoutContent(
     onToggleSetCompleted: (setId: Int) -> Unit,
     onDeleteSet: (setId: Int) -> Unit,
     onDuplicateSet: (setId: Int) -> Unit,
-    
+    onAddExercise: () -> Unit,
+    onExerciseClick: (exerciseId: Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(
+    Box(
         modifier = modifier.fillMaxSize()
     ) {
-        // Exercise List
-        LazyColumn(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth(),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+        Column(
+            modifier = Modifier.fillMaxSize()
         ) {
-            if (uiState.workoutExercises.isEmpty()) {
-                item {
-                    NoExercisesPlaceholder()
-                }
-            } else {
-                items(
-                    items = uiState.workoutExercises,
-                    key = { it.exercise.id }
-                ) { exercise ->
-                    ExerciseSection(
-                        exercise = exercise,
-                        sets = exercise.sets,
-                        onWeightChange = onUpdateSetWeight,
-                        onRepsChange = onUpdateSetReps,
-                        onSetCompleted = onToggleSetCompleted,
-                        onDeleteSet = onDeleteSet,
-                        onDuplicateSet = onDuplicateSet,
-                        
-                        onAddSet = { onAddSet(exercise.exercise.id) },
-                        onAddSetWithAutoFill = { onAddSetWithAutoFill(exercise.exercise.id) }
-                    )
+            // Exercise List
+            LazyColumn(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                if (uiState.workoutExercises.isEmpty()) {
+                    item {
+                        NoExercisesPlaceholder(onAddExercise = onAddExercise)
+                    }
+                } else {
+                    items(
+                        items = uiState.workoutExercises,
+                        key = { it.exercise.id }
+                    ) { exercise ->
+                        ExerciseSection(
+                            exercise = exercise,
+                            sets = exercise.sets,
+                            onWeightChange = onUpdateSetWeight,
+                            onRepsChange = onUpdateSetReps,
+                            onSetCompleted = onToggleSetCompleted,
+                            onDeleteSet = onDeleteSet,
+                            onDuplicateSet = onDuplicateSet,
+                            onAddSet = { onAddSet(exercise.exercise.id) },
+                            onAddSetWithAutoFill = { onAddSetWithAutoFill(exercise.exercise.id) },
+                            onExerciseClick = { onExerciseClick(exercise.exercise.id) }
+                        )
+                    }
                 }
             }
+
+            // Workout Controls at bottom
+            WorkoutControls(
+                onEndWorkout = onEndWorkout,
+                onDiscardWorkout = onDiscardWorkout
+            )
         }
 
-        // Workout Controls at bottom
-        WorkoutControls(
-            onEndWorkout = onEndWorkout,
-            onDiscardWorkout = onDiscardWorkout
-        )
+        // Floating Action Button to add exercises (only show when there are existing exercises)
+        if (uiState.workoutExercises.isNotEmpty()) {
+            FloatingActionButton(
+                onClick = onAddExercise,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(bottom = 80.dp, end = 16.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Add Exercise"
+                )
+            }
+        }
     }
 }
 
@@ -302,7 +330,9 @@ private fun EmptyWorkoutState(
  * Placeholder shown when workout has no exercises
  */
 @Composable
-private fun NoExercisesPlaceholder() {
+private fun NoExercisesPlaceholder(
+    onAddExercise: () -> Unit = {}
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -310,16 +340,37 @@ private fun NoExercisesPlaceholder() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        Icon(
+            imageVector = Icons.Default.FitnessCenter,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(16.dp)
+        )
+
         Text(
             text = "No exercises yet",
             style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurface
         )
         Text(
-            text = "Adding exercises will be available in PR #2",
+            text = "Add exercises to start logging your workout",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
         )
+
+        Button(
+            onClick = onAddExercise,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = null
+            )
+            Text(
+                text = "Add Exercise",
+                modifier = Modifier.padding(start = 8.dp)
+            )
+        }
     }
 }
