@@ -112,7 +112,9 @@ class ActiveWorkoutViewModel @Inject constructor(
                 )
 
                 val workoutId = workoutRepository.insertWorkout(newWorkout).toInt()
-                val createdWorkout = newWorkout.copy(id = workoutId)
+
+                // Reload workout from database to get it with all relationships
+                val createdWorkout = workoutRepository.getWorkoutById(workoutId) ?: newWorkout.copy(id = workoutId)
 
                 // Load routine name and exercises if applicable
                 val routineName = routineId?.let { id ->
@@ -203,7 +205,14 @@ class ActiveWorkoutViewModel @Inject constructor(
      */
     fun addSet(exerciseId: Int, autoFill: Boolean = false) {
         viewModelScope.launch {
-            val workout = _uiState.value.currentWorkout ?: return@launch
+            val workout = _uiState.value.currentWorkout
+
+            if (workout == null) {
+                _uiState.value = _uiState.value.copy(
+                    error = "No active workout found"
+                )
+                return@launch
+            }
 
             try {
                 // Find the next set order for this exercise
@@ -387,7 +396,14 @@ class ActiveWorkoutViewModel @Inject constructor(
      */
     fun addExerciseToWorkout(exerciseId: Int) {
         viewModelScope.launch {
-            val workout = _uiState.value.currentWorkout ?: return@launch
+            val workout = _uiState.value.currentWorkout
+
+            if (workout == null) {
+                _uiState.value = _uiState.value.copy(
+                    error = "No active workout found"
+                )
+                return@launch
+            }
 
             try {
                 // Check if exercise already exists in workout

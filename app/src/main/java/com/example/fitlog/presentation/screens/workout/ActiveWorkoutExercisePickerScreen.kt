@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.fitlog.domain.model.Exercise
+import com.example.fitlog.presentation.navigation.FitLogDestinations
 import com.example.fitlog.presentation.viewmodel.ActiveWorkoutViewModel
 import com.example.fitlog.presentation.viewmodel.ExerciseViewModel
 
@@ -46,7 +47,9 @@ import com.example.fitlog.presentation.viewmodel.ExerciseViewModel
 fun ActiveWorkoutExercisePickerScreen(
     navController: NavController,
     exerciseViewModel: ExerciseViewModel = hiltViewModel(),
-    workoutViewModel: ActiveWorkoutViewModel = hiltViewModel()
+    workoutViewModel: ActiveWorkoutViewModel = hiltViewModel(
+        navController.getBackStackEntry(FitLogDestinations.WORKOUT)
+    )
 ) {
     val exerciseState by exerciseViewModel.uiState.collectAsState()
 
