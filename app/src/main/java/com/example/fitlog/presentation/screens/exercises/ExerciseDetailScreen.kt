@@ -155,7 +155,7 @@ private fun ExerciseDetailContent(
                 contentDescription = exercise.name,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp),
+                    .height(360.dp),
                 fallbackIconSize = 80.dp
             )
         }
