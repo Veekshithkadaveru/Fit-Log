@@ -31,6 +31,7 @@ import com.example.fitlog.domain.model.Equipment
 import com.example.fitlog.domain.model.Exercise
 import com.example.fitlog.domain.model.ExerciseCategory
 import com.example.fitlog.domain.model.MuscleGroup
+import com.example.fitlog.presentation.components.ExerciseImage
 import com.example.fitlog.ui.theme.FitLogTheme
 
 @Composable
@@ -55,19 +56,14 @@ fun ExerciseCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Exercise thumbnail/icon
-            Box(
+            ExerciseImage(
+                thumbnailRes = exercise.thumbnailRes,
+                contentDescription = exercise.name,
                 modifier = Modifier
                     .size(48.dp)
                     .clip(RoundedCornerShape(8.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.FitnessCenter,
-                    contentDescription = "Exercise icon",
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(32.dp)
-                )
-            }
+                fallbackIconSize = 32.dp
+            )
 
             Spacer(modifier = Modifier.width(12.dp))
 

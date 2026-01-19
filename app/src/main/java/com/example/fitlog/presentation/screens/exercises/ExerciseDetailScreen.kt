@@ -46,6 +46,7 @@ import com.example.fitlog.domain.model.Equipment
 import com.example.fitlog.domain.model.Exercise
 import com.example.fitlog.domain.model.ExerciseCategory
 import com.example.fitlog.domain.model.MuscleGroup
+import com.example.fitlog.presentation.components.ExerciseImage
 import com.example.fitlog.presentation.screens.exercises.components.CategoryBadge
 import com.example.fitlog.presentation.screens.exercises.components.MuscleGroupChip
 import com.example.fitlog.ui.theme.FitLogTheme
@@ -149,19 +150,14 @@ private fun ExerciseDetailContent(
             modifier = Modifier.fillMaxWidth(),
             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
         ) {
-            Box(
+            ExerciseImage(
+                thumbnailRes = exercise.thumbnailRes,
+                contentDescription = exercise.name,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(200.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.FitnessCenter,
-                    contentDescription = "Exercise illustration",
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(80.dp)
-                )
-            }
+                fallbackIconSize = 80.dp
+            )
         }
 
         // Exercise info card

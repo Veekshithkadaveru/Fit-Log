@@ -89,19 +89,21 @@ class ExerciseLibraryViewModelSafe @Inject constructor(
         return listOf(
             Exercise(
                 id = 1,
-                name = "Bench Press",
+                name = "Barbell Bench Press",
                 primaryMuscle = MuscleGroup.CHEST,
                 secondaryMuscles = listOf(MuscleGroup.TRICEPS, MuscleGroup.SHOULDERS),
                 category = ExerciseCategory.COMPOUND,
-                equipment = Equipment.BARBELL
+                equipment = Equipment.BARBELL,
+                thumbnailRes = "ic_barbell_bench_press"
             ),
             Exercise(
                 id = 2,
-                name = "Squat",
+                name = "Squats",
                 primaryMuscle = MuscleGroup.LEGS,
                 secondaryMuscles = listOf(MuscleGroup.GLUTES, MuscleGroup.CORE),
                 category = ExerciseCategory.COMPOUND,
-                equipment = Equipment.BARBELL
+                equipment = Equipment.BARBELL,
+                thumbnailRes = "ic_squats"
             ),
             Exercise(
                 id = 3,
@@ -109,15 +111,17 @@ class ExerciseLibraryViewModelSafe @Inject constructor(
                 primaryMuscle = MuscleGroup.BACK,
                 secondaryMuscles = listOf(MuscleGroup.LEGS, MuscleGroup.GLUTES),
                 category = ExerciseCategory.COMPOUND,
-                equipment = Equipment.BARBELL
+                equipment = Equipment.BARBELL,
+                thumbnailRes = "ic_deadlift"
             ),
             Exercise(
                 id = 4,
-                name = "Pull-ups",
+                name = "Pull-Ups",
                 primaryMuscle = MuscleGroup.BACK,
                 secondaryMuscles = listOf(MuscleGroup.BICEPS),
                 category = ExerciseCategory.COMPOUND,
-                equipment = Equipment.BODYWEIGHT
+                equipment = Equipment.BODYWEIGHT,
+                thumbnailRes = "ic_pull_ups"
             ),
             Exercise(
                 id = 5,
@@ -125,7 +129,8 @@ class ExerciseLibraryViewModelSafe @Inject constructor(
                 primaryMuscle = MuscleGroup.SHOULDERS,
                 secondaryMuscles = listOf(MuscleGroup.TRICEPS, MuscleGroup.CORE),
                 category = ExerciseCategory.COMPOUND,
-                equipment = Equipment.BARBELL
+                equipment = Equipment.BARBELL,
+                thumbnailRes = "ic_overhead_press"
             ),
             Exercise(
                 id = 6,
@@ -133,7 +138,8 @@ class ExerciseLibraryViewModelSafe @Inject constructor(
                 primaryMuscle = MuscleGroup.BICEPS,
                 secondaryMuscles = emptyList(),
                 category = ExerciseCategory.ISOLATION,
-                equipment = Equipment.DUMBBELL
+                equipment = Equipment.DUMBBELL,
+                thumbnailRes = "ic_dumbbell_curls"
             )
         )
     }
