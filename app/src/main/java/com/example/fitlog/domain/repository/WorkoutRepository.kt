@@ -1,8 +1,6 @@
 package com.example.fitlog.domain.repository
 
-import com.example.fitlog.domain.model.CardioSession
-import com.example.fitlog.domain.model.Workout
-import com.example.fitlog.domain.model.WorkoutSet
+import com.example.fitlog.domain.model.*
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -85,5 +83,38 @@ interface WorkoutRepository {
     suspend fun getTotalVolumeInRange(startDate: Long, endDate: Long): Float?
 
     suspend fun getAverageWorkoutDuration(): Long?
+
+    // ==================== Muscle Group Analytics Operations ====================
+
+    suspend fun getTotalVolumeForMuscleInRange(
+        muscleGroup: MuscleGroup,
+        startDate: Long,
+        endDate: Long
+    ): Float?
+
+    suspend fun getTotalSetsForMuscleInRange(
+        muscleGroup: MuscleGroup,
+        startDate: Long,
+        endDate: Long
+    ): Int
+
+    suspend fun getWorkoutCountForMuscleInRange(
+        muscleGroup: MuscleGroup,
+        startDate: Long,
+        endDate: Long
+    ): Int
+
+    suspend fun getLastWorkoutDateForMuscle(muscleGroup: MuscleGroup): Long?
+
+    suspend fun getExerciseCountForMuscleInRange(
+        muscleGroup: MuscleGroup,
+        startDate: Long,
+        endDate: Long
+    ): Int
+
+    suspend fun getActiveMuscleGroupsInRange(
+        startDate: Long,
+        endDate: Long
+    ): List<MuscleGroup>
 }
 

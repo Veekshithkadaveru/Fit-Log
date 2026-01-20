@@ -132,5 +132,90 @@ interface WorkoutDao {
 
     @Query("SELECT AVG(endTime - startTime) FROM workouts WHERE endTime IS NOT NULL")
     suspend fun getAverageWorkoutDuration(): Long?
+
+    // Muscle Group Analytics queries
+    @Query("""
+        SELECT SUM(ws.weight * ws.reps) FROM workout_sets ws
+        INNER JOIN exercises e ON ws.exerciseId = e.id
+        INNER JOIN workouts w ON ws.workoutId = w.id
+        WHERE e.primaryMuscle = :muscleGroup
+        AND w.startTime >= :startDate
+        AND w.startTime <= :endDate
+        AND ws.isCompleted = 1
+    """)
+    suspend fun getTotalVolumeForMuscleInRange(
+        muscleGroup: String,
+        startDate: Long,
+        endDate: Long
+    ): Float?
+
+    @Query("""
+        SELECT COUNT(DISTINCT ws.id) FROM workout_sets ws
+        INNER JOIN exercises e ON ws.exerciseId = e.id
+        INNER JOIN workouts w ON ws.workoutId = w.id
+        WHERE e.primaryMuscle = :muscleGroup
+        AND w.startTime >= :startDate
+        AND w.startTime <= :endDate
+        AND ws.isCompleted = 1
+    """)
+    suspend fun getTotalSetsForMuscleInRange(
+        muscleGroup: String,
+        startDate: Long,
+        endDate: Long
+    ): Int
+
+    @Query("""
+        SELECT COUNT(DISTINCT w.id) FROM workouts w
+        INNER JOIN workout_sets ws ON ws.workoutId = w.id
+        INNER JOIN exercises e ON ws.exerciseId = e.id
+        WHERE e.primaryMuscle = :muscleGroup
+        AND w.startTime >= :startDate
+        AND w.startTime <= :endDate
+        AND ws.isCompleted = 1
+        AND w.endTime IS NOT NULL
+    """)
+    suspend fun getWorkoutCountForMuscleInRange(
+        muscleGroup: String,
+        startDate: Long,
+        endDate: Long
+    ): Int
+
+    @Query("""
+        SELECT MAX(w.startTime) FROM workouts w
+        INNER JOIN workout_sets ws ON ws.workoutId = w.id
+        INNER JOIN exercises e ON ws.exerciseId = e.id
+        WHERE e.primaryMuscle = :muscleGroup
+        AND ws.isCompleted = 1
+        AND w.endTime IS NOT NULL
+    """)
+    suspend fun getLastWorkoutDateForMuscle(muscleGroup: String): Long?
+
+    @Query("""
+        SELECT COUNT(DISTINCT ws.exerciseId) FROM workout_sets ws
+        INNER JOIN exercises e ON ws.exerciseId = e.id
+        INNER JOIN workouts w ON ws.workoutId = w.id
+        WHERE e.primaryMuscle = :muscleGroup
+        AND w.startTime >= :startDate
+        AND w.startTime <= :endDate
+        AND ws.isCompleted = 1
+    """)
+    suspend fun getExerciseCountForMuscleInRange(
+        muscleGroup: String,
+        startDate: Long,
+        endDate: Long
+    ): Int
+
+    @Query("""
+        SELECT DISTINCT e.primaryMuscle FROM exercises e
+        INNER JOIN workout_sets ws ON ws.exerciseId = e.id
+        INNER JOIN workouts w ON ws.workoutId = w.id
+        WHERE w.startTime >= :startDate
+        AND w.startTime <= :endDate
+        AND ws.isCompleted = 1
+    """)
+    suspend fun getActiveMuscleGroupsInRange(
+        startDate: Long,
+        endDate: Long
+    ): List<String>
 }
 
