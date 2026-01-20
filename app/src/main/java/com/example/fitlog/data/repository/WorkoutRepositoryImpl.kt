@@ -7,9 +7,7 @@ import com.example.fitlog.data.mapper.toDomainModels
 import com.example.fitlog.data.mapper.toEntity
 import com.example.fitlog.data.mapper.toWorkoutSetDomainModels
 import com.example.fitlog.data.mapper.toWorkoutSetEntities
-import com.example.fitlog.domain.model.CardioSession
-import com.example.fitlog.domain.model.Workout
-import com.example.fitlog.domain.model.WorkoutSet
+import com.example.fitlog.domain.model.*
 import com.example.fitlog.domain.repository.WorkoutRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -185,6 +183,58 @@ class WorkoutRepositoryImpl @Inject constructor(
 
     override suspend fun getAverageWorkoutDuration(): Long? {
         return workoutDao.getAverageWorkoutDuration()
+    }
+
+    // ==================== Muscle Group Analytics Operations ====================
+
+    override suspend fun getTotalVolumeForMuscleInRange(
+        muscleGroup: MuscleGroup,
+        startDate: Long,
+        endDate: Long
+    ): Float? {
+        return workoutDao.getTotalVolumeForMuscleInRange(muscleGroup.name, startDate, endDate)
+    }
+
+    override suspend fun getTotalSetsForMuscleInRange(
+        muscleGroup: MuscleGroup,
+        startDate: Long,
+        endDate: Long
+    ): Int {
+        return workoutDao.getTotalSetsForMuscleInRange(muscleGroup.name, startDate, endDate)
+    }
+
+    override suspend fun getWorkoutCountForMuscleInRange(
+        muscleGroup: MuscleGroup,
+        startDate: Long,
+        endDate: Long
+    ): Int {
+        return workoutDao.getWorkoutCountForMuscleInRange(muscleGroup.name, startDate, endDate)
+    }
+
+    override suspend fun getLastWorkoutDateForMuscle(muscleGroup: MuscleGroup): Long? {
+        return workoutDao.getLastWorkoutDateForMuscle(muscleGroup.name)
+    }
+
+    override suspend fun getExerciseCountForMuscleInRange(
+        muscleGroup: MuscleGroup,
+        startDate: Long,
+        endDate: Long
+    ): Int {
+        return workoutDao.getExerciseCountForMuscleInRange(muscleGroup.name, startDate, endDate)
+    }
+
+    override suspend fun getActiveMuscleGroupsInRange(
+        startDate: Long,
+        endDate: Long
+    ): List<MuscleGroup> {
+        return workoutDao.getActiveMuscleGroupsInRange(startDate, endDate)
+            .mapNotNull { muscleGroupName ->
+                try {
+                    MuscleGroup.valueOf(muscleGroupName)
+                } catch (e: IllegalArgumentException) {
+                    null
+                }
+            }
     }
 }
 
