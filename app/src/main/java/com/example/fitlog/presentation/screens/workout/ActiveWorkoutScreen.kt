@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
@@ -41,6 +42,7 @@ import com.example.fitlog.presentation.screens.workout.components.WorkoutControl
 import com.example.fitlog.presentation.screens.workout.components.WorkoutHeader
 import com.example.fitlog.presentation.viewmodel.ActiveWorkoutViewModel
 import com.example.fitlog.presentation.viewmodel.WorkoutNavigationEvent
+import com.example.fitlog.presentation.screens.workout.components.MusclesTrainedPanel
 
 /**
  * Main screen for active workout tracking
@@ -124,6 +126,9 @@ fun ActiveWorkoutScreen(
                         onStartFromRoutine = {
                             navController.navigate(FitLogDestinations.ROUTINE_LIST)
                         },
+                        onViewAnalytics = {
+                            navController.navigate(FitLogDestinations.MUSCLE_ANALYTICS)
+                        },
                         modifier = Modifier.align(Alignment.Center)
                     )
                 }
@@ -202,6 +207,15 @@ private fun ActiveWorkoutContent(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                // Muscles Trained Summary
+                if (uiState.workoutExercises.isNotEmpty()) {
+                    item {
+                        MusclesTrainedPanel(
+                            exercises = uiState.workoutExercises
+                        )
+                    }
+                }
+
                 if (uiState.workoutExercises.isEmpty()) {
                     item {
                         NoExercisesPlaceholder(onAddExercise = onAddExercise)
@@ -258,6 +272,7 @@ private fun ActiveWorkoutContent(
 private fun EmptyWorkoutState(
     onQuickStart: () -> Unit,
     onStartFromRoutine: () -> Unit,
+    onViewAnalytics: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -319,6 +334,21 @@ private fun EmptyWorkoutState(
                 )
                 Text(
                     text = "Start from Routine",
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+            }
+
+            Button(
+                onClick = onViewAnalytics,
+                modifier = Modifier.fillMaxWidth(),
+                colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors()
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Info, // Fallback or Assessment if available. Let's use Info for safety or Assessment.
+                    contentDescription = null
+                )
+                Text(
+                    text = "Muscle Analytics",
                     modifier = Modifier.padding(start = 8.dp)
                 )
             }

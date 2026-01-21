@@ -167,6 +167,12 @@ fun FitLogNavGraph(
         composable(FitLogDestinations.CALENDAR_VIEW) {
             PlaceholderScreen(title = "Calendar", navController = navController)
         }
+
+        composable(FitLogDestinations.MUSCLE_ANALYTICS) {
+            com.example.fitlog.presentation.screens.analytics.MuscleAnalyticsScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
         
         composable(FitLogDestinations.PREMIUM) {
             PlaceholderScreen(title = "Premium", navController = navController)

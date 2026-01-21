@@ -28,6 +28,9 @@ object FitLogDestinations {
     const val WORKOUT_DETAIL = "workout_detail/{workoutId}"
     const val CALENDAR_VIEW = "calendar_view"
     
+    // Analytics Destinations
+    const val MUSCLE_ANALYTICS = "muscle_analytics"
+    
     // Settings Destinations
     const val PREMIUM = "premium"
     const val EXPORT_DATA = "export_data"
