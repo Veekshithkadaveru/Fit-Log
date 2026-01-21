@@ -3,11 +3,13 @@ package com.example.fitlog.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fitlog.domain.model.Exercise
+import com.example.fitlog.domain.model.PRCheckResult
 import com.example.fitlog.domain.model.Workout
 import com.example.fitlog.domain.model.WorkoutSet
 import com.example.fitlog.domain.repository.ExerciseRepository
 import com.example.fitlog.domain.repository.RoutineRepository
 import com.example.fitlog.domain.repository.WorkoutRepository
+import com.example.fitlog.domain.usecase.PRDetectionUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -24,7 +26,8 @@ import javax.inject.Inject
 class ActiveWorkoutViewModel @Inject constructor(
     private val workoutRepository: WorkoutRepository,
     private val routineRepository: RoutineRepository,
-    private val exerciseRepository: ExerciseRepository
+    private val exerciseRepository: ExerciseRepository,
+    private val prDetectionUseCase: PRDetectionUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ActiveWorkoutUiState())
@@ -32,6 +35,10 @@ class ActiveWorkoutViewModel @Inject constructor(
 
     private val _navigationEvent = Channel<WorkoutNavigationEvent>()
     val navigationEvent = _navigationEvent.receiveAsFlow()
+
+    // PR Event channel for showing PR celebrations
+    private val _prEvent = Channel<PREvent>()
+    val prEvent = _prEvent.receiveAsFlow()
 
     private var timerJob: Job? = null
     private var restTimerJob: Job? = null
@@ -335,7 +342,7 @@ class ActiveWorkoutViewModel @Inject constructor(
     }
 
     /**
-     * Toggle set completion status and auto-start rest timer
+     * Toggle set completion status, check for PRs, and auto-start rest timer
      */
     fun toggleSetCompleted(setId: Int) {
         viewModelScope.launch {
@@ -343,7 +350,42 @@ class ActiveWorkoutViewModel @Inject constructor(
 
             try {
                 val setToUpdate = workout.sets.find { it.id == setId } ?: return@launch
-                val updatedSet = setToUpdate.copy(isCompleted = !setToUpdate.isCompleted)
+                val isCompleting = !setToUpdate.isCompleted
+
+                var updatedSet = setToUpdate.copy(isCompleted = isCompleting)
+
+                // Check for PR when completing a set with valid weight and reps
+                if (isCompleting && setToUpdate.weight > 0 && setToUpdate.reps > 0) {
+                    val prResult = prDetectionUseCase.checkAndUpdatePR(
+                        exerciseId = setToUpdate.exerciseId,
+                        weight = setToUpdate.weight,
+                        reps = setToUpdate.reps
+                    )
+
+                    if (prResult.isAnyPR) {
+                        // Mark this set as a PR
+                        updatedSet = updatedSet.copy(isPR = true)
+
+                        // Get exercise name for the PR event
+                        val exercise = exerciseRepository.getExerciseById(setToUpdate.exerciseId)
+                        val exerciseName = exercise?.name ?: "Exercise"
+
+                        // Send PR celebration event
+                        _prEvent.send(
+                            PREvent(
+                                exerciseName = exerciseName,
+                                weight = setToUpdate.weight,
+                                reps = setToUpdate.reps,
+                                prResult = prResult
+                            )
+                        )
+
+                        // Track PR in session state
+                        _uiState.value = _uiState.value.copy(
+                            sessionPRCount = _uiState.value.sessionPRCount + 1
+                        )
+                    }
+                }
 
                 workoutRepository.updateSet(updatedSet)
 
@@ -357,7 +399,7 @@ class ActiveWorkoutViewModel @Inject constructor(
                 reloadExercises()
 
                 // Auto-start rest timer when completing a set (not when uncompleting)
-                if (updatedSet.isCompleted) {
+                if (isCompleting) {
                     startRestTimer(90) // Default 90 seconds
                 }
             } catch (e: Exception) {
@@ -500,9 +542,7 @@ class ActiveWorkoutViewModel @Inject constructor(
     /**
      * Load exercises for an existing workout
      */
-    /**
-     * Load exercises for an existing workout
-     */
+
     private suspend fun loadExercisesForWorkout(workout: Workout): List<WorkoutExerciseWithDetails> {
         val existingSetsByExercise = workout.sets.groupBy { it.exerciseId }
         val routineId = workout.routineId
@@ -554,16 +594,6 @@ class ActiveWorkoutViewModel @Inject constructor(
 
         return (fromRoutine + fromExtras).sortedBy { it.orderIndex }
     }
-
-
-
-
-
-
-
-
-
-
 
     /**
      * Start rest timer with given duration
@@ -649,7 +679,8 @@ data class ActiveWorkoutUiState(
     val isWorkoutActive: Boolean = false,
     val routineName: String? = null,
     val workoutExercises: List<WorkoutExerciseWithDetails> = emptyList(),
-    val error: String? = null
+    val error: String? = null,
+    val sessionPRCount: Int = 0
 ) {
     val exerciseCount: Int
         get() = workoutExercises.size
@@ -657,7 +688,7 @@ data class ActiveWorkoutUiState(
     val completedSetsCount: Int
         get() = workoutExercises.sumOf { it.completedSets }
 
-        val totalSetsCount: Int
+    val totalSetsCount: Int
         get() = workoutExercises.sumOf { kotlin.math.max(it.targetSets, it.sets.size) }
 }
 
@@ -691,4 +722,14 @@ data class RestTimerState(
     val totalSeconds: Int = 0,
     val isPaused: Boolean = false,
     val isComplete: Boolean = false
+)
+
+/**
+ * PR event for celebration/notification
+ */
+data class PREvent(
+    val exerciseName: String,
+    val weight: Float,
+    val reps: Int,
+    val prResult: PRCheckResult
 )
