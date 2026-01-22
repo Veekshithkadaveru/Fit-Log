@@ -27,7 +27,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -41,8 +43,11 @@ import com.example.fitlog.presentation.screens.workout.components.RestTimerOverl
 import com.example.fitlog.presentation.screens.workout.components.WorkoutControls
 import com.example.fitlog.presentation.screens.workout.components.WorkoutHeader
 import com.example.fitlog.presentation.viewmodel.ActiveWorkoutViewModel
+import com.example.fitlog.presentation.viewmodel.PREvent
 import com.example.fitlog.presentation.viewmodel.WorkoutNavigationEvent
 import com.example.fitlog.presentation.screens.workout.components.MusclesTrainedPanel
+import com.example.fitlog.presentation.screens.workout.components.PRToastNotification
+import com.example.fitlog.presentation.screens.workout.components.WorkoutSummaryDialog
 
 /**
  * Main screen for active workout tracking
@@ -86,11 +91,17 @@ fun ActiveWorkoutScreen(
         }
     }
 
-    // Show error messages
     LaunchedEffect(uiState.error) {
         uiState.error?.let { error ->
             snackbarHostState.showSnackbar(error)
             viewModel.clearError()
+        }
+    }
+
+    // Listen for PR events and show celebration
+    LaunchedEffect(Unit) {
+        viewModel.prEvent.collect { prEvent ->
+            currentPREvent = prEvent
         }
     }
 
@@ -102,6 +113,7 @@ fun ActiveWorkoutScreen(
                     routineName = uiState.routineName,
                     exerciseCount = uiState.exerciseCount,
                     totalSets = uiState.totalSetsCount,
+                    prCount = uiState.sessionPRCount,
                     onBackClick = { navController.popBackStack() }
                 )
             }
@@ -159,6 +171,21 @@ fun ActiveWorkoutScreen(
                 }
             }
 
+            // PR Toast Notification (positioned at top)
+            currentPREvent?.let { prEvent ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.TopCenter)
+                        .padding(top = 8.dp)
+                ) {
+                    PRToastNotification(
+                        prEvent = prEvent,
+                        onDismiss = { currentPREvent = null }
+                    )
+                }
+            }
+
             // Rest Timer Overlay (on top of everything)
             RestTimerOverlay(
                 isVisible = restTimerState.isActive,
@@ -171,6 +198,16 @@ fun ActiveWorkoutScreen(
                 onClose = { viewModel.closeRestTimer() }
             )
         }
+    }
+
+    // Workout Summary Dialog (shown after workout ends if there are PRs)
+    if (uiState.showWorkoutSummary) {
+        WorkoutSummaryDialog(
+            sessionPRs = uiState.sessionPRs,
+            workoutDuration = uiState.workoutDuration,
+            totalSets = uiState.totalSetsCount,
+            onDismiss = { viewModel.dismissWorkoutSummary() }
+        )
     }
 }
 
@@ -344,7 +381,7 @@ private fun EmptyWorkoutState(
                 colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors()
             ) {
                 Icon(
-                    imageVector = Icons.Default.Info, // Fallback or Assessment if available. Let's use Info for safety or Assessment.
+                    imageVector = Icons.Default.Info,
                     contentDescription = null
                 )
                 Text(

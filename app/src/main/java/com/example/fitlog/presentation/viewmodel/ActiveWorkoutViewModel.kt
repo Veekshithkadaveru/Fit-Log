@@ -99,7 +99,6 @@ class ActiveWorkoutViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
             try {
-                // Check if there's already an active workout
                 val existingWorkout = workoutRepository.getActiveWorkout()
                 if (existingWorkout != null) {
                     _uiState.value = _uiState.value.copy(
@@ -109,7 +108,6 @@ class ActiveWorkoutViewModel @Inject constructor(
                     return@launch
                 }
 
-                // Create new workout
                 val newWorkout = Workout(
                     startTime = System.currentTimeMillis(),
                     endTime = null,
@@ -120,7 +118,6 @@ class ActiveWorkoutViewModel @Inject constructor(
 
                 val workoutId = workoutRepository.insertWorkout(newWorkout).toInt()
 
-                // Reload workout from database to get it with all relationships
                 val createdWorkout = workoutRepository.getWorkoutById(workoutId) ?: newWorkout.copy(id = workoutId)
 
                 // Load routine name and exercises if applicable
@@ -158,29 +155,44 @@ class ActiveWorkoutViewModel @Inject constructor(
     fun endWorkout() {
         viewModelScope.launch {
             val currentWorkout = _uiState.value.currentWorkout ?: return@launch
+            val sessionPRs = _uiState.value.sessionPRs
 
             _uiState.value = _uiState.value.copy(isLoading = true)
             try {
-                // Stop timer first
                 stopWorkoutTimer()
 
-                // Update workout with end time
                 val completedWorkout = currentWorkout.copy(
                     endTime = System.currentTimeMillis()
                 )
                 workoutRepository.updateWorkout(completedWorkout)
 
-                // Reset state
-                _uiState.value = ActiveWorkoutUiState(isLoading = false)
-
-                // Navigate to history or back
-                _navigationEvent.send(WorkoutNavigationEvent.NavigateToHistory)
+                // If there were PRs, show summary dialog before navigating
+                if (sessionPRs.isNotEmpty()) {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        showWorkoutSummary = true
+                    )
+                } else {
+                    // No PRs, navigate directly
+                    _uiState.value = ActiveWorkoutUiState(isLoading = false)
+                    _navigationEvent.send(WorkoutNavigationEvent.NavigateToHistory)
+                }
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     error = "Failed to end workout: ${e.message}"
                 )
             }
+        }
+    }
+
+    /**
+     * Dismiss workout summary and navigate to history
+     */
+    fun dismissWorkoutSummary() {
+        viewModelScope.launch {
+            _uiState.value = ActiveWorkoutUiState(isLoading = false)
+            _navigationEvent.send(WorkoutNavigationEvent.NavigateToHistory)
         }
     }
 
@@ -370,19 +382,20 @@ class ActiveWorkoutViewModel @Inject constructor(
                         val exercise = exerciseRepository.getExerciseById(setToUpdate.exerciseId)
                         val exerciseName = exercise?.name ?: "Exercise"
 
-                        // Send PR celebration event
-                        _prEvent.send(
-                            PREvent(
-                                exerciseName = exerciseName,
-                                weight = setToUpdate.weight,
-                                reps = setToUpdate.reps,
-                                prResult = prResult
-                            )
+                        val prEvent = PREvent(
+                            exerciseName = exerciseName,
+                            weight = setToUpdate.weight,
+                            reps = setToUpdate.reps,
+                            prResult = prResult
                         )
 
-                        // Track PR in session state
+                        // Send PR event for toast notification
+                        _prEvent.send(prEvent)
+
+                        // Track PR in session state for end-of-workout summary
                         _uiState.value = _uiState.value.copy(
-                            sessionPRCount = _uiState.value.sessionPRCount + 1
+                            sessionPRCount = _uiState.value.sessionPRCount + 1,
+                            sessionPRs = _uiState.value.sessionPRs + prEvent
                         )
                     }
                 }
@@ -680,7 +693,9 @@ data class ActiveWorkoutUiState(
     val routineName: String? = null,
     val workoutExercises: List<WorkoutExerciseWithDetails> = emptyList(),
     val error: String? = null,
-    val sessionPRCount: Int = 0
+    val sessionPRCount: Int = 0,
+    val sessionPRs: List<PREvent> = emptyList(),
+    val showWorkoutSummary: Boolean = false
 ) {
     val exerciseCount: Int
         get() = workoutExercises.size

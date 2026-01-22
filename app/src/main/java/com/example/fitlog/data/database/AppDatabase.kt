@@ -27,7 +27,7 @@ import com.example.fitlog.data.database.entity.WorkoutSetEntity
         BodyweightEntity::class,
         PersonalRecordEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {

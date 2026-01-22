@@ -15,7 +15,7 @@ import androidx.room.PrimaryKey
             onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [Index("exerciseId")]
+    indices = [Index(value = ["exerciseId"], unique = true)]
 )
 data class PersonalRecordEntity(
     @PrimaryKey(autoGenerate = true)
