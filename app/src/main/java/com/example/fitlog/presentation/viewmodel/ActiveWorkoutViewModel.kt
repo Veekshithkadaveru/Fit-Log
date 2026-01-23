@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fitlog.domain.model.Exercise
 import com.example.fitlog.domain.model.PRCheckResult
+import com.example.fitlog.domain.model.RepRange
+import com.example.fitlog.domain.model.RepRangePRResult
 import com.example.fitlog.domain.model.Workout
 import com.example.fitlog.domain.model.WorkoutSet
 import com.example.fitlog.domain.repository.ExerciseRepository
@@ -368,13 +370,16 @@ class ActiveWorkoutViewModel @Inject constructor(
 
                 // Check for PR when completing a set with valid weight and reps
                 if (isCompleting && setToUpdate.weight > 0 && setToUpdate.reps > 0) {
-                    val prResult = prDetectionUseCase.checkAndUpdatePR(
+                    val (prResult, repRangePRResult) = prDetectionUseCase.checkAndUpdatePRWithRepRange(
                         exerciseId = setToUpdate.exerciseId,
                         weight = setToUpdate.weight,
                         reps = setToUpdate.reps
                     )
 
-                    if (prResult.isAnyPR) {
+                    // A PR is achieved if either legacy PR or rep-range PR is new
+                    val isAnyPR = prResult.isAnyPR || repRangePRResult.isAnyPR
+
+                    if (isAnyPR) {
                         // Mark this set as a PR
                         updatedSet = updatedSet.copy(isPR = true)
 
@@ -386,7 +391,8 @@ class ActiveWorkoutViewModel @Inject constructor(
                             exerciseName = exerciseName,
                             weight = setToUpdate.weight,
                             reps = setToUpdate.reps,
-                            prResult = prResult
+                            prResult = prResult,
+                            repRangePRResult = repRangePRResult
                         )
 
                         // Send PR event for toast notification
@@ -746,5 +752,24 @@ data class PREvent(
     val exerciseName: String,
     val weight: Float,
     val reps: Int,
-    val prResult: PRCheckResult
-)
+    val prResult: PRCheckResult,
+    val repRangePRResult: RepRangePRResult? = null
+) {
+    /**
+     * Get the rep range display name (e.g., "5RM", "10RM")
+     */
+    val repRangeDisplayName: String
+        get() = repRangePRResult?.repRange?.displayName ?: RepRange.fromReps(reps).displayName
+
+    /**
+     * Check if this is a new estimated 1RM PR
+     */
+    val isNew1RMPR: Boolean
+        get() = repRangePRResult?.isNew1RMPR == true
+
+    /**
+     * Get the estimated 1RM value
+     */
+    val estimated1RM: Float
+        get() = repRangePRResult?.newEstimated1RM ?: 0f
+}

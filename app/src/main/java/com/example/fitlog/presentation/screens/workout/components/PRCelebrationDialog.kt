@@ -487,17 +487,45 @@ fun PRToastNotification(
             Column(
                 modifier = Modifier.weight(1f)
             ) {
-                Text(
-                    text = "NEW PR!",
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "NEW ${prEvent.repRangeDisplayName} PR!",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                    // Show 1RM badge if it's also a new estimated 1RM
+                    if (prEvent.isNew1RMPR && prEvent.repRangeDisplayName != "1RM") {
+                        Surface(
+                            color = Color.White.copy(alpha = 0.3f),
+                            shape = RoundedCornerShape(4.dp)
+                        ) {
+                            Text(
+                                text = "NEW 1RM",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+                }
                 Text(
                     text = "${prEvent.exerciseName}: ${prEvent.weight.toInt()} lbs × ${prEvent.reps}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.White.copy(alpha = 0.9f)
                 )
+                // Show estimated 1RM if available
+                if (prEvent.estimated1RM > 0) {
+                    Text(
+                        text = "Est. 1RM: ${prEvent.estimated1RM.toInt()} lbs",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.White.copy(alpha = 0.7f)
+                    )
+                }
             }
 
             // Close button
@@ -725,17 +753,44 @@ private fun PRSummaryItem(prEvent: PREvent) {
             Column(
                 modifier = Modifier.weight(1f)
             ) {
-                Text(
-                    text = prEvent.exerciseName,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    color = PRGoldDark
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = prEvent.exerciseName,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = PRGoldDark
+                    )
+                    // Rep range badge
+                    Surface(
+                        color = PRGoldDark.copy(alpha = 0.2f),
+                        shape = RoundedCornerShape(4.dp)
+                    ) {
+                        Text(
+                            text = prEvent.repRangeDisplayName,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = PRGoldDark,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+                }
                 Text(
                     text = "${prEvent.weight.toInt()} lbs × ${prEvent.reps} reps",
                     style = MaterialTheme.typography.bodyMedium,
                     color = PRGoldDark.copy(alpha = 0.8f)
                 )
+                // Show estimated 1RM if it's also a new 1RM PR
+                if (prEvent.isNew1RMPR && prEvent.estimated1RM > 0) {
+                    Text(
+                        text = "New Est. 1RM: ${prEvent.estimated1RM.toInt()} lbs",
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = PRGoldDark.copy(alpha = 0.7f)
+                    )
+                }
             }
         }
     }

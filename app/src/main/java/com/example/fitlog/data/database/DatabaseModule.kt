@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.example.fitlog.data.database.dao.BodyweightDao
 import com.example.fitlog.data.database.dao.ExerciseDao
 import com.example.fitlog.data.database.dao.PersonalRecordDao
+import com.example.fitlog.data.database.dao.RepRangeRecordDao
 import com.example.fitlog.data.database.dao.RoutineDao
 import com.example.fitlog.data.database.dao.WorkoutDao
 import dagger.Module
@@ -60,6 +61,12 @@ object DatabaseModule {
     @Singleton
     fun providePersonalRecordDao(database: AppDatabase): PersonalRecordDao {
         return database.personalRecordDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideRepRangeRecordDao(database: AppDatabase): RepRangeRecordDao {
+        return database.repRangeRecordDao()
     }
 }
 
