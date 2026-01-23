@@ -5,12 +5,14 @@ import androidx.room.RoomDatabase
 import com.example.fitlog.data.database.dao.BodyweightDao
 import com.example.fitlog.data.database.dao.ExerciseDao
 import com.example.fitlog.data.database.dao.PersonalRecordDao
+import com.example.fitlog.data.database.dao.RepRangeRecordDao
 import com.example.fitlog.data.database.dao.RoutineDao
 import com.example.fitlog.data.database.dao.WorkoutDao
 import com.example.fitlog.data.database.entity.BodyweightEntity
 import com.example.fitlog.data.database.entity.CardioSessionEntity
 import com.example.fitlog.data.database.entity.ExerciseEntity
 import com.example.fitlog.data.database.entity.PersonalRecordEntity
+import com.example.fitlog.data.database.entity.RepRangeRecordEntity
 import com.example.fitlog.data.database.entity.RoutineEntity
 import com.example.fitlog.data.database.entity.RoutineExerciseEntity
 import com.example.fitlog.data.database.entity.WorkoutEntity
@@ -25,9 +27,10 @@ import com.example.fitlog.data.database.entity.WorkoutSetEntity
         WorkoutSetEntity::class,
         CardioSessionEntity::class,
         BodyweightEntity::class,
-        PersonalRecordEntity::class
+        PersonalRecordEntity::class,
+        RepRangeRecordEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -37,6 +40,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun workoutDao(): WorkoutDao
     abstract fun bodyweightDao(): BodyweightDao
     abstract fun personalRecordDao(): PersonalRecordDao
+    abstract fun repRangeRecordDao(): RepRangeRecordDao
 
     companion object {
         const val DATABASE_NAME = "fitlog_database"

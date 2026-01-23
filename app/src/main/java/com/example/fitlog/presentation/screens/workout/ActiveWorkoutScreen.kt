@@ -62,6 +62,7 @@ fun ActiveWorkoutScreen(
     val uiState by viewModel.uiState.collectAsState()
     val restTimerState by viewModel.restTimerState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    var currentPREvent by remember { mutableStateOf<PREvent?>(null) }
 
     // Auto-start workout if routineId provided and no active workout
     LaunchedEffect(routineId, uiState.isLoading, uiState.isWorkoutActive) {
