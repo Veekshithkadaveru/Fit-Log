@@ -10,6 +10,7 @@ import androidx.navigation.navArgument
 import com.example.fitlog.presentation.screens.PlaceholderScreen
 import com.example.fitlog.presentation.screens.exercises.ExerciseDetailScreen
 import com.example.fitlog.presentation.screens.exercises.ExerciseLibraryScreen
+import com.example.fitlog.presentation.screens.progress.ProgressDashboardScreen
 
 /**
  * Main navigation graph for the FitLog app
@@ -28,7 +29,7 @@ fun FitLogNavGraph(
         
         // Bottom Navigation Screens
         composable(FitLogDestinations.HOME) {
-            PlaceholderScreen(title = "Home", navController = navController)
+            ProgressDashboardScreen()
         }
         
         composable(FitLogDestinations.WORKOUT) {
