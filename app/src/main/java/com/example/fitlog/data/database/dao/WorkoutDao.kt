@@ -217,5 +217,199 @@ interface WorkoutDao {
         startDate: Long,
         endDate: Long
     ): List<String>
+
+    // ==================== Progress Chart Analytics Queries ====================
+
+    /**
+     * Get max weight lifted per day for a specific exercise within a date range.
+     * Used for exercise progress line charts.
+     */
+    @Query("""
+        SELECT w.startTime as date, MAX(ws.weight) as maxWeight
+        FROM workout_sets ws
+        INNER JOIN workouts w ON ws.workoutId = w.id
+        WHERE ws.exerciseId = :exerciseId
+        AND ws.isCompleted = 1
+        AND w.startTime >= :startDate
+        AND w.startTime <= :endDate
+        AND w.endTime IS NOT NULL
+        GROUP BY date(w.startTime / 1000, 'unixepoch', 'localtime')
+        ORDER BY w.startTime ASC
+    """)
+    suspend fun getMaxWeightProgressForExercise(
+        exerciseId: Int,
+        startDate: Long,
+        endDate: Long
+    ): List<WeightDatePoint>
+
+    /**
+     * Get volume (weight × reps) per day for a specific exercise within a date range.
+     * Used for exercise volume progression charts.
+     */
+    @Query("""
+        SELECT w.startTime as date, SUM(ws.weight * ws.reps) as volume
+        FROM workout_sets ws
+        INNER JOIN workouts w ON ws.workoutId = w.id
+        WHERE ws.exerciseId = :exerciseId
+        AND ws.isCompleted = 1
+        AND w.startTime >= :startDate
+        AND w.startTime <= :endDate
+        AND w.endTime IS NOT NULL
+        GROUP BY date(w.startTime / 1000, 'unixepoch', 'localtime')
+        ORDER BY w.startTime ASC
+    """)
+    suspend fun getVolumeProgressForExercise(
+        exerciseId: Int,
+        startDate: Long,
+        endDate: Long
+    ): List<VolumeDatePoint>
+
+    /**
+     * Get total volume per day across all exercises within a date range.
+     * Used for overall volume trend line chart.
+     */
+    @Query("""
+        SELECT w.startTime as date, SUM(ws.weight * ws.reps) as volume
+        FROM workout_sets ws
+        INNER JOIN workouts w ON ws.workoutId = w.id
+        WHERE ws.isCompleted = 1
+        AND w.startTime >= :startDate
+        AND w.startTime <= :endDate
+        AND w.endTime IS NOT NULL
+        GROUP BY date(w.startTime / 1000, 'unixepoch', 'localtime')
+        ORDER BY w.startTime ASC
+    """)
+    suspend fun getDailyVolumeInRange(
+        startDate: Long,
+        endDate: Long
+    ): List<VolumeDatePoint>
+
+    /**
+     * Get workout count per month within a date range.
+     * Used for workouts per month bar chart.
+     */
+    @Query("""
+        SELECT strftime('%Y-%m-01', w.startTime / 1000, 'unixepoch', 'localtime') as monthStart,
+               COUNT(*) as count
+        FROM workouts w
+        WHERE w.startTime >= :startDate
+        AND w.startTime <= :endDate
+        AND w.endTime IS NOT NULL
+        GROUP BY monthStart
+        ORDER BY monthStart ASC
+    """)
+    suspend fun getWorkoutCountByMonth(
+        startDate: Long,
+        endDate: Long
+    ): List<WorkoutCountByPeriod>
+
+    /**
+     * Get workout count per week within a date range.
+     * Used for weekly workout frequency analysis.
+     */
+    @Query("""
+        SELECT strftime('%Y-%W', w.startTime / 1000, 'unixepoch', 'localtime') as weekStart,
+               COUNT(*) as count
+        FROM workouts w
+        WHERE w.startTime >= :startDate
+        AND w.startTime <= :endDate
+        AND w.endTime IS NOT NULL
+        GROUP BY weekStart
+        ORDER BY weekStart ASC
+    """)
+    suspend fun getWorkoutCountByWeek(
+        startDate: Long,
+        endDate: Long
+    ): List<WorkoutCountByWeek>
+
+    /**
+     * Get workout duration per completed workout within a date range.
+     * Used for duration trend analysis.
+     */
+    @Query("""
+        SELECT w.startTime as date, (w.endTime - w.startTime) as durationMs
+        FROM workouts w
+        WHERE w.startTime >= :startDate
+        AND w.startTime <= :endDate
+        AND w.endTime IS NOT NULL
+        ORDER BY w.startTime ASC
+    """)
+    suspend fun getWorkoutDurationsInRange(
+        startDate: Long,
+        endDate: Long
+    ): List<DurationDatePoint>
+
+    /**
+     * Get average workout duration within a date range.
+     */
+    @Query("""
+        SELECT AVG(w.endTime - w.startTime)
+        FROM workouts w
+        WHERE w.startTime >= :startDate
+        AND w.startTime <= :endDate
+        AND w.endTime IS NOT NULL
+    """)
+    suspend fun getAverageWorkoutDurationInRange(
+        startDate: Long,
+        endDate: Long
+    ): Long?
+
+    /**
+     * Get the first workout date (for calculating streaks and all-time ranges).
+     */
+    @Query("SELECT MIN(startTime) FROM workouts WHERE endTime IS NOT NULL")
+    suspend fun getFirstWorkoutDate(): Long?
+
+    /**
+     * Get consecutive workout days streak ending at a specific date.
+     * Returns list of workout dates to calculate streak in code.
+     */
+    @Query("""
+        SELECT DISTINCT date(w.startTime / 1000, 'unixepoch', 'localtime') as workoutDate
+        FROM workouts w
+        WHERE w.endTime IS NOT NULL
+        ORDER BY workoutDate DESC
+    """)
+    suspend fun getWorkoutDates(): List<String>
 }
+
+/**
+ * Data class for weight progress query results
+ */
+data class WeightDatePoint(
+    val date: Long,
+    val maxWeight: Float
+)
+
+/**
+ * Data class for volume progress query results
+ */
+data class VolumeDatePoint(
+    val date: Long,
+    val volume: Float
+)
+
+/**
+ * Data class for workout count by month query results
+ */
+data class WorkoutCountByPeriod(
+    val monthStart: String,
+    val count: Int
+)
+
+/**
+ * Data class for workout count by week query results
+ */
+data class WorkoutCountByWeek(
+    val weekStart: String,
+    val count: Int
+)
+
+/**
+ * Data class for duration progress query results
+ */
+data class DurationDatePoint(
+    val date: Long,
+    val durationMs: Long
+)
 

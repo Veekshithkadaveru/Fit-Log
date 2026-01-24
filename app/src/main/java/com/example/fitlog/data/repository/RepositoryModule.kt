@@ -3,6 +3,7 @@ package com.example.fitlog.data.repository
 import com.example.fitlog.domain.repository.BodyweightRepository
 import com.example.fitlog.domain.repository.ExerciseRepository
 import com.example.fitlog.domain.repository.PersonalRecordRepository
+import com.example.fitlog.domain.repository.ProgressRepository
 import com.example.fitlog.domain.repository.RepRangeRecordRepository
 import com.example.fitlog.domain.repository.RoutineRepository
 import com.example.fitlog.domain.repository.WorkoutRepository
@@ -51,5 +52,11 @@ abstract class RepositoryModule {
     abstract fun bindRepRangeRecordRepository(
         repRangeRecordRepositoryImpl: RepRangeRecordRepositoryImpl
     ): RepRangeRecordRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindProgressRepository(
+        progressRepositoryImpl: ProgressRepositoryImpl
+    ): ProgressRepository
 }
 
