@@ -85,6 +85,17 @@ interface ProgressRepository {
     ): List<WorkoutCountPoint>
 
     /**
+     * Get workout count aggregated by day.
+     * @param startDate Start of date range (epoch millis)
+     * @param endDate End of date range (epoch millis)
+     * @return List of daily workout counts sorted by day
+     */
+    suspend fun getWorkoutCountByDay(
+        startDate: Long,
+        endDate: Long
+    ): List<WorkoutCountPoint>
+
+    /**
      * Get workout durations within a date range.
      * @param startDate Start of date range (epoch millis)
      * @param endDate End of date range (epoch millis)

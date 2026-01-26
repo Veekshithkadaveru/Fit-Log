@@ -371,6 +371,25 @@ interface WorkoutDao {
         ORDER BY workoutDate DESC
     """)
     suspend fun getWorkoutDates(): List<String>
+
+    /**
+     * Get workout count per day within a date range.
+     * Used for daily workout bar chart.
+     */
+    @Query("""
+        SELECT date(w.startTime / 1000, 'unixepoch', 'localtime') as dayStart,
+               COUNT(*) as count
+        FROM workouts w
+        WHERE w.startTime >= :startDate
+        AND w.startTime <= :endDate
+        AND w.endTime IS NOT NULL
+        GROUP BY dayStart
+        ORDER BY dayStart ASC
+    """)
+    suspend fun getWorkoutCountByDay(
+        startDate: Long,
+        endDate: Long
+    ): List<WorkoutCountByDay>
 }
 
 /**
@@ -411,5 +430,13 @@ data class WorkoutCountByWeek(
 data class DurationDatePoint(
     val date: Long,
     val durationMs: Long
+)
+
+/**
+ * Data class for workout count by day query results
+ */
+data class WorkoutCountByDay(
+    val dayStart: String,
+    val count: Int
 )
 

@@ -65,9 +65,7 @@ data class ProgressSummary(
  * Date range filter options for progress charts
  */
 enum class DateRangeFilter(val days: Int, val displayName: String) {
+    LAST_7_DAYS(7, "7 Days"),
     LAST_30_DAYS(30, "30 Days"),
-    LAST_60_DAYS(60, "60 Days"),
-    LAST_90_DAYS(90, "90 Days"),
-    LAST_YEAR(365, "1 Year"),
-    ALL_TIME(-1, "All Time")
+    LAST_YEAR(365, "1 Year")
 }
