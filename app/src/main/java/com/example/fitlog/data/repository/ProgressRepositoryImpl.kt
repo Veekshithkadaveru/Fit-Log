@@ -5,6 +5,7 @@ import com.example.fitlog.data.database.dao.PersonalRecordDao
 import com.example.fitlog.data.database.dao.WorkoutDao
 import com.example.fitlog.domain.model.*
 import com.example.fitlog.domain.repository.ProgressRepository
+import kotlinx.coroutines.flow.first
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
@@ -86,47 +87,54 @@ class ProgressRepositoryImpl @Inject constructor(
         startDate: Long,
         endDate: Long
     ): List<WorkoutCountPoint> {
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
-        return workoutDao.getWorkoutCountByMonth(startDate, endDate)
-            .mapNotNull { point ->
-                try {
-                    val date = dateFormat.parse(point.monthStart)
-                    WorkoutCountPoint(
-                        periodStart = date?.time ?: return@mapNotNull null,
-                        count = point.count
-                    )
-                } catch (e: Exception) {
-                    null
-                }
+        val workouts = workoutDao.getWorkoutsInDateRange(startDate, endDate).first()
+
+        val calendar = Calendar.getInstance()
+        
+        return workouts
+            .groupBy { workout ->
+                calendar.timeInMillis = workout.startTime
+                calendar.set(Calendar.DAY_OF_MONTH, 1)
+                calendar.set(Calendar.HOUR_OF_DAY, 0)
+                calendar.set(Calendar.MINUTE, 0)
+                calendar.set(Calendar.SECOND, 0)
+                calendar.set(Calendar.MILLISECOND, 0)
+                calendar.timeInMillis
             }
+            .map { (monthStart, workoutsInMonth) ->
+                WorkoutCountPoint(
+                    periodStart = monthStart,
+                    count = workoutsInMonth.size
+                )
+            }
+            .sortedBy { it.periodStart }
     }
 
     override suspend fun getWorkoutCountByWeek(
         startDate: Long,
         endDate: Long
     ): List<WorkoutCountPoint> {
-        // Week format is "YYYY-WW", we need to convert to timestamp
+        val workouts = workoutDao.getWorkoutsInDateRange(startDate, endDate).first()
+
         val calendar = Calendar.getInstance()
-        return workoutDao.getWorkoutCountByWeek(startDate, endDate)
-            .mapNotNull { point ->
-                try {
-                    val parts = point.weekStart.split("-")
-                    if (parts.size == 2) {
-                        val year = parts[0].toInt()
-                        val week = parts[1].toInt()
-                        calendar.clear()
-                        calendar.set(Calendar.YEAR, year)
-                        calendar.set(Calendar.WEEK_OF_YEAR, week)
-                        calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
-                        WorkoutCountPoint(
-                            periodStart = calendar.timeInMillis,
-                            count = point.count
-                        )
-                    } else null
-                } catch (e: Exception) {
-                    null
-                }
+        
+        return workouts
+            .groupBy { workout ->
+                calendar.timeInMillis = workout.startTime
+                calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+                calendar.set(Calendar.HOUR_OF_DAY, 0)
+                calendar.set(Calendar.MINUTE, 0)
+                calendar.set(Calendar.SECOND, 0)
+                calendar.set(Calendar.MILLISECOND, 0)
+                calendar.timeInMillis
             }
+            .map { (weekStart, workoutsInWeek) ->
+                WorkoutCountPoint(
+                    periodStart = weekStart,
+                    count = workoutsInWeek.size
+                )
+            }
+            .sortedBy { it.periodStart }
     }
 
     override suspend fun getWorkoutDurations(
@@ -252,24 +260,16 @@ class ProgressRepositoryImpl @Inject constructor(
         val endDate = calendar.timeInMillis
 
         return when (filter) {
+            DateRangeFilter.LAST_7_DAYS -> {
+                calendar.add(Calendar.DAY_OF_YEAR, -7)
+                calendar.set(Calendar.HOUR_OF_DAY, 0)
+                calendar.set(Calendar.MINUTE, 0)
+                calendar.set(Calendar.SECOND, 0)
+                calendar.set(Calendar.MILLISECOND, 0)
+                Pair(calendar.timeInMillis, endDate)
+            }
             DateRangeFilter.LAST_30_DAYS -> {
                 calendar.add(Calendar.DAY_OF_YEAR, -30)
-                calendar.set(Calendar.HOUR_OF_DAY, 0)
-                calendar.set(Calendar.MINUTE, 0)
-                calendar.set(Calendar.SECOND, 0)
-                calendar.set(Calendar.MILLISECOND, 0)
-                Pair(calendar.timeInMillis, endDate)
-            }
-            DateRangeFilter.LAST_60_DAYS -> {
-                calendar.add(Calendar.DAY_OF_YEAR, -60)
-                calendar.set(Calendar.HOUR_OF_DAY, 0)
-                calendar.set(Calendar.MINUTE, 0)
-                calendar.set(Calendar.SECOND, 0)
-                calendar.set(Calendar.MILLISECOND, 0)
-                Pair(calendar.timeInMillis, endDate)
-            }
-            DateRangeFilter.LAST_90_DAYS -> {
-                calendar.add(Calendar.DAY_OF_YEAR, -90)
                 calendar.set(Calendar.HOUR_OF_DAY, 0)
                 calendar.set(Calendar.MINUTE, 0)
                 calendar.set(Calendar.SECOND, 0)
@@ -284,9 +284,32 @@ class ProgressRepositoryImpl @Inject constructor(
                 calendar.set(Calendar.MILLISECOND, 0)
                 Pair(calendar.timeInMillis, endDate)
             }
-            DateRangeFilter.ALL_TIME -> {
-                Pair(0L, endDate)
-            }
         }
+    }
+
+    override suspend fun getWorkoutCountByDay(
+        startDate: Long,
+        endDate: Long
+    ): List<WorkoutCountPoint> {
+        val workouts = workoutDao.getWorkoutsInDateRange(startDate, endDate).first()
+
+        val calendar = Calendar.getInstance()
+        
+        return workouts
+            .groupBy { workout ->
+                calendar.timeInMillis = workout.startTime
+                calendar.set(Calendar.HOUR_OF_DAY, 0)
+                calendar.set(Calendar.MINUTE, 0)
+                calendar.set(Calendar.SECOND, 0)
+                calendar.set(Calendar.MILLISECOND, 0)
+                calendar.timeInMillis
+            }
+            .map { (dayStart, workoutsInDay) ->
+                WorkoutCountPoint(
+                    periodStart = dayStart,
+                    count = workoutsInDay.size
+                )
+            }
+            .sortedBy { it.periodStart }
     }
 }

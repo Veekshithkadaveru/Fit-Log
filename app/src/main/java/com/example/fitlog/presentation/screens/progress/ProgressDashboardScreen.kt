@@ -35,9 +35,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.fitlog.presentation.screens.progress.components.BodyweightTrendChart
 import com.example.fitlog.presentation.screens.progress.components.DateRangeSelector
 import com.example.fitlog.presentation.screens.progress.components.MetricCard
+import com.example.fitlog.presentation.screens.progress.components.VolumeTrendChart
+import com.example.fitlog.presentation.screens.progress.components.WorkoutFrequencyChart
+import com.example.fitlog.domain.model.DateRangeFilter
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -217,22 +224,54 @@ private fun ProgressDashboardContent(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Placeholder for charts (PR 3)
-        SectionHeader(title = "Charts")
+        // Charts Section
+        if (uiState.isChartsLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        } else {
+            // Workouts Chart (daily for 7/30 days, monthly otherwise)
+            val chartTitle = when (uiState.selectedDateRange) {
+                DateRangeFilter.LAST_7_DAYS, DateRangeFilter.LAST_30_DAYS -> "Workouts Per Day"
+                else -> "Workouts Per Month"
+            }
+            SectionHeader(title = chartTitle)
 
-        Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp)
-                .padding(horizontal = 16.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "Charts coming soon...",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+            WorkoutFrequencyChart(
+                workoutCounts = uiState.workoutCounts,
+                dateRangeFilter = uiState.selectedDateRange,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Volume Trend Chart
+            SectionHeader(title = "Volume Trend")
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            VolumeTrendChart(
+                volumeData = uiState.volumeProgress,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Bodyweight Trend Chart
+            SectionHeader(title = "Bodyweight Trend")
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            BodyweightTrendChart(
+                entries = uiState.bodyweightEntries,
+                modifier = Modifier.padding(horizontal = 16.dp)
             )
         }
 
@@ -245,12 +284,28 @@ private fun SectionHeader(
     title: String,
     modifier: Modifier = Modifier
 ) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.titleMedium,
-        fontWeight = FontWeight.SemiBold,
-        modifier = modifier.padding(horizontal = 16.dp)
-    )
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .height(16.dp)
+                .width(3.dp)
+                .background(
+                    color = MaterialTheme.colorScheme.primary,
+                    shape = RoundedCornerShape(2.dp)
+                )
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold
+        )
+    }
 }
 
 private fun formatVolume(volume: Float): String {
