@@ -30,6 +30,8 @@ object FitLogDestinations {
     
     // Analytics Destinations
     const val MUSCLE_ANALYTICS = "muscle_analytics"
+    const val EXERCISE_PROGRESS = "exercise_progress"
+    const val EXERCISE_PROGRESS_WITH_ID = "exercise_progress?exerciseId={exerciseId}"
     
     // Settings Destinations
     const val PREMIUM = "premium"
@@ -66,5 +68,13 @@ object FitLogRoutes {
 
     fun activeWorkoutWithRoutine(routineId: Int): String {
         return "active_workout?routineId=$routineId"
+    }
+
+    fun exerciseProgress(exerciseId: Int? = null): String {
+        return if (exerciseId != null) {
+            "exercise_progress?exerciseId=$exerciseId"
+        } else {
+            "exercise_progress"
+        }
     }
 }

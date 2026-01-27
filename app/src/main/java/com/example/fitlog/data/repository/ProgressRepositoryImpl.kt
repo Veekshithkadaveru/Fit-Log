@@ -5,6 +5,7 @@ import com.example.fitlog.data.database.dao.PersonalRecordDao
 import com.example.fitlog.data.database.dao.WorkoutDao
 import com.example.fitlog.domain.model.*
 import com.example.fitlog.domain.repository.ProgressRepository
+import kotlinx.coroutines.flow.first
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
@@ -80,6 +81,31 @@ class ProgressRepositoryImpl @Inject constructor(
                     totalVolume = point.volume
                 )
             }
+    }
+
+    override suspend fun getWorkoutCountByDay(
+        startDate: Long,
+        endDate: Long
+    ): List<WorkoutCountPoint> {
+        val workouts = workoutDao.getWorkoutsInDateRange(startDate, endDate).first()
+        val calendar = Calendar.getInstance()
+
+        // Group workouts by day
+        val countsByDay = workouts.groupBy { workout ->
+            calendar.timeInMillis = workout.startTime
+            calendar.set(Calendar.HOUR_OF_DAY, 0)
+            calendar.set(Calendar.MINUTE, 0)
+            calendar.set(Calendar.SECOND, 0)
+            calendar.set(Calendar.MILLISECOND, 0)
+            calendar.timeInMillis
+        }
+
+        return countsByDay.map { (dayStart, dayWorkouts) ->
+            WorkoutCountPoint(
+                periodStart = dayStart,
+                count = dayWorkouts.size
+            )
+        }.sortedBy { it.periodStart }
     }
 
     override suspend fun getWorkoutCountByMonth(
@@ -243,7 +269,6 @@ class ProgressRepositoryImpl @Inject constructor(
     }
 
     override fun getDateRangeForFilter(filter: DateRangeFilter): Pair<Long, Long> {
-        val now = System.currentTimeMillis()
         val calendar = Calendar.getInstance()
         calendar.set(Calendar.HOUR_OF_DAY, 23)
         calendar.set(Calendar.MINUTE, 59)
@@ -252,16 +277,16 @@ class ProgressRepositoryImpl @Inject constructor(
         val endDate = calendar.timeInMillis
 
         return when (filter) {
-            DateRangeFilter.LAST_30_DAYS -> {
-                calendar.add(Calendar.DAY_OF_YEAR, -30)
+            DateRangeFilter.LAST_7_DAYS -> {
+                calendar.add(Calendar.DAY_OF_YEAR, -7)
                 calendar.set(Calendar.HOUR_OF_DAY, 0)
                 calendar.set(Calendar.MINUTE, 0)
                 calendar.set(Calendar.SECOND, 0)
                 calendar.set(Calendar.MILLISECOND, 0)
                 Pair(calendar.timeInMillis, endDate)
             }
-            DateRangeFilter.LAST_60_DAYS -> {
-                calendar.add(Calendar.DAY_OF_YEAR, -60)
+            DateRangeFilter.LAST_30_DAYS -> {
+                calendar.add(Calendar.DAY_OF_YEAR, -30)
                 calendar.set(Calendar.HOUR_OF_DAY, 0)
                 calendar.set(Calendar.MINUTE, 0)
                 calendar.set(Calendar.SECOND, 0)
@@ -283,9 +308,6 @@ class ProgressRepositoryImpl @Inject constructor(
                 calendar.set(Calendar.SECOND, 0)
                 calendar.set(Calendar.MILLISECOND, 0)
                 Pair(calendar.timeInMillis, endDate)
-            }
-            DateRangeFilter.ALL_TIME -> {
-                Pair(0L, endDate)
             }
         }
     }

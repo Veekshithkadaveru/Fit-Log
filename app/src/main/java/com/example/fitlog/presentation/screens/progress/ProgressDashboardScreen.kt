@@ -36,8 +36,11 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.fitlog.presentation.screens.progress.components.BodyweightTrendChart
 import com.example.fitlog.presentation.screens.progress.components.DateRangeSelector
 import com.example.fitlog.presentation.screens.progress.components.MetricCard
+import com.example.fitlog.presentation.screens.progress.components.VolumeTrendChart
+import com.example.fitlog.presentation.screens.progress.components.WorkoutFrequencyChart
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -217,24 +220,33 @@ private fun ProgressDashboardContent(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Placeholder for charts (PR 3)
+        // Charts Section
         SectionHeader(title = "Charts")
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp)
-                .padding(horizontal = 16.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "Charts coming soon...",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
+        // Workout Frequency Chart
+        WorkoutFrequencyChart(
+            workoutCounts = uiState.workoutCounts,
+            dateRangeFilter = uiState.selectedDateRange,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Volume Trend Chart
+        VolumeTrendChart(
+            volumeData = uiState.volumeData,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Bodyweight Trend Chart
+        BodyweightTrendChart(
+            bodyweightData = uiState.bodyweightData,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
 
         Spacer(modifier = Modifier.height(32.dp))
     }
