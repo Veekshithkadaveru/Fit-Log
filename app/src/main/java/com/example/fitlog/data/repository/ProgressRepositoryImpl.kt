@@ -83,6 +83,31 @@ class ProgressRepositoryImpl @Inject constructor(
             }
     }
 
+    override suspend fun getWorkoutCountByDay(
+        startDate: Long,
+        endDate: Long
+    ): List<WorkoutCountPoint> {
+        val workouts = workoutDao.getWorkoutsInDateRange(startDate, endDate).first()
+        val calendar = Calendar.getInstance()
+
+        // Group workouts by day
+        val countsByDay = workouts.groupBy { workout ->
+            calendar.timeInMillis = workout.startTime
+            calendar.set(Calendar.HOUR_OF_DAY, 0)
+            calendar.set(Calendar.MINUTE, 0)
+            calendar.set(Calendar.SECOND, 0)
+            calendar.set(Calendar.MILLISECOND, 0)
+            calendar.timeInMillis
+        }
+
+        return countsByDay.map { (dayStart, dayWorkouts) ->
+            WorkoutCountPoint(
+                periodStart = dayStart,
+                count = dayWorkouts.size
+            )
+        }.sortedBy { it.periodStart }
+    }
+
     override suspend fun getWorkoutCountByMonth(
         startDate: Long,
         endDate: Long
@@ -251,7 +276,6 @@ class ProgressRepositoryImpl @Inject constructor(
     }
 
     override fun getDateRangeForFilter(filter: DateRangeFilter): Pair<Long, Long> {
-        val now = System.currentTimeMillis()
         val calendar = Calendar.getInstance()
         calendar.set(Calendar.HOUR_OF_DAY, 23)
         calendar.set(Calendar.MINUTE, 59)
@@ -287,29 +311,5 @@ class ProgressRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getWorkoutCountByDay(
-        startDate: Long,
-        endDate: Long
-    ): List<WorkoutCountPoint> {
-        val workouts = workoutDao.getWorkoutsInDateRange(startDate, endDate).first()
 
-        val calendar = Calendar.getInstance()
-        
-        return workouts
-            .groupBy { workout ->
-                calendar.timeInMillis = workout.startTime
-                calendar.set(Calendar.HOUR_OF_DAY, 0)
-                calendar.set(Calendar.MINUTE, 0)
-                calendar.set(Calendar.SECOND, 0)
-                calendar.set(Calendar.MILLISECOND, 0)
-                calendar.timeInMillis
-            }
-            .map { (dayStart, workoutsInDay) ->
-                WorkoutCountPoint(
-                    periodStart = dayStart,
-                    count = workoutsInDay.size
-                )
-            }
-            .sortedBy { it.periodStart }
-    }
 }

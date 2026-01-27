@@ -230,7 +230,7 @@ private fun ProgressDashboardContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(200.dp),
-                contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator()
             }

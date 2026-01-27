@@ -10,6 +10,7 @@ import androidx.navigation.navArgument
 import com.example.fitlog.presentation.screens.PlaceholderScreen
 import com.example.fitlog.presentation.screens.exercises.ExerciseDetailScreen
 import com.example.fitlog.presentation.screens.exercises.ExerciseLibraryScreen
+import com.example.fitlog.presentation.screens.progress.ExerciseProgressScreen
 import com.example.fitlog.presentation.screens.progress.ProgressDashboardScreen
 
 /**
@@ -171,6 +172,24 @@ fun FitLogNavGraph(
 
         composable(FitLogDestinations.MUSCLE_ANALYTICS) {
             com.example.fitlog.presentation.screens.analytics.MuscleAnalyticsScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        // Exercise Progress Screen (with optional exerciseId query parameter)
+        composable(
+            route = FitLogDestinations.EXERCISE_PROGRESS_WITH_ID,
+            arguments = listOf(
+                navArgument(FitLogDestinations.Args.EXERCISE_ID) {
+                    type = NavType.IntType
+                    defaultValue = -1
+                    nullable = false
+                }
+            )
+        ) { backStackEntry ->
+            val exerciseId = backStackEntry.arguments?.getInt(FitLogDestinations.Args.EXERCISE_ID)?.takeIf { it != -1 }
+            ExerciseProgressScreen(
+                exerciseId = exerciseId,
                 onNavigateBack = { navController.popBackStack() }
             )
         }
