@@ -53,10 +53,16 @@ data class ExerciseProgressData(
 data class ProgressSummary(
     val workoutsThisWeek: Int,
     val workoutsThisMonth: Int,
+    val workoutsThisYear: Int,
     val totalWorkouts: Int,
     val prsThisMonth: Int,
+    val prsThisYear: Int,
     val totalVolumeThisWeek: Float,
     val totalVolumeThisMonth: Float,
+    val totalVolumeThisYear: Float,
+    val averageDurationThisWeek: Long,
+    val averageDurationThisMonth: Long,
+    val averageDurationThisYear: Long,
     val averageWorkoutDurationMinutes: Long,
     val currentStreak: Int
 )
