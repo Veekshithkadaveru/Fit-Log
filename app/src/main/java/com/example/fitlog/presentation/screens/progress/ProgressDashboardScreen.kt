@@ -1,5 +1,6 @@
 package com.example.fitlog.presentation.screens.progress
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -127,10 +128,10 @@ private fun ProgressDashboardContent(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(scrollState)
+            .animateContentSize()
     ) {
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Date Range Selector
         DateRangeSelector(
             selectedFilter = uiState.selectedDateRange,
             onFilterSelected = onDateRangeSelected
@@ -138,65 +139,117 @@ private fun ProgressDashboardContent(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Section: This Week
-        SectionHeader(title = "This Week")
+        // Dynamic Sections based on selection
+        when (uiState.selectedDateRange) {
+            DateRangeFilter.LAST_7_DAYS -> {
+                // Section: This Week
+                SectionHeader(title = "This Week")
 
-        Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            MetricCard(
-                title = "Workouts",
-                value = "${summary?.workoutsThisWeek ?: 0}",
-                subtitle = "${summary?.totalWorkouts ?: 0} all-time",
-                icon = Icons.Default.FitnessCenter,
-                iconTint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.weight(1f)
-            )
-            MetricCard(
-                title = "Current Streak",
-                value = "${summary?.currentStreak ?: 0}",
-                subtitle = "days",
-                icon = Icons.Default.LocalFireDepartment,
-                iconTint = MaterialTheme.colorScheme.tertiary,
-                modifier = Modifier.weight(1f)
-            )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    MetricCard(
+                        title = "Workouts",
+                        value = "${summary?.workoutsThisWeek ?: 0}",
+                        subtitle = "${summary?.totalWorkouts ?: 0} all-time",
+                        icon = Icons.Default.FitnessCenter,
+                        iconTint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.weight(1f)
+                    )
+                    MetricCard(
+                        title = "Current Streak",
+                        value = "${summary?.currentStreak ?: 0}",
+                        subtitle = "days",
+                        icon = Icons.Default.LocalFireDepartment,
+                        iconTint = MaterialTheme.colorScheme.tertiary,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+            DateRangeFilter.LAST_YEAR -> {
+                // Section: This Year
+                SectionHeader(title = "This Year")
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    MetricCard(
+                        title = "Workouts",
+                        value = "${summary?.workoutsThisYear ?: 0}",
+                        subtitle = "${summary?.totalWorkouts ?: 0} all-time",
+                        icon = Icons.Default.FitnessCenter,
+                        iconTint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.weight(1f)
+                    )
+                    MetricCard(
+                        title = "New PRs",
+                        value = "${summary?.prsThisYear ?: 0}",
+                        icon = Icons.Default.EmojiEvents,
+                        iconTint = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+            else -> {
+                // Section: This Month (Default for 30 days, 3 months, 6 months)
+                SectionHeader(title = "This Month")
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    MetricCard(
+                        title = "Workouts",
+                        value = "${summary?.workoutsThisMonth ?: 0}",
+                        icon = Icons.Default.FitnessCenter,
+                        iconTint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.weight(1f)
+                    )
+                    MetricCard(
+                        title = "New PRs",
+                        value = "${summary?.prsThisMonth ?: 0}",
+                        icon = Icons.Default.EmojiEvents,
+                        iconTint = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
         }
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Section: This Month
-        SectionHeader(title = "This Month")
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            MetricCard(
-                title = "Workouts",
-                value = "${summary?.workoutsThisMonth ?: 0}",
-                icon = Icons.Default.FitnessCenter,
-                iconTint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.weight(1f)
+        // Dynamic Volume & Duration Cards
+        val (volumeValue, volumeSubtitle, durationValue) = when (uiState.selectedDateRange) {
+            DateRangeFilter.LAST_7_DAYS -> Triple(
+                summary?.totalVolumeThisWeek ?: 0f,
+                "this week",
+                summary?.averageDurationThisWeek ?: 0L
             )
-            MetricCard(
-                title = "New PRs",
-                value = "${summary?.prsThisMonth ?: 0}",
-                icon = Icons.Default.EmojiEvents,
-                iconTint = MaterialTheme.colorScheme.secondary,
-                modifier = Modifier.weight(1f)
+            DateRangeFilter.LAST_YEAR -> Triple(
+                summary?.totalVolumeThisYear ?: 0f,
+                "this year",
+                summary?.averageDurationThisYear ?: 0L
+            )
+            else -> Triple(
+                summary?.totalVolumeThisMonth ?: 0f,
+                "this month",
+                summary?.averageDurationThisMonth ?: 0L
             )
         }
-
-        Spacer(modifier = Modifier.height(12.dp))
 
         Row(
             modifier = Modifier
@@ -206,15 +259,15 @@ private fun ProgressDashboardContent(
         ) {
             MetricCard(
                 title = "Total Volume",
-                value = formatVolume(summary?.totalVolumeThisMonth ?: 0f),
-                subtitle = formatVolume(summary?.totalVolumeThisWeek ?: 0f) + " this week",
+                value = formatVolume(volumeValue),
+                subtitle = volumeSubtitle,
                 icon = Icons.Default.FitnessCenter,
                 iconTint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.weight(1f)
             )
             MetricCard(
                 title = "Avg Duration",
-                value = "${summary?.averageWorkoutDurationMinutes ?: 0}",
+                value = "$durationValue",
                 subtitle = "minutes",
                 icon = Icons.Default.Timer,
                 iconTint = MaterialTheme.colorScheme.secondary,
@@ -224,7 +277,6 @@ private fun ProgressDashboardContent(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Charts Section
         if (uiState.isChartsLoading) {
             Box(
                 modifier = Modifier
@@ -235,7 +287,6 @@ private fun ProgressDashboardContent(
                 CircularProgressIndicator()
             }
         } else {
-            // Workouts Chart (daily for 7/30 days, monthly otherwise)
             val chartTitle = when (uiState.selectedDateRange) {
                 DateRangeFilter.LAST_7_DAYS, DateRangeFilter.LAST_30_DAYS -> "Workouts Per Day"
                 else -> "Workouts Per Month"
@@ -252,7 +303,6 @@ private fun ProgressDashboardContent(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Volume Trend Chart
             SectionHeader(title = "Volume Trend")
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -264,7 +314,6 @@ private fun ProgressDashboardContent(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Bodyweight Trend Chart
             SectionHeader(title = "Bodyweight Trend")
 
             Spacer(modifier = Modifier.height(12.dp))

@@ -197,22 +197,47 @@ class ProgressRepositoryImpl @Inject constructor(
         calendar.set(Calendar.MILLISECOND, 0)
         val monthStart = calendar.timeInMillis
 
+        // Start of this year
+        calendar.timeInMillis = now
+        calendar.set(Calendar.DAY_OF_YEAR, 1)
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        val yearStart = calendar.timeInMillis
+
         val workoutsThisWeek = workoutDao.getWorkoutCountInRange(weekStart, now)
         val workoutsThisMonth = workoutDao.getWorkoutCountInRange(monthStart, now)
+        val workoutsThisYear = workoutDao.getWorkoutCountInRange(yearStart, now)
         val totalWorkouts = workoutDao.getCompletedWorkoutCount()
+        
         val prsThisMonth = personalRecordDao.getRecordCountInRange(monthStart, now)
+        val prsThisYear = personalRecordDao.getRecordCountInRange(yearStart, now)
+        
         val totalVolumeThisWeek = workoutDao.getTotalVolumeInRange(weekStart, now) ?: 0f
         val totalVolumeThisMonth = workoutDao.getTotalVolumeInRange(monthStart, now) ?: 0f
+        val totalVolumeThisYear = workoutDao.getTotalVolumeInRange(yearStart, now) ?: 0f
+        
         val avgDuration = workoutDao.getAverageWorkoutDuration()?.let { it / (1000 * 60) } ?: 0L
+        val avgDurationThisWeek = workoutDao.getAverageWorkoutDurationInRange(weekStart, now)?.let { it / (1000 * 60) } ?: 0L
+        val avgDurationThisMonth = workoutDao.getAverageWorkoutDurationInRange(monthStart, now)?.let { it / (1000 * 60) } ?: 0L
+        val avgDurationThisYear = workoutDao.getAverageWorkoutDurationInRange(yearStart, now)?.let { it / (1000 * 60) } ?: 0L
+        
         val currentStreak = getCurrentStreak()
 
         return ProgressSummary(
             workoutsThisWeek = workoutsThisWeek,
             workoutsThisMonth = workoutsThisMonth,
+            workoutsThisYear = workoutsThisYear,
             totalWorkouts = totalWorkouts,
             prsThisMonth = prsThisMonth,
+            prsThisYear = prsThisYear,
             totalVolumeThisWeek = totalVolumeThisWeek,
             totalVolumeThisMonth = totalVolumeThisMonth,
+            totalVolumeThisYear = totalVolumeThisYear,
+            averageDurationThisWeek = avgDurationThisWeek,
+            averageDurationThisMonth = avgDurationThisMonth,
+            averageDurationThisYear = avgDurationThisYear,
             averageWorkoutDurationMinutes = avgDuration,
             currentStreak = currentStreak
         )
