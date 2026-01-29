@@ -11,6 +11,7 @@ import com.example.fitlog.presentation.screens.PlaceholderScreen
 import com.example.fitlog.presentation.screens.exercises.ExerciseDetailScreen
 import com.example.fitlog.presentation.screens.exercises.ExerciseLibraryScreen
 import com.example.fitlog.presentation.screens.history.HistoryScreen
+import com.example.fitlog.presentation.screens.history.WorkoutDetailScreen
 import com.example.fitlog.presentation.screens.progress.ExerciseProgressScreen
 import com.example.fitlog.presentation.screens.progress.ProgressDashboardScreen
 
@@ -28,8 +29,6 @@ fun FitLogNavGraph(
         startDestination = startDestination,
         modifier = modifier
     ) {
-        
-        // Bottom Navigation Screens
         composable(FitLogDestinations.HOME) {
             ProgressDashboardScreen()
         }
@@ -56,8 +55,6 @@ fun FitLogNavGraph(
         composable(FitLogDestinations.SETTINGS) {
             PlaceholderScreen(title = "Settings", navController = navController)
         }
-        
-        // Exercise Detail Screen
         composable(
             route = FitLogDestinations.EXERCISE_DETAIL,
             arguments = listOf(
@@ -72,8 +69,6 @@ fun FitLogNavGraph(
                 onNavigateBack = { navController.popBackStack() }
             )
         }
-        
-        // Workout Detail Screen
         composable(
             route = FitLogDestinations.WORKOUT_DETAIL,
             arguments = listOf(
@@ -81,16 +76,11 @@ fun FitLogNavGraph(
                     type = NavType.IntType
                 }
             )
-        ) { backStackEntry ->
-            val workoutId = backStackEntry.arguments?.getInt(FitLogDestinations.Args.WORKOUT_ID) ?: 0
-            PlaceholderScreen(
-                title = "Workout Detail",
-                subtitle = "Workout ID: $workoutId",
-                navController = navController
+        ) {
+            WorkoutDetailScreen(
+                onNavigateBack = { navController.popBackStack() }
             )
         }
-        
-        // Active Workout Screen (with optional routineId query parameter)
         composable(
             route = "active_workout?routineId={routineId}",
             arguments = listOf(
@@ -109,7 +99,7 @@ fun FitLogNavGraph(
         }
         
         
-        // Routine List Screen
+
         composable(FitLogDestinations.ROUTINE_LIST) {
             com.example.fitlog.presentation.screens.routines.RoutineListScreen(
                 navController = navController,
@@ -159,8 +149,6 @@ fun FitLogNavGraph(
                 }
             )
         }
-
-        // Active Workout Exercise Picker
         composable(FitLogDestinations.ACTIVE_WORKOUT_EXERCISE_PICKER) {
             com.example.fitlog.presentation.screens.workout.ActiveWorkoutExercisePickerScreen(
                 navController = navController
@@ -177,7 +165,7 @@ fun FitLogNavGraph(
             )
         }
 
-        // Exercise Progress Screen (with optional exerciseId query parameter)
+
         composable(
             route = FitLogDestinations.EXERCISE_PROGRESS_WITH_ID,
             arguments = listOf(
