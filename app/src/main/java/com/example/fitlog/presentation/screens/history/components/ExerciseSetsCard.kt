@@ -4,14 +4,21 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.fitlog.domain.model.WorkoutSet
@@ -19,11 +26,17 @@ import com.example.fitlog.presentation.screens.history.ExerciseWithSets
 
 /**
  * Card component displaying an exercise with all its sets from a workout
+ * Supports both read-only and edit modes
  */
 @Composable
 fun ExerciseSetsCard(
     exerciseWithSets: ExerciseWithSets,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isEditMode: Boolean = false,
+    getWeight: ((Int) -> Float)? = null,
+    getReps: ((Int) -> Int)? = null,
+    onWeightChange: ((Int, Float) -> Unit)? = null,
+    onRepsChange: ((Int, Int) -> Unit)? = null
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -38,29 +51,36 @@ fun ExerciseSetsCard(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-
             ExerciseHeader(exerciseWithSets = exerciseWithSets)
 
             Spacer(modifier = Modifier.height(12.dp))
 
-
-            SetsTableHeader()
+            SetsTableHeader(isEditMode = isEditMode)
 
             Spacer(modifier = Modifier.height(8.dp))
 
-
             exerciseWithSets.sets.forEachIndexed { index, set ->
-                SetRow(
-                    setNumber = index + 1,
-                    set = set
-                )
+                if (isEditMode) {
+                    EditableSetRow(
+                        setNumber = index + 1,
+                        set = set,
+                        weight = getWeight?.invoke(set.id) ?: set.weight,
+                        reps = getReps?.invoke(set.id) ?: set.reps,
+                        onWeightChange = { onWeightChange?.invoke(set.id, it) },
+                        onRepsChange = { onRepsChange?.invoke(set.id, it) }
+                    )
+                } else {
+                    SetRow(
+                        setNumber = index + 1,
+                        set = set
+                    )
+                }
                 if (index < exerciseWithSets.sets.size - 1) {
                     Spacer(modifier = Modifier.height(6.dp))
                 }
             }
 
-
-            if (exerciseWithSets.sets.size > 1) {
+            if (exerciseWithSets.sets.size > 1 && !isEditMode) {
                 Spacer(modifier = Modifier.height(12.dp))
                 ExerciseSummary(exerciseWithSets = exerciseWithSets)
             }
@@ -92,7 +112,6 @@ private fun ExerciseHeader(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-
 
         if (exerciseWithSets.hasPR) {
             PRBadge(prCount = exerciseWithSets.prCount)
@@ -133,6 +152,7 @@ private fun PRBadge(
 
 @Composable
 private fun SetsTableHeader(
+    isEditMode: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -151,22 +171,23 @@ private fun SetsTableHeader(
             text = "Weight",
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.width(72.dp)
+            modifier = Modifier.width(if (isEditMode) 80.dp else 72.dp)
         )
         Text(
             text = "Reps",
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.width(48.dp)
+            modifier = Modifier.width(if (isEditMode) 60.dp else 48.dp)
         )
-        Text(
-            text = "Volume",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.width(72.dp)
-        )
-
-        Spacer(modifier = Modifier.width(32.dp))
+        if (!isEditMode) {
+            Text(
+                text = "Volume",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.width(72.dp)
+            )
+            Spacer(modifier = Modifier.width(32.dp))
+        }
     }
 }
 
@@ -191,7 +212,6 @@ private fun SetRow(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-
         Box(
             modifier = Modifier
                 .size(28.dp)
@@ -217,14 +237,12 @@ private fun SetRow(
             )
         }
 
-
         Text(
             text = formatWeight(set.weight),
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Medium,
             modifier = Modifier.width(72.dp)
         )
-
 
         Text(
             text = "${set.reps}",
@@ -233,14 +251,12 @@ private fun SetRow(
             modifier = Modifier.width(48.dp)
         )
 
-
         Text(
             text = formatVolume(set.volume),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.width(72.dp)
         )
-
 
         Box(
             modifier = Modifier.width(32.dp),
@@ -274,6 +290,152 @@ private fun SetRow(
             }
         }
     }
+}
+
+@Composable
+private fun EditableSetRow(
+    setNumber: Int,
+    set: WorkoutSet,
+    weight: Float,
+    reps: Int,
+    onWeightChange: (Float) -> Unit,
+    onRepsChange: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val backgroundColor = when {
+        set.isPR -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+        set.isCompleted -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
+    }
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .background(backgroundColor)
+            .padding(horizontal = 8.dp, vertical = 6.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Set number badge
+        Box(
+            modifier = Modifier
+                .size(28.dp)
+                .clip(CircleShape)
+                .background(
+                    if (set.isCompleted) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.outline
+                    }
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "$setNumber",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = if (set.isCompleted) {
+                    MaterialTheme.colorScheme.onPrimary
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                }
+            )
+        }
+
+        // Editable weight field
+        EditableNumberField(
+            value = weight,
+            onValueChange = onWeightChange,
+            suffix = "lbs",
+            modifier = Modifier.width(80.dp)
+        )
+
+        // Editable reps field
+        EditableIntField(
+            value = reps,
+            onValueChange = onRepsChange,
+            modifier = Modifier.width(60.dp)
+        )
+    }
+}
+
+@Composable
+private fun EditableNumberField(
+    value: Float,
+    onValueChange: (Float) -> Unit,
+    suffix: String,
+    modifier: Modifier = Modifier
+) {
+    var textValue by remember(value) {
+        mutableStateOf(
+            if (value == value.toInt().toFloat()) {
+                value.toInt().toString()
+            } else {
+                String.format("%.1f", value)
+            }
+        )
+    }
+
+    OutlinedTextField(
+        value = textValue,
+        onValueChange = { newValue ->
+            textValue = newValue
+            val parsed = newValue.toFloatOrNull()
+            if (parsed != null && parsed >= 0) {
+                onValueChange(parsed)
+            }
+        },
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+        singleLine = true,
+        textStyle = LocalTextStyle.current.copy(
+            fontWeight = FontWeight.Medium,
+            textAlign = TextAlign.End
+        ),
+        suffix = {
+            Text(
+                text = suffix,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        },
+        modifier = modifier,
+        colors = OutlinedTextFieldDefaults.colors(
+            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+            focusedContainerColor = MaterialTheme.colorScheme.surface
+        )
+    )
+}
+
+@Composable
+private fun EditableIntField(
+    value: Int,
+    onValueChange: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var textValue by remember(value) { mutableStateOf(value.toString()) }
+
+    OutlinedTextField(
+        value = textValue,
+        onValueChange = { newValue ->
+            textValue = newValue
+            val parsed = newValue.toIntOrNull()
+            if (parsed != null && parsed >= 0) {
+                onValueChange(parsed)
+            }
+        },
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        singleLine = true,
+        textStyle = LocalTextStyle.current.copy(
+            fontWeight = FontWeight.Medium,
+            textAlign = TextAlign.Center
+        ),
+        modifier = modifier,
+        colors = OutlinedTextFieldDefaults.colors(
+            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+            focusedContainerColor = MaterialTheme.colorScheme.surface
+        )
+    )
 }
 
 @Composable

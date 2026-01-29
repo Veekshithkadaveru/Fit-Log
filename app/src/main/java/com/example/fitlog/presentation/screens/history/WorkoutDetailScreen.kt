@@ -11,6 +11,7 @@ import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -21,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.fitlog.domain.model.Workout
 import com.example.fitlog.presentation.screens.history.components.ExerciseSetsCard
+import kotlinx.coroutines.flow.collectLatest
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -33,28 +35,41 @@ fun WorkoutDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+    // Handle navigation events
+    LaunchedEffect(Unit) {
+        viewModel.events.collectLatest { event ->
+            when (event) {
+                is WorkoutDetailEvent.WorkoutDeleted -> onNavigateBack()
+                is WorkoutDetailEvent.SaveSuccess -> { /* Show success toast if needed */ }
+                is WorkoutDetailEvent.SaveError -> { /* Show error toast if needed */ }
+            }
+        }
+    }
+
+    // Delete confirmation dialog
+    if (uiState.showDeleteConfirmation) {
+        DeleteConfirmationDialog(
+            onConfirm = { viewModel.deleteWorkout() },
+            onDismiss = { viewModel.hideDeleteConfirmation() }
+        )
+    }
+
     Scaffold(
         modifier = modifier,
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Workout Details",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
+            WorkoutDetailTopBar(
+                isEditMode = uiState.isEditMode,
+                isSaving = uiState.isSaving,
+                onNavigateBack = {
+                    if (uiState.isEditMode) {
+                        viewModel.cancelEditMode()
+                    } else {
+                        onNavigateBack()
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
+                onEditClick = { viewModel.enterEditMode() },
+                onSaveClick = { viewModel.saveChanges() },
+                onDeleteClick = { viewModel.showDeleteConfirmation() }
             )
         }
     ) { paddingValues ->
@@ -64,7 +79,7 @@ fun WorkoutDetailScreen(
                 .padding(paddingValues)
         ) {
             when {
-                uiState.isLoading -> {
+                uiState.isLoading || uiState.isDeleting -> {
                     CircularProgressIndicator(
                         modifier = Modifier.align(Alignment.Center)
                     )
@@ -81,6 +96,7 @@ fun WorkoutDetailScreen(
                 uiState.workout != null -> {
                     WorkoutDetailContent(
                         uiState = uiState,
+                        viewModel = viewModel,
                         workoutTypeName = viewModel.getWorkoutTypeName()
                     )
                 }
@@ -89,9 +105,124 @@ fun WorkoutDetailScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun WorkoutDetailTopBar(
+    isEditMode: Boolean,
+    isSaving: Boolean,
+    onNavigateBack: () -> Unit,
+    onEditClick: () -> Unit,
+    onSaveClick: () -> Unit,
+    onDeleteClick: () -> Unit
+) {
+    TopAppBar(
+        title = {
+            Text(
+                text = if (isEditMode) "Edit Workout" else "Workout Details",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        navigationIcon = {
+            IconButton(onClick = onNavigateBack) {
+                Icon(
+                    imageVector = if (isEditMode) Icons.Default.Close else Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = if (isEditMode) "Cancel" else "Back"
+                )
+            }
+        },
+        actions = {
+            if (isEditMode) {
+                // Save button in edit mode
+                IconButton(
+                    onClick = onSaveClick,
+                    enabled = !isSaving
+                ) {
+                    if (isSaving) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = "Save Changes",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            } else {
+                // Edit button
+                IconButton(onClick = onEditClick) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Edit Workout"
+                    )
+                }
+                // Delete button
+                IconButton(onClick = onDeleteClick) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Delete Workout",
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    )
+}
+
+@Composable
+private fun DeleteConfirmationDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = {
+            Icon(
+                imageVector = Icons.Default.Delete,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.error
+            )
+        },
+        title = {
+            Text(
+                text = "Delete Workout?",
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Text(
+                text = "This will permanently delete this workout and all its data. This action cannot be undone.",
+                textAlign = TextAlign.Center
+            )
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error
+                )
+            ) {
+                Text("Delete")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
 @Composable
 private fun WorkoutDetailContent(
     uiState: WorkoutDetailUiState,
+    viewModel: WorkoutDetailViewModel,
     workoutTypeName: String,
     modifier: Modifier = Modifier
 ) {
@@ -102,7 +233,6 @@ private fun WorkoutDetailContent(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-
         item {
             WorkoutSummaryCard(
                 workout = workout,
@@ -110,38 +240,54 @@ private fun WorkoutDetailContent(
             )
         }
 
-
         item {
             WorkoutStatsCard(workout = workout)
         }
 
-
         if (uiState.exerciseGroups.isNotEmpty()) {
             item {
-                Text(
-                    text = "Exercises",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Exercises",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                    if (uiState.isEditMode) {
+                        Text(
+                            text = "Tap values to edit",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
+                }
             }
-
 
             items(
                 items = uiState.exerciseGroups,
                 key = { it.exercise.id }
             ) { exerciseWithSets ->
-                ExerciseSetsCard(exerciseWithSets = exerciseWithSets)
+                ExerciseSetsCard(
+                    exerciseWithSets = exerciseWithSets,
+                    isEditMode = uiState.isEditMode,
+                    getWeight = { setId -> viewModel.getSetWeight(setId) },
+                    getReps = { setId -> viewModel.getSetReps(setId) },
+                    onWeightChange = { setId, weight -> viewModel.updateSetWeight(setId, weight) },
+                    onRepsChange = { setId, reps -> viewModel.updateSetReps(setId, reps) }
+                )
             }
         }
 
-
-        if (!workout.notes.isNullOrBlank()) {
+        if (!workout.notes.isNullOrBlank() && !uiState.isEditMode) {
             item {
                 NotesCard(notes = workout.notes!!)
             }
         }
-
 
         item {
             Spacer(modifier = Modifier.height(32.dp))
@@ -170,7 +316,6 @@ private fun WorkoutSummaryCard(
                 .fillMaxWidth()
                 .padding(20.dp)
         ) {
-
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -213,7 +358,6 @@ private fun WorkoutSummaryCard(
                     )
                 }
             }
-
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -263,7 +407,6 @@ private fun WorkoutStatsCard(
                 .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-
             workout.durationMinutes?.let { duration ->
                 StatColumn(
                     icon = Icons.Default.Timer,
@@ -271,7 +414,6 @@ private fun WorkoutStatsCard(
                     label = "Duration"
                 )
             }
-
 
             if (!workout.isCardio && workout.totalVolume > 0) {
                 StatColumn(
@@ -281,7 +423,6 @@ private fun WorkoutStatsCard(
                 )
             }
 
-
             if (!workout.isCardio && workout.completedSets > 0) {
                 StatColumn(
                     icon = Icons.Default.CheckCircle,
@@ -290,7 +431,6 @@ private fun WorkoutStatsCard(
                 )
             }
 
-
             if (workout.exerciseCount > 0) {
                 StatColumn(
                     icon = Icons.AutoMirrored.Filled.List,
@@ -298,7 +438,6 @@ private fun WorkoutStatsCard(
                     label = "Exercises"
                 )
             }
-
 
             if (workout.prCount > 0) {
                 StatColumn(
