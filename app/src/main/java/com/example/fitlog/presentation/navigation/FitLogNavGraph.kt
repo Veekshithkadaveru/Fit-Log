@@ -10,6 +10,7 @@ import androidx.navigation.navArgument
 import com.example.fitlog.presentation.screens.PlaceholderScreen
 import com.example.fitlog.presentation.screens.exercises.ExerciseDetailScreen
 import com.example.fitlog.presentation.screens.exercises.ExerciseLibraryScreen
+import com.example.fitlog.presentation.screens.history.HistoryScreen
 import com.example.fitlog.presentation.screens.progress.ExerciseProgressScreen
 import com.example.fitlog.presentation.screens.progress.ProgressDashboardScreen
 
@@ -49,7 +50,7 @@ fun FitLogNavGraph(
         }
         
         composable(FitLogDestinations.HISTORY) {
-            PlaceholderScreen(title = "History", navController = navController)
+            HistoryScreen(navController = navController)
         }
         
         composable(FitLogDestinations.SETTINGS) {
