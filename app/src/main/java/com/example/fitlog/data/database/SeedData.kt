@@ -81,7 +81,7 @@ object SeedData {
         ),
         ExerciseEntity(
             id = 8,
-            name = "Decline Bench Press",
+            name = "Decline Bench Press", // TODO: Rework on these images. Prompt: A realistic photo of a fit person performing a decline barbell bench press. Lying on a decline bench, pressing the weight up. Focus on lower chest and triceps. Professional gym atmosphere. Photorealistic.
             primaryMuscle = MuscleGroup.CHEST.name,
             secondaryMuscles = "${MuscleGroup.SHOULDERS.name},${MuscleGroup.TRICEPS.name}",
             category = ExerciseCategory.COMPOUND.name,
@@ -155,7 +155,7 @@ object SeedData {
         ),
         ExerciseEntity(
             id = 16,
-            name = "Face Pulls",
+            name = "Face Pulls", // TODO: Rework on these images. Prompt: A realistic photo of a fit person performing face pulls using a cable machine with a rope attachment. Pulling the rope towards their face, elbows high and out. Rear delts engaged. Modern fitness center. Photorealistic.
             primaryMuscle = MuscleGroup.REAR_DELTS.name,
             secondaryMuscles = "${MuscleGroup.BACK.name},${MuscleGroup.TRAPS.name}",
             category = ExerciseCategory.ISOLATION.name,
@@ -276,7 +276,7 @@ object SeedData {
         ),
         ExerciseEntity(
             id = 29,
-            name = "Bulgarian Split Squats",
+            name = "Bulgarian Split Squats", // TODO: Rework on these images. Prompt: A realistic photo of a fit person performing bulgarian split squats with dumbbells. One foot resting on a bench behind them, lowering into a lunge. Modern gym setting, soft lighting. Photorealistic, 8k quality.
             primaryMuscle = MuscleGroup.QUADRICEPS.name,
             secondaryMuscles = "${MuscleGroup.GLUTES.name},${MuscleGroup.HAMSTRINGS.name}",
             category = ExerciseCategory.COMPOUND.name,
@@ -386,7 +386,7 @@ object SeedData {
         ),
         ExerciseEntity(
             id = 41,
-            name = "Hammer Curls",
+            name = "Hammer Curls", // TODO: Rework on these images. Prompt: A realistic photo of a fit person performing standing dumbbell hammer curls. Holding dumbbells with a neutral grip (palms facing each other), lifting towards shoulders. Biceps and forearms focus. Gym setting. Photorealistic.
             primaryMuscle = MuscleGroup.BICEPS.name,
             secondaryMuscles = MuscleGroup.FOREARMS.name,
             category = ExerciseCategory.ISOLATION.name,
@@ -395,7 +395,7 @@ object SeedData {
         ),
         ExerciseEntity(
             id = 42,
-            name = "Close-Grip Bench Press",
+            name = "Close-Grip Bench Press", // TODO: Rework on these images. Prompt: A realistic photo of a fit person performing a close-grip barbell bench press. Lying on a flat bench, hands positioned shoulder-width apart on the bar. Triceps engaged. Gym environment. Photorealistic.
             primaryMuscle = MuscleGroup.TRICEPS.name,
             secondaryMuscles = "${MuscleGroup.CHEST.name},${MuscleGroup.SHOULDERS.name}",
             category = ExerciseCategory.COMPOUND.name,
@@ -511,6 +511,190 @@ object SeedData {
             category = ExerciseCategory.COMPOUND.name,
             equipment = Equipment.OTHER.name,
             thumbnailRes = "ic_ab_wheel_rollouts"
+        ),
+        
+        // NEW EXERCISES (10)
+        ExerciseEntity(
+            id = 55,
+            name = "Front Squat",
+            primaryMuscle = MuscleGroup.QUADRICEPS.name,
+            secondaryMuscles = "${MuscleGroup.GLUTES.name},${MuscleGroup.CORE.name}",
+            category = ExerciseCategory.COMPOUND.name,
+            equipment = Equipment.BARBELL.name,
+            thumbnailRes = "ic_front_squat"
+        ),
+        ExerciseEntity(
+            id = 56,
+            name = "Skull Crushers",
+            primaryMuscle = MuscleGroup.TRICEPS.name,
+            secondaryMuscles = "",
+            category = ExerciseCategory.ISOLATION.name,
+            equipment = Equipment.EZ_BAR.name,
+            thumbnailRes = "ic_skull_crushers"
+        ),
+        ExerciseEntity(
+            id = 57,
+            name = "Concentration Curls",
+            primaryMuscle = MuscleGroup.BICEPS.name,
+            secondaryMuscles = "",
+            category = ExerciseCategory.ISOLATION.name,
+            equipment = Equipment.DUMBBELL.name,
+            thumbnailRes = "ic_concentration_curls"
+        ),
+        ExerciseEntity(
+            id = 58,
+            name = "Kettlebell Swings",
+            primaryMuscle = MuscleGroup.HAMSTRINGS.name,
+            secondaryMuscles = "${MuscleGroup.GLUTES.name},${MuscleGroup.CORE.name},${MuscleGroup.SHOULDERS.name}",
+            category = ExerciseCategory.COMPOUND.name,
+            equipment = Equipment.KETTLEBELL.name,
+            thumbnailRes = "ic_kettlebell_swings"
+        ),
+        ExerciseEntity(
+            id = 59,
+            name = "Box Jumps",
+            primaryMuscle = MuscleGroup.QUADRICEPS.name,
+            secondaryMuscles = "${MuscleGroup.CALVES.name},${MuscleGroup.GLUTES.name}",
+            category = ExerciseCategory.COMPOUND.name,
+            equipment = Equipment.OTHER.name,
+            thumbnailRes = "ic_box_jumps"
+        ),
+        ExerciseEntity(
+            id = 60,
+            name = "Burpees",
+            primaryMuscle = MuscleGroup.CORE.name,
+            secondaryMuscles = "${MuscleGroup.CHEST.name},${MuscleGroup.SHOULDERS.name},${MuscleGroup.QUADRICEPS.name}",
+            category = ExerciseCategory.CARDIO.name,
+            equipment = Equipment.BODYWEIGHT.name,
+            thumbnailRes = "ic_burpees"
+        ),
+        ExerciseEntity(
+            id = 61,
+            name = "Farmer's Carry",
+            primaryMuscle = MuscleGroup.FOREARMS.name,
+            secondaryMuscles = "${MuscleGroup.TRAPS.name},${MuscleGroup.CORE.name}",
+            category = ExerciseCategory.COMPOUND.name,
+            equipment = Equipment.DUMBBELL.name,
+            thumbnailRes = "ic_farmers_carry"
+        ),
+        ExerciseEntity(
+            id = 62,
+            name = "Good Mornings",
+            primaryMuscle = MuscleGroup.HAMSTRINGS.name,
+            secondaryMuscles = "${MuscleGroup.GLUTES.name},${MuscleGroup.BACK.name}",
+            category = ExerciseCategory.COMPOUND.name,
+            equipment = Equipment.BARBELL.name,
+            thumbnailRes = "ic_good_mornings"
+        ),
+        ExerciseEntity(
+            id = 63,
+            name = "Dumbbell Pullover",
+            primaryMuscle = MuscleGroup.LATS.name,
+            secondaryMuscles = "${MuscleGroup.CHEST.name},${MuscleGroup.TRICEPS.name}",
+            category = ExerciseCategory.ISOLATION.name,
+            equipment = Equipment.DUMBBELL.name,
+            thumbnailRes = "ic_dumbbell_pullover"
+        ),
+        ExerciseEntity(
+            id = 64,
+            name = "Reverse Curls", // TODO: Rework on these images. Prompt: A realistic photo of a fit person performing standing barbell reverse curls. Holding the bar with an overhand grip (palms facing down), lifting towards chest. Focus on forearms and biceps. Modern gym. Photorealistic.
+            primaryMuscle = MuscleGroup.FOREARMS.name,
+            secondaryMuscles = MuscleGroup.BICEPS.name,
+            category = ExerciseCategory.ISOLATION.name,
+            equipment = Equipment.EZ_BAR.name,
+            thumbnailRes = "ic_reverse_curls"
+        ),
+        
+        // BATCH 2 EXERCISES (10)
+        ExerciseEntity(
+            id = 65,
+            name = "Hack Squat",
+            primaryMuscle = MuscleGroup.QUADRICEPS.name,
+            secondaryMuscles = "${MuscleGroup.GLUTES.name},${MuscleGroup.CALVES.name}",
+            category = ExerciseCategory.COMPOUND.name,
+            equipment = Equipment.MACHINE.name,
+            thumbnailRes = "ic_hack_squat"
+        ),
+        ExerciseEntity(
+            id = 66,
+            name = "Cable Crunches", // TODO: Rework on these images. Prompt: A realistic photo of a fit person performing kneeling cable crunches. Holding the rope attachment behind their head, crunching downwards towards the floor. Focus on core engagement. Modern gym background. Photorealistic.
+            primaryMuscle = MuscleGroup.CORE.name,
+            secondaryMuscles = "",
+            category = ExerciseCategory.ISOLATION.name,
+            equipment = Equipment.CABLE.name,
+            thumbnailRes = "ic_cable_crunches"
+        ),
+        ExerciseEntity(
+            id = 67,
+            name = "Landmine Press", // TODO: Rework on these images. Prompt: A realistic photo of a fit person performing a standing landmine press. Pressing a barbell anchored in a landmine attachment with one arm overhead. Core tight, athletic stance. Gym background. Photorealistic.
+            primaryMuscle = MuscleGroup.SHOULDERS.name,
+            secondaryMuscles = "${MuscleGroup.TRICEPS.name},${MuscleGroup.CHEST.name}",
+            category = ExerciseCategory.COMPOUND.name,
+            equipment = Equipment.BARBELL.name,
+            thumbnailRes = "ic_landmine_press"
+        ),
+        ExerciseEntity(
+            id = 68,
+            name = "Pec Deck Fly",
+            primaryMuscle = MuscleGroup.CHEST.name,
+            secondaryMuscles = MuscleGroup.SHOULDERS.name,
+            category = ExerciseCategory.ISOLATION.name,
+            equipment = Equipment.MACHINE.name,
+            thumbnailRes = "ic_pec_deck_fly"
+        ),
+        ExerciseEntity(
+            id = 69,
+            name = "Clean and Press",
+            primaryMuscle = MuscleGroup.SHOULDERS.name,
+            secondaryMuscles = "${MuscleGroup.LEGS.name},${MuscleGroup.BACK.name},${MuscleGroup.CORE.name}",
+            category = ExerciseCategory.COMPOUND.name,
+            equipment = Equipment.BARBELL.name,
+            thumbnailRes = "ic_clean_and_press"
+        ),
+        ExerciseEntity(
+            id = 70,
+            name = "Battle Ropes",
+            primaryMuscle = MuscleGroup.SHOULDERS.name,
+            secondaryMuscles = "${MuscleGroup.CORE.name},${MuscleGroup.BICEPS.name},${MuscleGroup.TRICEPS.name}",
+            category = ExerciseCategory.CARDIO.name,
+            equipment = Equipment.OTHER.name,
+            thumbnailRes = "ic_battle_ropes"
+        ),
+        ExerciseEntity(
+            id = 71,
+            name = "Trap Bar Deadlift",
+            primaryMuscle = MuscleGroup.LEGS.name,
+            secondaryMuscles = "${MuscleGroup.BACK.name},${MuscleGroup.GLUTES.name},${MuscleGroup.TRAPS.name}",
+            category = ExerciseCategory.COMPOUND.name,
+            equipment = Equipment.OTHER.name,
+            thumbnailRes = "ic_trap_bar_deadlift"
+        ),
+        ExerciseEntity(
+            id = 72,
+            name = "Wall Sit",
+            primaryMuscle = MuscleGroup.QUADRICEPS.name,
+            secondaryMuscles = "${MuscleGroup.GLUTES.name},${MuscleGroup.CORE.name}",
+            category = ExerciseCategory.ISOLATION.name,
+            equipment = Equipment.BODYWEIGHT.name,
+            thumbnailRes = "ic_wall_sit"
+        ),
+        ExerciseEntity(
+            id = 73,
+            name = "Nordic Hamstring Curl",
+            primaryMuscle = MuscleGroup.HAMSTRINGS.name,
+            secondaryMuscles = "${MuscleGroup.GLUTES.name},${MuscleGroup.CALVES.name}",
+            category = ExerciseCategory.ISOLATION.name,
+            equipment = Equipment.BODYWEIGHT.name,
+            thumbnailRes = "ic_nordic_hamstring_curl"
+        ),
+        ExerciseEntity(
+            id = 74,
+            name = "Jump Squats",
+            primaryMuscle = MuscleGroup.QUADRICEPS.name,
+            secondaryMuscles = "${MuscleGroup.GLUTES.name},${MuscleGroup.CALVES.name}",
+            category = ExerciseCategory.COMPOUND.name,
+            equipment = Equipment.BODYWEIGHT.name,
+            thumbnailRes = "ic_jump_squats"
         )
     )
 
