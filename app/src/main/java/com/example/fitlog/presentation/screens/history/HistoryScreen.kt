@@ -3,6 +3,7 @@ package com.example.fitlog.presentation.screens.history
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -79,15 +80,15 @@ fun HistoryScreen(
                     )
                 }
 
-                uiState.workouts.isEmpty() -> {
-                    // Empty state
+                uiState.workouts.isEmpty() && uiState.searchQuery.isEmpty() && uiState.currentFilter == HistoryFilterType.ALL -> {
+                    // Empty state (only if no search/filter applied)
                     EmptyHistoryState(
                         modifier = Modifier.align(Alignment.Center)
                     )
                 }
 
                 else -> {
-                    // Content
+                    // Content (List or No Search Results)
                     HistoryContent(
                         uiState = uiState,
                         viewModel = viewModel,
@@ -112,52 +113,147 @@ private fun HistoryContent(
     onAnalyticsClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    LazyColumn(
-        modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        // Analytics Card
-        item {
-            AnalyticsCard(onClick = onAnalyticsClick)
-        }
+    Column(modifier = modifier.fillMaxSize()) {
+        
+        // Search and Filter Section
+        SearchAndFilterSection(
+            searchQuery = uiState.searchQuery,
+            currentFilter = uiState.currentFilter,
+            onSearchQueryChange = viewModel::onSearchQueryChange,
+            onFilterChange = viewModel::onFilterChange,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+        )
 
-        // Section header
-        item {
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+        if (uiState.workouts.isEmpty()) {
+            // No Results Found State
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Recent Workouts",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "${uiState.workouts.size} workouts",
-                    style = MaterialTheme.typography.labelMedium,
+                    text = "No matching workouts found",
+                    style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Analytics Card (Keep distinct from search results)
+                item {
+                    AnalyticsCard(onClick = onAnalyticsClick)
+                }
+    
+                // Section header
+                item {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Recent Workouts",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "${uiState.workouts.size} workouts",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+    
+                // Workout list
+                items(
+                    items = uiState.workouts,
+                    key = { it.id }
+                ) { workout ->
+                    WorkoutHistoryCard(
+                        workout = workout,
+                        routineName = viewModel.getRoutineNameForWorkout(workout),
+                        onClick = { onWorkoutClick(workout.id) }
+                    )
+                }
+    
+                // Bottom spacing for FAB or navigation bar
+                item {
+                    Spacer(modifier = Modifier.height(80.dp))
+                }
+            }
         }
+    }
+}
 
-        // Workout list
-        items(
-            items = uiState.workouts,
-            key = { it.id }
-        ) { workout ->
-            WorkoutHistoryCard(
-                workout = workout,
-                routineName = viewModel.getRoutineNameForWorkout(workout),
-                onClick = { onWorkoutClick(workout.id) }
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SearchAndFilterSection(
+    searchQuery: String,
+    currentFilter: HistoryFilterType,
+    onSearchQueryChange: (String) -> Unit,
+    onFilterChange: (HistoryFilterType) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        // Search Bar
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = onSearchQueryChange,
+            modifier = Modifier.fillMaxWidth(),
+            placeholder = { Text("Search workouts...") },
+            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+            trailingIcon = {
+                if (searchQuery.isNotEmpty()) {
+                    IconButton(onClick = { onSearchQueryChange("") }) {
+                        Icon(Icons.Default.Close, contentDescription = "Clear search")
+                    }
+                }
+            },
+            singleLine = true,
+            shape = RoundedCornerShape(12.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                focusedBorderColor = MaterialTheme.colorScheme.primary
             )
-        }
+        )
 
-        // Bottom spacing for FAB or navigation bar
-        item {
-            Spacer(modifier = Modifier.height(80.dp))
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Filter Chips
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            HistoryFilterType.values().forEach { type ->
+                FilterChip(
+                    selected = currentFilter == type,
+                    onClick = { onFilterChange(type) },
+                    label = {
+                        Text(
+                            text = when (type) {
+                                HistoryFilterType.ALL -> "All"
+                                HistoryFilterType.STRENGTH -> "Strength"
+                                HistoryFilterType.CARDIO -> "Cardio"
+                            }
+                        )
+                    },
+                    leadingIcon = if (currentFilter == type) {
+                        {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    } else null
+                )
+            }
         }
     }
 }

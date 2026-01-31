@@ -10,6 +10,7 @@ import androidx.navigation.navArgument
 import com.example.fitlog.presentation.screens.PlaceholderScreen
 import com.example.fitlog.presentation.screens.exercises.ExerciseDetailScreen
 import com.example.fitlog.presentation.screens.exercises.ExerciseLibraryScreen
+import com.example.fitlog.presentation.screens.calendar.CalendarScreen
 import com.example.fitlog.presentation.screens.history.HistoryScreen
 import com.example.fitlog.presentation.screens.history.WorkoutDetailScreen
 import com.example.fitlog.presentation.screens.progress.ExerciseProgressScreen
@@ -156,7 +157,12 @@ fun FitLogNavGraph(
         }
 
         composable(FitLogDestinations.CALENDAR_VIEW) {
-            PlaceholderScreen(title = "Calendar", navController = navController)
+            CalendarScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onWorkoutClick = { workoutId ->
+                    navController.navigate(FitLogRoutes.workoutDetail(workoutId))
+                }
+            )
         }
 
         composable(FitLogDestinations.MUSCLE_ANALYTICS) {
