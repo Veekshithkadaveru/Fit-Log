@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.automirrored.filled.DirectionsRun
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Info
@@ -138,6 +139,9 @@ fun ActiveWorkoutScreen(
                         onQuickStart = { viewModel.startWorkout() },
                         onStartFromRoutine = {
                             navController.navigate(FitLogDestinations.ROUTINE_LIST)
+                        },
+                        onLogCardio = {
+                            navController.navigate(FitLogDestinations.CARDIO_LOG)
                         },
                         onViewAnalytics = {
                             navController.navigate(FitLogDestinations.MUSCLE_ANALYTICS)
@@ -310,6 +314,7 @@ private fun ActiveWorkoutContent(
 private fun EmptyWorkoutState(
     onQuickStart: () -> Unit,
     onStartFromRoutine: () -> Unit,
+    onLogCardio: () -> Unit,
     onViewAnalytics: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -372,6 +377,21 @@ private fun EmptyWorkoutState(
                 )
                 Text(
                     text = "Start from Routine",
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+            }
+
+            Button(
+                onClick = onLogCardio,
+                modifier = Modifier.fillMaxWidth(),
+                colors = androidx.compose.material3.ButtonDefaults.filledTonalButtonColors()
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.DirectionsRun,
+                    contentDescription = null
+                )
+                Text(
+                    text = "Log Cardio",
                     modifier = Modifier.padding(start = 8.dp)
                 )
             }

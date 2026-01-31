@@ -116,6 +116,20 @@ interface WorkoutDao {
     @Query("SELECT SUM(durationMinutes) FROM cardio_sessions WHERE workoutId = :workoutId")
     suspend fun getTotalCardioDuration(workoutId: Int): Int?
 
+    @Query("SELECT * FROM cardio_sessions ORDER BY id DESC")
+    suspend fun getAllCardioSessions(): List<CardioSessionEntity>
+
+    @Query("SELECT * FROM cardio_sessions ORDER BY id DESC")
+    fun getAllCardioSessionsFlow(): Flow<List<CardioSessionEntity>>
+
+    @Query("""
+        SELECT cs.* FROM cardio_sessions cs
+        INNER JOIN workouts w ON cs.workoutId = w.id
+        WHERE w.startTime >= :startDate AND w.startTime <= :endDate
+        ORDER BY w.startTime DESC
+    """)
+    suspend fun getCardioSessionsByDateRange(startDate: Long, endDate: Long): List<CardioSessionEntity>
+
     // Analytics queries
     @Query("""
         SELECT SUM(weight * reps) FROM workout_sets 
