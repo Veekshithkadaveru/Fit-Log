@@ -86,18 +86,35 @@ fun VolumeTrendChart(
 
             val dateFormat = remember { SimpleDateFormat("MM/dd", Locale.getDefault()) }
 
-            // Chart
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(160.dp)
             ) {
                 Canvas(modifier = Modifier.fillMaxSize()) {
-                    if (sortedData.size < 2) return@Canvas
-
                     val chartWidth = size.width
                     val chartHeight = size.height - 8.dp.toPx()
                     val paddingTop = 8.dp.toPx()
+
+                    // Handle single entry case - show a single point in the center
+                    if (sortedData.size == 1) {
+                        val centerX = chartWidth / 2
+                        val centerY = chartHeight / 2
+                        drawCircle(
+                            color = Color.White,
+                            radius = 8.dp.toPx(),
+                            center = Offset(centerX, centerY)
+                        )
+                        drawCircle(
+                            color = primaryColor,
+                            radius = 6.dp.toPx(),
+                            center = Offset(centerX, centerY)
+                        )
+                        return@Canvas
+                    }
+
+                    if (sortedData.size < 2) return@Canvas
 
                     val points = sortedData.mapIndexed { index, point ->
                         val x = (index.toFloat() / (sortedData.size - 1)) * chartWidth
@@ -106,7 +123,7 @@ fun VolumeTrendChart(
                         Offset(x, y)
                     }
 
-                    // Draw gradient fill under the line
+
                     val fillPath = Path().apply {
                         moveTo(points.first().x, chartHeight)
                         points.forEach { point ->
@@ -126,7 +143,7 @@ fun VolumeTrendChart(
                     )
                     drawPath(fillPath, gradient)
 
-                    // Draw the line
+
                     val linePath = Path().apply {
                         points.forEachIndexed { index, point ->
                             if (index == 0) {
@@ -146,7 +163,7 @@ fun VolumeTrendChart(
                         )
                     )
 
-                    // Draw points
+
                     points.forEach { point ->
                         drawCircle(
                             color = Color.White,
@@ -195,7 +212,7 @@ fun VolumeTrendChart(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Stats row
+
             val totalVolume = sortedData.sumOf { it.totalVolume.toDouble() }.toFloat()
             val avgVolume = if (sortedData.isNotEmpty()) totalVolume / sortedData.size else 0f
 
