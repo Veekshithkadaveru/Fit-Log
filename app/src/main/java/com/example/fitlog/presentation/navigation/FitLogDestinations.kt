@@ -32,6 +32,9 @@ object FitLogDestinations {
     const val MUSCLE_ANALYTICS = "muscle_analytics"
     const val EXERCISE_PROGRESS = "exercise_progress"
     const val EXERCISE_PROGRESS_WITH_ID = "exercise_progress?exerciseId={exerciseId}"
+
+    // Cardio & Bodyweight Destinations
+    const val CARDIO_LOG = "cardio_log"
     
     // Settings Destinations
     const val PREMIUM = "premium"

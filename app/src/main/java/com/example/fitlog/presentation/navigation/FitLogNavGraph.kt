@@ -13,6 +13,7 @@ import com.example.fitlog.presentation.screens.exercises.ExerciseLibraryScreen
 import com.example.fitlog.presentation.screens.calendar.CalendarScreen
 import com.example.fitlog.presentation.screens.history.HistoryScreen
 import com.example.fitlog.presentation.screens.history.WorkoutDetailScreen
+import com.example.fitlog.presentation.screens.cardio.CardioScreen
 import com.example.fitlog.presentation.screens.progress.ExerciseProgressScreen
 import com.example.fitlog.presentation.screens.progress.ProgressDashboardScreen
 
@@ -192,9 +193,21 @@ fun FitLogNavGraph(
         composable(FitLogDestinations.PREMIUM) {
             PlaceholderScreen(title = "Premium", navController = navController)
         }
-        
+
         composable(FitLogDestinations.EXPORT_DATA) {
             PlaceholderScreen(title = "Export Data", navController = navController)
+        }
+
+        // Cardio Screen
+        composable(FitLogDestinations.CARDIO_LOG) {
+            CardioScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToHistory = {
+                    navController.navigate(FitLogDestinations.HISTORY) {
+                        popUpTo(FitLogDestinations.CARDIO_LOG) { inclusive = true }
+                    }
+                }
+            )
         }
     }
 }
