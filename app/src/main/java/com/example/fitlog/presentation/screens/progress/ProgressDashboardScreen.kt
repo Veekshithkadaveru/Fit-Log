@@ -10,9 +10,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.LocalFireDepartment
@@ -52,6 +55,7 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProgressDashboardScreen(
+    onNavigateToBodyweight: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: ProgressDashboardViewModel = hiltViewModel()
 ) {
@@ -108,6 +112,7 @@ fun ProgressDashboardScreen(
                 ProgressDashboardContent(
                     uiState = uiState,
                     onDateRangeSelected = viewModel::selectDateRange,
+                    onNavigateToBodyweight = onNavigateToBodyweight,
                     modifier = Modifier.padding(paddingValues)
                 )
             }
@@ -119,6 +124,7 @@ fun ProgressDashboardScreen(
 private fun ProgressDashboardContent(
     uiState: ProgressDashboardUiState,
     onDateRangeSelected: (com.example.fitlog.domain.model.DateRangeFilter) -> Unit,
+    onNavigateToBodyweight: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val summary = uiState.progressSummary
@@ -139,10 +145,10 @@ private fun ProgressDashboardContent(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Dynamic Sections based on selection
+
         when (uiState.selectedDateRange) {
             DateRangeFilter.LAST_7_DAYS -> {
-                // Section: This Week
+
                 SectionHeader(title = "This Week")
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -172,7 +178,7 @@ private fun ProgressDashboardContent(
                 }
             }
             DateRangeFilter.LAST_YEAR -> {
-                // Section: This Year
+
                 SectionHeader(title = "This Year")
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -201,7 +207,7 @@ private fun ProgressDashboardContent(
                 }
             }
             else -> {
-                // Section: This Month (Default for 30 days, 3 months, 6 months)
+
                 SectionHeader(title = "This Month")
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -232,7 +238,7 @@ private fun ProgressDashboardContent(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Dynamic Volume & Duration Cards
+
         val (volumeValue, volumeSubtitle, durationValue) = when (uiState.selectedDateRange) {
             DateRangeFilter.LAST_7_DAYS -> Triple(
                 summary?.totalVolumeThisWeek ?: 0f,
@@ -314,13 +320,19 @@ private fun ProgressDashboardContent(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            SectionHeader(title = "Bodyweight Trend")
+            SectionHeader(
+                title = "Bodyweight Trend",
+                showArrow = true,
+                onClick = onNavigateToBodyweight
+            )
 
             Spacer(modifier = Modifier.height(12.dp))
 
             BodyweightTrendChart(
                 entries = uiState.bodyweightEntries,
-                modifier = Modifier.padding(horizontal = 16.dp)
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .clickable { onNavigateToBodyweight() }
             )
         }
 
@@ -331,12 +343,18 @@ private fun ProgressDashboardContent(
 @Composable
 private fun SectionHeader(
     title: String,
+    showArrow: Boolean = false,
+    onClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = 16.dp)
+            .then(
+                if (onClick != null) Modifier.clickable { onClick() }
+                else Modifier
+            ),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
@@ -352,8 +370,17 @@ private fun SectionHeader(
         Text(
             text = title,
             style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.weight(1f)
         )
+        if (showArrow) {
+            androidx.compose.material3.Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = "Navigate",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(24.dp)
+            )
+        }
     }
 }
 
