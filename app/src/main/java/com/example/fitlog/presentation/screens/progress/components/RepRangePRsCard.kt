@@ -127,7 +127,7 @@ private fun RepRangeRow(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "${record.bestWeight.toInt()} lbs",
+                    text = "${record.bestWeight.toInt()} kg",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -169,7 +169,7 @@ private fun RepRangeRow(
                 )
             }
             Text(
-                text = "${record.estimated1RM.toInt()} lbs",
+                text = "${record.estimated1RM.toInt()} kg",
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = secondaryColor

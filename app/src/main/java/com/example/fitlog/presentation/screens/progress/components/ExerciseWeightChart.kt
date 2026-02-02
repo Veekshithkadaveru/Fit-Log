@@ -225,17 +225,17 @@ fun ExerciseWeightChart(
             ) {
                 StatItem(
                     label = "Current",
-                    value = "${latestWeight.toInt()} lbs",
+                    value = "${latestWeight.toInt()} kg",
                     color = primaryColor
                 )
                 StatItem(
                     label = "Change",
-                    value = String.format(Locale.US, "%+.0f lbs", change),
+                    value = String.format(Locale.US, "%+.0f kg", change),
                     color = if (change >= 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
                 )
                 StatItem(
                     label = "Peak",
-                    value = "${peakWeight.toInt()} lbs",
+                    value = "${peakWeight.toInt()} kg",
                     color = primaryColor
                 )
             }

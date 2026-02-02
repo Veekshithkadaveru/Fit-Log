@@ -1,5 +1,7 @@
 package com.example.fitlog.presentation.viewmodel
 
+import com.example.fitlog.presentation.timer.RestTimerManager
+
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fitlog.domain.model.Exercise
@@ -29,7 +31,8 @@ class ActiveWorkoutViewModel @Inject constructor(
     private val workoutRepository: WorkoutRepository,
     private val routineRepository: RoutineRepository,
     private val exerciseRepository: ExerciseRepository,
-    private val prDetectionUseCase: PRDetectionUseCase
+    private val prDetectionUseCase: PRDetectionUseCase,
+    private val restTimerManager: RestTimerManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ActiveWorkoutUiState())
@@ -43,11 +46,9 @@ class ActiveWorkoutViewModel @Inject constructor(
     val prEvent = _prEvent.receiveAsFlow()
 
     private var timerJob: Job? = null
-    private var restTimerJob: Job? = null
 
-    // Rest Timer State
-    private val _restTimerState = MutableStateFlow(RestTimerState())
-    val restTimerState: StateFlow<RestTimerState> = _restTimerState.asStateFlow()
+    // Rest Timer State exposed from Manager
+    val restTimerState: StateFlow<RestTimerState> = restTimerManager.restTimerState
 
     init {
         loadActiveWorkout()
@@ -617,61 +618,32 @@ class ActiveWorkoutViewModel @Inject constructor(
     /**
      * Start rest timer with given duration
      */
+    /**
+     * Start rest timer with given duration
+     */
     fun startRestTimer(durationSeconds: Int = 90) {
-        restTimerJob?.cancel()
-        _restTimerState.value = RestTimerState(
-            isActive = true,
-            remainingSeconds = durationSeconds,
-            totalSeconds = durationSeconds,
-            isPaused = false
-        )
-
-        restTimerJob = viewModelScope.launch {
-            while (isActive && _restTimerState.value.remainingSeconds > 0) {
-                delay(1000L)
-                if (!_restTimerState.value.isPaused) {
-                    val newRemaining = _restTimerState.value.remainingSeconds - 1
-                    _restTimerState.value = _restTimerState.value.copy(
-                        remainingSeconds = newRemaining
-                    )
-
-                    // Timer complete
-                    if (newRemaining == 0) {
-                        _restTimerState.value = _restTimerState.value.copy(
-                            isComplete = true
-                        )
-                    }
-                }
-            }
-        }
+        restTimerManager.startTimer(durationSeconds)
     }
 
     /**
      * Pause or resume rest timer
      */
     fun pauseResumeRestTimer() {
-        _restTimerState.value = _restTimerState.value.copy(
-            isPaused = !_restTimerState.value.isPaused
-        )
+        restTimerManager.pauseResumeTimer()
     }
 
     /**
      * Skip/stop rest timer
      */
     fun skipRestTimer() {
-        restTimerJob?.cancel()
-        _restTimerState.value = RestTimerState()
+        restTimerManager.stopTimer()
     }
 
     /**
      * Add time to rest timer
      */
     fun addRestTime(seconds: Int) {
-        val current = _restTimerState.value
-        _restTimerState.value = current.copy(
-            remainingSeconds = current.remainingSeconds + seconds,
-            totalSeconds = current.totalSeconds + seconds
-        )
+        restTimerManager.addTime(seconds)
     }
 
     /**
@@ -684,7 +656,12 @@ class ActiveWorkoutViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         stopWorkoutTimer()
-        restTimerJob?.cancel()
+        // We do NOT stop the RestTimerManager here because we want it to survive
+        // if we are just rotating screen. 
+        // However, if the user explicitly exits the workout, endWorkout() or discardWorkout() 
+        // should logicall stop the timer?
+        // Actually, if using Foreground Service, it outlives the UI. 
+        // Let's leave it running unless explicitly stopped by 'skipRestTimer'.
     }
 }
 
@@ -742,7 +719,8 @@ data class RestTimerState(
     val remainingSeconds: Int = 0,
     val totalSeconds: Int = 0,
     val isPaused: Boolean = false,
-    val isComplete: Boolean = false
+    val isComplete: Boolean = false,
+    val targetTimestamp: Long? = null
 )
 
 /**

@@ -31,7 +31,7 @@ data class WorkoutSetEntity(
     val id: Int = 0,
     val workoutId: Int,
     val exerciseId: Int,
-    val weight: Float = 0f, // In user's preferred unit (kg/lbs)
+    val weight: Float = 0f, // In user's preferred unit (kg)
     val reps: Int = 0,
     val isCompleted: Boolean = false,
     val isPR: Boolean = false, // Personal Record flag

@@ -1,5 +1,6 @@
 package com.example.fitlog.presentation.screens.workout
 
+import com.example.fitlog.presentation.viewmodel.WorkoutNavigationEvent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,10 +12,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.automirrored.filled.DirectionsRun
 import androidx.compose.material.icons.filled.FitnessCenter
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
@@ -39,17 +37,19 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.fitlog.presentation.navigation.FitLogDestinations
 import com.example.fitlog.presentation.navigation.FitLogRoutes
+import com.example.fitlog.presentation.screens.workout.components.EmptyWorkoutState
 import com.example.fitlog.presentation.screens.workout.components.ExerciseSection
+import com.example.fitlog.presentation.screens.workout.components.MusclesTrainedPanel
+import com.example.fitlog.presentation.screens.workout.components.PRToastNotification
 import com.example.fitlog.presentation.screens.workout.components.RestTimerOverlay
 import com.example.fitlog.presentation.screens.workout.components.WorkoutControls
 import com.example.fitlog.presentation.screens.workout.components.WorkoutHeader
+import com.example.fitlog.presentation.screens.workout.components.WorkoutSummaryDialog
 import com.example.fitlog.presentation.viewmodel.ActiveWorkoutViewModel
 import com.example.fitlog.presentation.viewmodel.PREvent
-import com.example.fitlog.presentation.viewmodel.WorkoutNavigationEvent
-import com.example.fitlog.presentation.screens.workout.components.EmptyWorkoutState
-import com.example.fitlog.presentation.screens.workout.components.MusclesTrainedPanel
-import com.example.fitlog.presentation.screens.workout.components.PRToastNotification
-import com.example.fitlog.presentation.screens.workout.components.WorkoutSummaryDialog
+import com.example.fitlog.presentation.viewmodel.RestTimerState
+import com.example.fitlog.presentation.viewmodel.ActiveWorkoutUiState
+
 
 /**
  * Main screen for active workout tracking
