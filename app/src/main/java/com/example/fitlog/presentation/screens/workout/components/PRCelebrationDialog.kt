@@ -64,12 +64,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.fitlog.domain.model.PRCheckResult
 import com.example.fitlog.presentation.viewmodel.PREvent
+import com.example.fitlog.ui.theme.FitLogColors
 import kotlin.random.Random
-
-// PR Gold color palette
-private val PRGold = Color(0xFFFFD700)
-private val PRGoldDark = Color(0xFFB8860B)
-private val PRGoldLight = Color(0xFFFFF4CC)
 
 /**
  * Full-screen PR celebration dialog with animations
@@ -147,7 +143,7 @@ private fun ConfettiEffect() {
                 .offset(x = offsetX.dp, y = yOffset.dp)
                 .size(size.dp)
                 .rotate(rotation),
-            tint = if (index % 2 == 0) PRGold else PRGoldLight
+            tint = if (index % 2 == 0) FitLogColors.prGold else FitLogColors.prGoldLight
         )
     }
 }
@@ -188,7 +184,7 @@ private fun PRCelebrationCard(
                     .fillMaxWidth()
                     .background(
                         Brush.verticalGradient(
-                            colors = listOf(PRGold, PRGoldDark)
+                            colors = listOf(FitLogColors.prGold, FitLogColors.prGoldDark)
                         )
                     )
                     .padding(vertical = 24.dp),
@@ -269,7 +265,7 @@ private fun PRCelebrationCard(
                 ) {
                     StatBox(
                         value = "${prEvent.weight.toInt()}",
-                        label = "lbs",
+                        label = "kg",
                         icon = Icons.Default.FitnessCenter
                     )
 
@@ -295,7 +291,7 @@ private fun PRCelebrationCard(
                     onClick = onDismiss,
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = PRGold,
+                        containerColor = FitLogColors.prGold,
                         contentColor = Color.Black
                     ),
                     shape = RoundedCornerShape(12.dp)
@@ -328,13 +324,13 @@ private fun StatBox(
                 imageVector = icon,
                 contentDescription = null,
                 modifier = Modifier.size(20.dp),
-                tint = PRGold
+                tint = FitLogColors.prGold
             )
             Text(
                 text = value,
                 style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.Bold,
-                color = PRGold
+                color = FitLogColors.prGold
             )
         }
         Text(
@@ -369,14 +365,14 @@ private fun PRTypeBadges(prResult: PRCheckResult) {
 @Composable
 private fun PRTypeBadge(text: String) {
     Surface(
-        color = PRGoldLight,
+        color = FitLogColors.prGoldLight,
         shape = RoundedCornerShape(16.dp)
     ) {
         Text(
             text = text,
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.SemiBold,
-            color = PRGoldDark,
+            color = FitLogColors.prGoldDark,
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
         )
     }
@@ -397,7 +393,7 @@ fun PRCountBadge(
     ) {
         Surface(
             modifier = modifier,
-            color = PRGold,
+            color = FitLogColors.prGold,
             shape = RoundedCornerShape(16.dp)
         ) {
             Row(
@@ -456,7 +452,7 @@ fun PRToastNotification(
             .scale(scale.value),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = PRGold
+            containerColor = FitLogColors.prGold
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
@@ -514,14 +510,14 @@ fun PRToastNotification(
                     }
                 }
                 Text(
-                    text = "${prEvent.exerciseName}: ${prEvent.weight.toInt()} lbs × ${prEvent.reps}",
+                    text = "${prEvent.exerciseName}: ${prEvent.weight.toInt()} kg × ${prEvent.reps}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.White.copy(alpha = 0.9f)
                 )
                 // Show estimated 1RM if available
                 if (prEvent.estimated1RM > 0) {
                     Text(
-                        text = "Est. 1RM: ${prEvent.estimated1RM.toInt()} lbs",
+                        text = "Est. 1RM: ${prEvent.estimated1RM.toInt()} kg",
                         style = MaterialTheme.typography.bodySmall,
                         color = Color.White.copy(alpha = 0.7f)
                     )
@@ -588,7 +584,7 @@ fun WorkoutSummaryDialog(
                             .fillMaxWidth()
                             .background(
                                 if (sessionPRs.isNotEmpty()) {
-                                    Brush.verticalGradient(colors = listOf(PRGold, PRGoldDark))
+                                    Brush.verticalGradient(colors = listOf(FitLogColors.prGold, FitLogColors.prGoldDark))
                                 } else {
                                     Brush.verticalGradient(
                                         colors = listOf(
@@ -690,7 +686,7 @@ fun WorkoutSummaryDialog(
                             onClick = onDismiss,
                             modifier = Modifier.fillMaxWidth(),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = if (sessionPRs.isNotEmpty()) PRGold else MaterialTheme.colorScheme.primary,
+                                containerColor = if (sessionPRs.isNotEmpty()) FitLogColors.prGold else MaterialTheme.colorScheme.primary,
                                 contentColor = if (sessionPRs.isNotEmpty()) Color.Black else Color.White
                             ),
                             shape = RoundedCornerShape(12.dp)
@@ -734,7 +730,7 @@ private fun WorkoutStatItem(
 private fun PRSummaryItem(prEvent: PREvent) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        color = PRGoldLight,
+        color = FitLogColors.prGoldLight,
         shape = RoundedCornerShape(12.dp)
     ) {
         Row(
@@ -748,7 +744,7 @@ private fun PRSummaryItem(prEvent: PREvent) {
                 imageVector = Icons.Default.EmojiEvents,
                 contentDescription = null,
                 modifier = Modifier.size(24.dp),
-                tint = PRGoldDark
+                tint = FitLogColors.prGoldDark
             )
             Column(
                 modifier = Modifier.weight(1f)
@@ -761,34 +757,34 @@ private fun PRSummaryItem(prEvent: PREvent) {
                         text = prEvent.exerciseName,
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.SemiBold,
-                        color = PRGoldDark
+                        color = FitLogColors.prGoldDark
                     )
                     // Rep range badge
                     Surface(
-                        color = PRGoldDark.copy(alpha = 0.2f),
+                        color = FitLogColors.prGoldDark.copy(alpha = 0.2f),
                         shape = RoundedCornerShape(4.dp)
                     ) {
                         Text(
                             text = prEvent.repRangeDisplayName,
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
-                            color = PRGoldDark,
+                            color = FitLogColors.prGoldDark,
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                         )
                     }
                 }
                 Text(
-                    text = "${prEvent.weight.toInt()} lbs × ${prEvent.reps} reps",
+                    text = "${prEvent.weight.toInt()} kg × ${prEvent.reps} reps",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = PRGoldDark.copy(alpha = 0.8f)
+                    color = FitLogColors.prGoldDark.copy(alpha = 0.8f)
                 )
                 // Show estimated 1RM if it's also a new 1RM PR
                 if (prEvent.isNew1RMPR && prEvent.estimated1RM > 0) {
                     Text(
-                        text = "New Est. 1RM: ${prEvent.estimated1RM.toInt()} lbs",
+                        text = "New Est. 1RM: ${prEvent.estimated1RM.toInt()} kg",
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.SemiBold,
-                        color = PRGoldDark.copy(alpha = 0.7f)
+                        color = FitLogColors.prGoldDark.copy(alpha = 0.7f)
                     )
                 }
             }

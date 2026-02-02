@@ -31,10 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.fitlog.domain.model.WorkoutSet
-
-// PR Gold colors
-private val PRGold = Color(0xFFFFD700)
-private val PRGoldDark = Color(0xFFB8860B)
+import com.example.fitlog.ui.theme.FitLogColors
 
 /**
  * Smart set input row with duplicate button and PR styling
@@ -58,7 +55,7 @@ fun SetInputRowSmart(
             .then(
                 if (isPR) {
                     Modifier.background(
-                        PRGold.copy(alpha = 0.1f),
+                        FitLogColors.prGold.copy(alpha = 0.1f),
                         shape = MaterialTheme.shapes.small
                     )
                 } else {
@@ -79,7 +76,7 @@ fun SetInputRowSmart(
                     modifier = Modifier
                         .size(28.dp)
                         .clip(CircleShape)
-                        .background(PRGold),
+                        .background(FitLogColors.prGold),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -101,14 +98,14 @@ fun SetInputRowSmart(
         OutlinedTextField(
             value = if (workoutSet.weight == 0f) "" else workoutSet.weight.toString(),
             onValueChange = onWeightChange,
-            label = { Text("lbs") },
+            label = { Text("kg") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             singleLine = true,
             modifier = Modifier.weight(1f),
             colors = if (isPR) {
                 OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = PRGold,
-                    unfocusedBorderColor = PRGoldDark.copy(alpha = 0.5f)
+                    focusedBorderColor = FitLogColors.prGold,
+                    unfocusedBorderColor = FitLogColors.prGoldDark.copy(alpha = 0.5f)
                 )
             } else {
                 OutlinedTextFieldDefaults.colors()
@@ -124,8 +121,8 @@ fun SetInputRowSmart(
             modifier = Modifier.weight(1f),
             colors = if (isPR) {
                 OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = PRGold,
-                    unfocusedBorderColor = PRGoldDark.copy(alpha = 0.5f)
+                    focusedBorderColor = FitLogColors.prGold,
+                    unfocusedBorderColor = FitLogColors.prGoldDark.copy(alpha = 0.5f)
                 )
             } else {
                 OutlinedTextFieldDefaults.colors()
@@ -137,7 +134,7 @@ fun SetInputRowSmart(
             onCheckedChange = { onCompletedToggle() },
             colors = if (isPR) {
                 CheckboxDefaults.colors(
-                    checkedColor = PRGold,
+                    checkedColor = FitLogColors.prGold,
                     checkmarkColor = Color.White
                 )
             } else {
@@ -149,7 +146,7 @@ fun SetInputRowSmart(
             Icon(
                 imageVector = Icons.Default.ContentCopy,
                 contentDescription = "Duplicate Set",
-                tint = if (isPR) PRGoldDark else MaterialTheme.colorScheme.onSurfaceVariant
+                tint = if (isPR) FitLogColors.prGoldDark else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 

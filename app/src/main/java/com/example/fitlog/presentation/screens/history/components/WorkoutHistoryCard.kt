@@ -1,9 +1,6 @@
 package com.example.fitlog.presentation.screens.history.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.DirectionsRun
 import androidx.compose.material.icons.filled.*
@@ -11,11 +8,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import com.example.fitlog.domain.model.Workout
+import com.example.fitlog.ui.theme.CardDimens
+import com.example.fitlog.ui.theme.FitLogCardDefaults
+import com.example.fitlog.ui.theme.FitLogChipDefaults
+import com.example.fitlog.ui.theme.FitLogShapes
+import com.example.fitlog.ui.theme.IconSize
+import com.example.fitlog.ui.theme.Spacing
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -32,16 +33,14 @@ fun WorkoutHistoryCard(
     Card(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        shape = FitLogShapes.card,
+        colors = FitLogCardDefaults.colors(),
+        elevation = FitLogCardDefaults.elevation()
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(CardDimens.paddingStandard)
         ) {
             // Top row: Date and workout type indicator
             Row(
@@ -60,7 +59,7 @@ fun WorkoutHistoryCard(
                 WorkoutTypeChip(isCardio = workout.isCardio)
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(Spacing.sm))
 
             // Routine name
             Text(
@@ -71,12 +70,12 @@ fun WorkoutHistoryCard(
                 overflow = TextOverflow.Ellipsis
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(Spacing.md))
 
             // Stats row
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                horizontalArrangement = Arrangement.spacedBy(Spacing.lg)
             ) {
                 // Duration
                 workout.durationMinutes?.let { duration ->
@@ -118,7 +117,7 @@ fun WorkoutHistoryCard(
 
             // Notes preview (if any)
             workout.notes?.takeIf { it.isNotBlank() }?.let { notes ->
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(Spacing.sm))
                 Text(
                     text = notes,
                     style = MaterialTheme.typography.bodySmall,
@@ -153,18 +152,18 @@ private fun WorkoutTypeChip(
 
     Surface(
         modifier = modifier,
-        shape = RoundedCornerShape(16.dp),
+        shape = FitLogShapes.chip,
         color = backgroundColor
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.padding(FitLogChipDefaults.padding),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                modifier = Modifier.size(14.dp),
+                modifier = Modifier.size(IconSize.tiny),
                 tint = contentColor
             )
             Text(
@@ -192,13 +191,13 @@ private fun StatItem(
 
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
-            modifier = Modifier.size(16.dp),
+            modifier = Modifier.size(IconSize.small),
             tint = iconColor
         )
         Column {
@@ -248,7 +247,7 @@ private fun isWithinLastWeek(date: Calendar, today: Calendar): Boolean {
 }
 
 /**
- * Format volume for display (e.g., "12,500 lbs" or "1.2k lbs")
+ * Format volume for display (e.g., "12,500 kg" or "1.2k kg")
  */
 private fun formatVolume(volume: Float): String {
     return when {

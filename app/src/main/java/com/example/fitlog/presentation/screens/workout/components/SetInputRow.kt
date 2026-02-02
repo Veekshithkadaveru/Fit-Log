@@ -33,10 +33,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.fitlog.domain.model.WorkoutSet
-
-// PR Gold color
-private val PRGold = Color(0xFFFFD700)
-private val PRGoldDark = Color(0xFFB8860B)
+import com.example.fitlog.ui.theme.FitLogColors
 
 /**
  * Single row for inputting set data (weight, reps, completion)
@@ -53,7 +50,7 @@ fun SetInputRow(
     modifier: Modifier = Modifier
 ) {
     val isPR = workoutSet.isPR
-    val borderColor = if (isPR) PRGold else MaterialTheme.colorScheme.outline
+    val borderColor = if (isPR) FitLogColors.prGold else MaterialTheme.colorScheme.outline
 
     Row(
         modifier = modifier
@@ -61,7 +58,7 @@ fun SetInputRow(
             .then(
                 if (isPR) {
                     Modifier.background(
-                        PRGold.copy(alpha = 0.1f),
+                        FitLogColors.prGold.copy(alpha = 0.1f),
                         shape = MaterialTheme.shapes.small
                     )
                 } else {
@@ -83,7 +80,7 @@ fun SetInputRow(
                     modifier = Modifier
                         .size(28.dp)
                         .clip(CircleShape)
-                        .background(PRGold),
+                        .background(FitLogColors.prGold),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -106,14 +103,14 @@ fun SetInputRow(
         OutlinedTextField(
             value = if (workoutSet.weight == 0f) "" else workoutSet.weight.toString(),
             onValueChange = onWeightChange,
-            label = { Text("lbs") },
+            label = { Text("kg") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             singleLine = true,
             modifier = Modifier.weight(1f),
             colors = if (isPR) {
                 OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = PRGold,
-                    unfocusedBorderColor = PRGoldDark.copy(alpha = 0.5f)
+                    focusedBorderColor = FitLogColors.prGold,
+                    unfocusedBorderColor = FitLogColors.prGoldDark.copy(alpha = 0.5f)
                 )
             } else {
                 OutlinedTextFieldDefaults.colors()
@@ -130,8 +127,8 @@ fun SetInputRow(
             modifier = Modifier.weight(1f),
             colors = if (isPR) {
                 OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = PRGold,
-                    unfocusedBorderColor = PRGoldDark.copy(alpha = 0.5f)
+                    focusedBorderColor = FitLogColors.prGold,
+                    unfocusedBorderColor = FitLogColors.prGoldDark.copy(alpha = 0.5f)
                 )
             } else {
                 OutlinedTextFieldDefaults.colors()
@@ -144,7 +141,7 @@ fun SetInputRow(
             onCheckedChange = { onCompletedToggle() },
             colors = if (isPR) {
                 CheckboxDefaults.colors(
-                    checkedColor = PRGold,
+                    checkedColor = FitLogColors.prGold,
                     checkmarkColor = Color.White
                 )
             } else {

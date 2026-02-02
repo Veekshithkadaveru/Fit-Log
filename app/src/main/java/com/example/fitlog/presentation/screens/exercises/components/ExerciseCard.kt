@@ -2,7 +2,6 @@ package com.example.fitlog.presentation.screens.exercises.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,12 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,7 +26,11 @@ import com.example.fitlog.domain.model.Exercise
 import com.example.fitlog.domain.model.ExerciseCategory
 import com.example.fitlog.domain.model.MuscleGroup
 import com.example.fitlog.presentation.components.ExerciseImage
+import com.example.fitlog.ui.theme.CardDimens
+import com.example.fitlog.ui.theme.FitLogCardDefaults
+import com.example.fitlog.ui.theme.FitLogShapes
 import com.example.fitlog.ui.theme.FitLogTheme
+import com.example.fitlog.ui.theme.Spacing
 
 @Composable
 fun ExerciseCard(
@@ -44,15 +42,14 @@ fun ExerciseCard(
         modifier = modifier
             .fillMaxWidth()
             .clickable { onClick() },
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
+        shape = FitLogShapes.card,
+        elevation = FitLogCardDefaults.elevation(),
+        colors = FitLogCardDefaults.colors()
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(CardDimens.paddingCompact),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Exercise thumbnail/icon
@@ -61,11 +58,11 @@ fun ExerciseCard(
                 contentDescription = exercise.name,
                 modifier = Modifier
                     .size(48.dp)
-                    .clip(RoundedCornerShape(8.dp)),
+                    .clip(FitLogShapes.small),
                 fallbackIconSize = 32.dp
             )
 
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(Spacing.md))
 
             // Exercise details
             Column(
@@ -78,27 +75,27 @@ fun ExerciseCard(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                
-                Spacer(modifier = Modifier.height(4.dp))
-                
+
+                Spacer(modifier = Modifier.height(Spacing.xs))
+
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     MuscleGroupChip(
                         muscleGroup = exercise.primaryMuscle,
                         isPrimary = true
                     )
-                    
+
                     Text(
                         text = exercise.equipment.displayName,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                
+
                 if (exercise.secondaryMuscles.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(Spacing.xs))
                     Text(
                         text = "Secondary: ${exercise.secondaryMuscles.joinToString { it.displayName }}",
                         style = MaterialTheme.typography.bodySmall,

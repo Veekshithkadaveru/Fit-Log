@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -19,7 +18,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
+import com.example.fitlog.ui.theme.CardDimens
+import com.example.fitlog.ui.theme.FitLogCardDefaults
+import com.example.fitlog.ui.theme.FitLogShapes
+import com.example.fitlog.ui.theme.IconSize
+import com.example.fitlog.ui.theme.Spacing
 
 @Composable
 fun MetricCard(
@@ -32,15 +35,14 @@ fun MetricCard(
 ) {
     Card(
         modifier = modifier,
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
+        shape = FitLogShapes.card,
+        elevation = FitLogCardDefaults.elevation(),
+        colors = FitLogCardDefaults.colors()
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(CardDimens.paddingStandard)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -56,11 +58,11 @@ fun MetricCard(
                     imageVector = icon,
                     contentDescription = null,
                     tint = iconTint,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(IconSize.medium)
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(Spacing.sm))
 
             Text(
                 text = value,
@@ -70,7 +72,7 @@ fun MetricCard(
             )
 
             subtitle?.let {
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(Spacing.xs))
                 Text(
                     text = it,
                     style = MaterialTheme.typography.bodySmall,
@@ -89,8 +91,8 @@ fun MetricCardRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+            .padding(horizontal = Spacing.lg),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.md)
     ) {
         content()
     }
