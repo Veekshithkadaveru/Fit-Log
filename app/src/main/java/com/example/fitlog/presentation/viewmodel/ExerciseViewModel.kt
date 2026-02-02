@@ -26,24 +26,39 @@ class ExerciseViewModel @Inject constructor(
     private val _selectedMuscle = MutableStateFlow<String?>(null)
     private val _isLoading = MutableStateFlow(false)
 
-    // Combined state for UI
     val uiState: StateFlow<ExercisePickerUiState> = combine(
         _searchQuery,
         _selectedMuscle,
         _isLoading,
         exerciseRepository.getAllExercises()
     ) { query, muscle, loading, allExercises ->
-         val filtered = allExercises.filter { exercise ->
-             val matchesQuery = exercise.name.contains(query, ignoreCase = true)
-             val matchesMuscle = muscle == null || exercise.primaryMuscle.displayName.equals(muscle, ignoreCase = true)
-             matchesQuery && matchesMuscle
-         }
-         ExercisePickerUiState(
-             exercises = filtered,
-             searchQuery = query,
-             selectedMuscle = muscle,
-             isLoading = loading
-         )
+             val filtered = allExercises.filter { exercise ->
+                 val matchesQuery = exercise.name.contains(query, ignoreCase = true)
+                 val matchesMuscle = muscle == null || when (muscle) {
+                     "Arms" -> exercise.primaryMuscle == com.example.fitlog.domain.model.MuscleGroup.BICEPS ||
+                               exercise.primaryMuscle == com.example.fitlog.domain.model.MuscleGroup.TRICEPS ||
+                               exercise.primaryMuscle == com.example.fitlog.domain.model.MuscleGroup.FOREARMS
+                     "Legs" -> exercise.primaryMuscle == com.example.fitlog.domain.model.MuscleGroup.LEGS ||
+                               exercise.primaryMuscle == com.example.fitlog.domain.model.MuscleGroup.QUADRICEPS ||
+                               exercise.primaryMuscle == com.example.fitlog.domain.model.MuscleGroup.HAMSTRINGS ||
+                               exercise.primaryMuscle == com.example.fitlog.domain.model.MuscleGroup.GLUTES ||
+                               exercise.primaryMuscle == com.example.fitlog.domain.model.MuscleGroup.CALVES
+                     "Abs" -> exercise.primaryMuscle == com.example.fitlog.domain.model.MuscleGroup.CORE
+                     "Back" -> exercise.primaryMuscle == com.example.fitlog.domain.model.MuscleGroup.BACK ||
+                               exercise.primaryMuscle == com.example.fitlog.domain.model.MuscleGroup.LATS ||
+                               exercise.primaryMuscle == com.example.fitlog.domain.model.MuscleGroup.TRAPS
+                     "Shoulders" -> exercise.primaryMuscle == com.example.fitlog.domain.model.MuscleGroup.SHOULDERS ||
+                                    exercise.primaryMuscle == com.example.fitlog.domain.model.MuscleGroup.REAR_DELTS
+                     else -> exercise.primaryMuscle.displayName.equals(muscle, ignoreCase = true)
+                 }
+                 matchesQuery && matchesMuscle
+             }
+             ExercisePickerUiState(
+                 exercises = filtered,
+                 searchQuery = query,
+                 selectedMuscle = muscle,
+                 isLoading = loading
+             )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -65,12 +80,9 @@ class ExerciseViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                // Add exercise logic
-                // 1. Get current max order
                 val count = routineRepository.getExerciseCountForRoutine(routineId)
                 val newOrder = count + 1
                 
-                // 2. Insert RoutineExercise
                 val joinEntity = com.example.fitlog.domain.model.RoutineExercise(
                     id = 0,
                     routineId = routineId,
@@ -81,7 +93,6 @@ class ExerciseViewModel @Inject constructor(
                 )
                 routineRepository.insertRoutineExercise(joinEntity)
                 
-                // 3. Navigate back
                 _navigationEvent.send(Unit)
             } catch (e: Exception) {
                 e.printStackTrace()
