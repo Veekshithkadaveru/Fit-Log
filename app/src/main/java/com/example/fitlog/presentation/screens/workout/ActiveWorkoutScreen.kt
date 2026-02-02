@@ -46,6 +46,7 @@ import com.example.fitlog.presentation.screens.workout.components.WorkoutHeader
 import com.example.fitlog.presentation.viewmodel.ActiveWorkoutViewModel
 import com.example.fitlog.presentation.viewmodel.PREvent
 import com.example.fitlog.presentation.viewmodel.WorkoutNavigationEvent
+import com.example.fitlog.presentation.screens.workout.components.EmptyWorkoutState
 import com.example.fitlog.presentation.screens.workout.components.MusclesTrainedPanel
 import com.example.fitlog.presentation.screens.workout.components.PRToastNotification
 import com.example.fitlog.presentation.screens.workout.components.WorkoutSummaryDialog
@@ -307,112 +308,7 @@ private fun ActiveWorkoutContent(
     }
 }
 
-/**
- * Empty state shown when no workout is active
- */
-@Composable
-private fun EmptyWorkoutState(
-    onQuickStart: () -> Unit,
-    onStartFromRoutine: () -> Unit,
-    onLogCardio: () -> Unit,
-    onViewAnalytics: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(24.dp)
-    ) {
-        Icon(
-            imageVector = Icons.Default.FitnessCenter,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(16.dp)
-        )
-
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Text(
-                text = "No Active Workout",
-                style = MaterialTheme.typography.headlineSmall,
-                textAlign = TextAlign.Center
-            )
-            Text(
-                text = "Start a workout to begin tracking your progress",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
-            )
-        }
-
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Button(
-                onClick = onQuickStart,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(
-                    imageVector = Icons.Default.PlayArrow,
-                    contentDescription = null
-                )
-                Text(
-                    text = "Quick Start",
-                    modifier = Modifier.padding(start = 8.dp)
-                )
-            }
-
-            Button(
-                onClick = onStartFromRoutine,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(
-                    imageVector = Icons.Default.FitnessCenter,
-                    contentDescription = null
-                )
-                Text(
-                    text = "Start from Routine",
-                    modifier = Modifier.padding(start = 8.dp)
-                )
-            }
-
-            Button(
-                onClick = onLogCardio,
-                modifier = Modifier.fillMaxWidth(),
-                colors = androidx.compose.material3.ButtonDefaults.filledTonalButtonColors()
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.DirectionsRun,
-                    contentDescription = null
-                )
-                Text(
-                    text = "Log Cardio",
-                    modifier = Modifier.padding(start = 8.dp)
-                )
-            }
-
-            Button(
-                onClick = onViewAnalytics,
-                modifier = Modifier.fillMaxWidth(),
-                colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors()
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Info,
-                    contentDescription = null
-                )
-                Text(
-                    text = "Muscle Analytics",
-                    modifier = Modifier.padding(start = 8.dp)
-                )
-            }
-        }
-    }
-}
+// Private components removed. Use com.example.fitlog.presentation.screens.workout.components.EmptyWorkoutState instead.
 
 /**
  * Placeholder shown when workout has no exercises

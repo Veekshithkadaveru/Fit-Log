@@ -13,35 +13,34 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 /**
- * FitLog Pro Theme - Light Professional Edition
+ * FitLog Pro Theme - Professional Edition
  *
- * Clean, bright, professional appearance with:
- * - Blue primary for trust and professionalism
- * - Green for success and progress
- * - Soft whites and grays for comfort
+ * Clean, minimal, modern aesthetic inspired by:
+ * - Strava, Nike Training Club, Strong
+ * - Premium SaaS apps like Linear, Notion
  */
 
-// Light Color Scheme - Professional & Clean
+// Light Color Scheme - Clean & Professional
 private val FitLogLightColorScheme = lightColorScheme(
-    // Primary - Professional Blue
-    primary = BluePrimary,
+    // Primary - Deep Indigo
+    primary = IndigoPrimary,
     onPrimary = TextOnPrimaryLight,
-    primaryContainer = BluePrimaryContainer,
-    onPrimaryContainer = BluePrimaryDark,
+    primaryContainer = IndigoPrimaryContainer,
+    onPrimaryContainer = IndigoPrimaryDark,
 
-    // Secondary - Fresh Green (Success)
-    secondary = GreenSecondary,
+    // Secondary - Emerald Green
+    secondary = EmeraldSecondary,
     onSecondary = TextOnSecondaryLight,
-    secondaryContainer = GreenSecondaryContainer,
-    onSecondaryContainer = GreenSecondaryDark,
+    secondaryContainer = EmeraldSecondaryContainer,
+    onSecondaryContainer = EmeraldSecondaryDark,
 
-    // Tertiary - Warm Orange (Energy)
-    tertiary = OrangeTertiary,
+    // Tertiary - Warm Amber
+    tertiary = AmberTertiary,
     onTertiary = TextOnPrimaryLight,
-    tertiaryContainer = OrangeTertiaryContainer,
-    onTertiaryContainer = OrangeTertiaryDark,
+    tertiaryContainer = AmberTertiaryContainer,
+    onTertiaryContainer = AmberTertiaryDark,
 
-    // Background and surfaces - Light & Clean
+    // Background and surfaces
     background = LightBackground,
     onBackground = TextPrimaryLight,
     surface = LightSurface,
@@ -50,43 +49,43 @@ private val FitLogLightColorScheme = lightColorScheme(
     onSurfaceVariant = TextSecondaryLight,
 
     // Error states
-    error = Error,
+    error = CoralAccent,
     onError = TextOnPrimaryLight,
-    errorContainer = ErrorContainer,
+    errorContainer = CoralAccentContainer,
     onErrorContainer = Color(0xFFB91C1C),
 
-    // Outlines - Subtle borders
+    // Outlines
     outline = OutlineLight,
     outlineVariant = OutlineLightVariant,
 
-    // Inverse colors (for snackbars, etc.)
-    inverseSurface = Color(0xFF1F2937),
-    inverseOnSurface = Color(0xFFF9FAFB),
-    inversePrimary = BluePrimarySoft,
+    // Inverse colors
+    inverseSurface = Color(0xFF1A1A1A),
+    inverseOnSurface = Color(0xFFF5F5F5),
+    inversePrimary = IndigoPrimarySoft,
 
-    // Scrim for modals
+    // Scrim
     scrim = Color.Black.copy(alpha = 0.32f),
 
     // Surface tint
-    surfaceTint = BluePrimary
+    surfaceTint = IndigoPrimary
 )
 
-// Dark Color Scheme - For dark mode support
+// Dark Color Scheme
 private val FitLogDarkColorScheme = darkColorScheme(
-    primary = BluePrimaryLight,
+    primary = IndigoPrimaryLight,
     onPrimary = TextOnPrimary,
-    primaryContainer = Color(0xFF1E3A5F),
-    onPrimaryContainer = BluePrimarySoft,
+    primaryContainer = Color(0xFF312E81),
+    onPrimaryContainer = IndigoPrimarySoft,
 
-    secondary = GreenSecondaryLight,
-    onSecondary = TextOnSecondary,
+    secondary = EmeraldSecondaryLight,
+    onSecondary = Color(0xFF003822),
     secondaryContainer = Color(0xFF064E3B),
-    onSecondaryContainer = GreenSecondaryLight,
+    onSecondaryContainer = EmeraldSecondaryLight,
 
-    tertiary = OrangeTertiaryLight,
-    onTertiary = TextOnSecondary,
+    tertiary = AmberTertiaryLight,
+    onTertiary = Color(0xFF422006),
     tertiaryContainer = Color(0xFF78350F),
-    onTertiaryContainer = OrangeTertiaryLight,
+    onTertiaryContainer = AmberTertiaryLight,
 
     background = DarkBackground,
     onBackground = TextPrimary,
@@ -95,26 +94,25 @@ private val FitLogDarkColorScheme = darkColorScheme(
     surfaceVariant = DarkSurfaceVariant,
     onSurfaceVariant = TextSecondary,
 
-    error = ErrorLight,
-    onError = TextOnPrimary,
+    error = CoralAccentLight,
+    onError = Color(0xFF601410),
     errorContainer = Color(0xFF7F1D1D),
-    onErrorContainer = ErrorLight,
+    onErrorContainer = CoralAccentLight,
 
     outline = OutlineDefault,
     outlineVariant = OutlineVariant,
 
-    inverseSurface = Color(0xFFF9FAFB),
-    inverseOnSurface = Color(0xFF1F2937),
-    inversePrimary = BluePrimaryDark,
+    inverseSurface = Color(0xFFF5F5F5),
+    inverseOnSurface = Color(0xFF1A1A1A),
+    inversePrimary = IndigoPrimaryDark,
 
-    scrim = Color.Black.copy(alpha = 0.7f),
-    surfaceTint = BluePrimaryLight
+    scrim = Color.Black.copy(alpha = 0.6f),
+    surfaceTint = IndigoPrimaryLight
 )
 
 @Composable
 fun FitLogTheme(
-    // Default to LIGHT theme for professional look
-    darkTheme: Boolean = false,
+    darkTheme: Boolean = false,  // Default to light
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
@@ -144,62 +142,60 @@ fun FitLogTheme(
 }
 
 /**
- * Extended color scheme for semantic colors not in Material 3
+ * Extended colors for FitLog-specific use cases
  */
 object FitLogColors {
-    // Primary variants
-    val primaryBright = BluePrimary
-    val primaryLight = BluePrimaryLight
-    val primarySoft = BluePrimarySoft
-    val primaryContainer = BluePrimaryContainer
+    // Primary
+    val primary = IndigoPrimary
+    val primaryLight = IndigoPrimaryLight
+    val primaryDark = IndigoPrimaryDark
+    val primaryContainer = IndigoPrimaryContainer
+    val primarySoft = IndigoPrimarySoft
 
-    // Secondary variants
-    val secondaryBright = GreenSecondary
-    val secondaryLight = GreenSecondaryLight
-    val secondaryContainer = GreenSecondaryContainer
+    // Secondary
+    val secondary = EmeraldSecondary
+    val secondaryLight = EmeraldSecondaryLight
+    val secondaryContainer = EmeraldSecondaryContainer
 
     // Tertiary
-    val tertiaryBright = OrangeTertiary
-    val tertiaryLight = OrangeTertiaryLight
-    val tertiaryContainer = OrangeTertiaryContainer
+    val tertiary = AmberTertiary
+    val tertiaryLight = AmberTertiaryLight
+    val tertiaryContainer = AmberTertiaryContainer
 
-    // Accent colors
-    val accentPink = RoseAccent
-    val accentPinkLight = RoseAccentLight
-    val accentPinkContainer = RoseAccentContainer
-    val accentPurple = PurpleAccent
-    val accentPurpleLight = PurpleAccentLight
-    val accentPurpleContainer = PurpleAccentContainer
+    // Accents
+    val coral = CoralAccent
+    val coralLight = CoralAccentLight
+    val coralContainer = CoralAccentContainer
+    val violet = VioletAccent
+    val violetLight = VioletAccentLight
+    val violetContainer = VioletAccentContainer
 
-    // Success states
+    // Semantic
     val success = Success
     val successLight = SuccessLight
     val successContainer = SuccessContainer
-    val onSuccess = TextOnSecondaryLight
-
-    // Warning states
     val warning = Warning
     val warningLight = WarningLight
     val warningContainer = WarningContainer
-    val onWarning = TextOnSecondaryLight
-
-    // Info states
+    val error = Error
+    val errorLight = ErrorLight
+    val errorContainer = ErrorContainer
     val info = Info
     val infoLight = InfoLight
     val infoContainer = InfoContainer
 
-    // Personal Records
+    // PR Gold
     val prGold = PRGold
     val prGoldLight = PRGoldLight
     val prGoldDark = PRGoldDark
     val prGoldContainer = PRGoldContainer
 
-    // Cardio activities
+    // Cardio
     val cardio = CardioOrange
     val cardioLight = CardioOrangeLight
     val cardioContainer = CardioContainer
 
-    // Muscle group colors for analytics
+    // Muscles
     val muscleChest = MuscleChest
     val muscleBack = MuscleBack
     val muscleShoulders = MuscleShoulders
@@ -207,7 +203,7 @@ object FitLogColors {
     val muscleLegs = MuscleLegs
     val muscleCore = MuscleCore
 
-    // Chart colors
+    // Charts
     val chartLine1 = ChartLine1
     val chartLine2 = ChartLine2
     val chartLine3 = ChartLine3
@@ -216,16 +212,29 @@ object FitLogColors {
     val chartFillSecondary = ChartFillSecondary
     val chartGrid = ChartGrid
 
-    // Surface elevations
+    // Surfaces
     val surfaceHigh = LightSurfaceHigh
     val surfaceBright = LightSurfaceBright
 
-    // Interactive states
+    // States
     val disabled = Disabled
     val disabledContent = DisabledContent
 
-    // Gradient
+    // Gradients
     val gradientStart = GradientStart
     val gradientMid = GradientMid
     val gradientEnd = GradientEnd
+
+    // Legacy aliases
+    val accentPink = CoralAccent
+    val accentPinkLight = CoralAccentLight
+    val accentPinkContainer = CoralAccentContainer
+    val accentPurple = VioletAccent
+    val accentPurpleLight = VioletAccentLight
+    val accentPurpleContainer = VioletAccentContainer
+    val primaryBright = IndigoPrimary
+    val secondaryBright = EmeraldSecondary
+    val tertiaryBright = AmberTertiary
+    val onSuccess = TextOnSecondaryLight
+    val onWarning = TextOnSecondaryLight
 }
