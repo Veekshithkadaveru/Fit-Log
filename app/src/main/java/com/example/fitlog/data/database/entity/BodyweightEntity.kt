@@ -8,7 +8,7 @@ data class BodyweightEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     val date: Long, // Epoch milliseconds (start of day)
-    val weight: Float, // In user's preferred unit (kg/lbs)
+    val weight: Float, // In user's preferred unit (kg)
     val notes: String? = null
 )
 

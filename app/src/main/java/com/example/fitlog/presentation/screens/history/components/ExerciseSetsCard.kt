@@ -347,7 +347,7 @@ private fun EditableSetRow(
         EditableNumberField(
             value = weight,
             onValueChange = onWeightChange,
-            suffix = "lbs",
+            suffix = "kg",
             modifier = Modifier.width(80.dp)
         )
 
@@ -501,9 +501,9 @@ private fun SummaryItem(
 
 private fun formatWeight(weight: Float): String {
     return if (weight == weight.toInt().toFloat()) {
-        "${weight.toInt()} lbs"
+        "${weight.toInt()} kg"
     } else {
-        String.format("%.1f lbs", weight)
+        String.format("%.1f kg", weight)
     }
 }
 

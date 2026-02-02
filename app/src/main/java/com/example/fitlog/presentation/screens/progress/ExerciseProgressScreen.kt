@@ -240,7 +240,7 @@ private fun ExerciseProgressContent(
         ) {
             StatCard(
                 title = "Best Weight",
-                value = uiState.bestWeight?.let { "${it.toInt()} lbs" } ?: "-",
+                value = uiState.bestWeight?.let { "${it.toInt()} kg" } ?: "-",
                 modifier = Modifier.weight(1f)
             )
             StatCard(
