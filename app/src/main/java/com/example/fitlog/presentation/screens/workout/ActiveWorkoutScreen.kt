@@ -159,10 +159,10 @@ fun ActiveWorkoutScreen(
                         onAddSet = { exerciseId -> viewModel.addSet(exerciseId, autoFill = false) },
                         onAddSetWithAutoFill = { exerciseId -> viewModel.addSet(exerciseId, autoFill = true) },
                         onUpdateSetWeight = { setId, weight ->
-                            viewModel.updateSet(setId, weight = weight.toFloatOrNull())
+                            viewModel.updateSet(setId, weight = weight.toFloatOrNull() ?: 0f)
                         },
                         onUpdateSetReps = { setId, reps ->
-                            viewModel.updateSet(setId, reps = reps.toIntOrNull())
+                            viewModel.updateSet(setId, reps = reps.toIntOrNull() ?: 0)
                         },
                         onToggleSetCompleted = { setId -> viewModel.toggleSetCompleted(setId) },
                         onDeleteSet = { setId -> viewModel.deleteSet(setId) },

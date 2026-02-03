@@ -55,8 +55,7 @@ fun SetInputGrid(
                 onWeightChange = { weight -> onWeightChange(set.id, weight) },
                 onRepsChange = { reps -> onRepsChange(set.id, reps) },
                 onCompletedToggle = { onSetCompleted(set.id) },
-                onDelete = { onDeleteSet(set.id) },
-                onDuplicate = { onDuplicateSet(set.id) }
+                onDelete = { onDeleteSet(set.id) }
             )
         }
 

@@ -248,7 +248,7 @@ private fun isWithinLastWeek(date: Calendar, today: Calendar): Boolean {
 }
 
 /**
- * Format volume for display (e.g., "12,500 lbs" or "1.2k lbs")
+ * Format volume for display (e.g., "12,500 kg" or "1.2k kg")
  */
 private fun formatVolume(volume: Float): String {
     return when {

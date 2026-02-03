@@ -269,7 +269,7 @@ private fun PRCelebrationCard(
                 ) {
                     StatBox(
                         value = "${prEvent.weight.toInt()}",
-                        label = "lbs",
+                        label = "kg",
                         icon = Icons.Default.FitnessCenter
                     )
 
@@ -514,14 +514,14 @@ fun PRToastNotification(
                     }
                 }
                 Text(
-                    text = "${prEvent.exerciseName}: ${prEvent.weight.toInt()} lbs × ${prEvent.reps}",
+                    text = "${prEvent.exerciseName}: ${prEvent.weight.toInt()} kg × ${prEvent.reps}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.White.copy(alpha = 0.9f)
                 )
                 // Show estimated 1RM if available
                 if (prEvent.estimated1RM > 0) {
                     Text(
-                        text = "Est. 1RM: ${prEvent.estimated1RM.toInt()} lbs",
+                        text = "Est. 1RM: ${prEvent.estimated1RM.toInt()} kg",
                         style = MaterialTheme.typography.bodySmall,
                         color = Color.White.copy(alpha = 0.7f)
                     )
@@ -778,14 +778,14 @@ private fun PRSummaryItem(prEvent: PREvent) {
                     }
                 }
                 Text(
-                    text = "${prEvent.weight.toInt()} lbs × ${prEvent.reps} reps",
+                    text = "${prEvent.weight.toInt()} kg × ${prEvent.reps} reps",
                     style = MaterialTheme.typography.bodyMedium,
                     color = PRGoldDark.copy(alpha = 0.8f)
                 )
                 // Show estimated 1RM if it's also a new 1RM PR
                 if (prEvent.isNew1RMPR && prEvent.estimated1RM > 0) {
                     Text(
-                        text = "New Est. 1RM: ${prEvent.estimated1RM.toInt()} lbs",
+                        text = "New Est. 1RM: ${prEvent.estimated1RM.toInt()} kg",
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.SemiBold,
                         color = PRGoldDark.copy(alpha = 0.7f)

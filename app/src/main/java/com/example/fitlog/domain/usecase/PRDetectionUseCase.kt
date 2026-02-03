@@ -14,8 +14,15 @@ import javax.inject.Inject
 
 /**
  * Use case for detecting and managing personal records (PRs).
- * Handles automatic PR detection when completing sets.
- * Supports both legacy overall PRs and new rep-range specific PRs.
+ * 
+ * Implements professional-standard PR detection similar to apps like Strong, Hevy, and JEFIT:
+ * - **Weight PR**: New max weight lifted for this exercise
+ * - **Volume PR**: New best set volume (weight × reps) for a single set
+ * - **Estimated 1RM PR**: New best estimated one-rep max
+ * - **Rep Range PR**: New best weight within a specific rep range (only if it also improves or matches overall 1RM)
+ * 
+ * Key principle: A set is only marked as PR if it represents an ACTUAL IMPROVEMENT in performance,
+ * not just a new entry in a different rep range bucket.
  */
 class PRDetectionUseCase @Inject constructor(
     private val personalRecordRepository: PersonalRecordRepository,
@@ -24,7 +31,10 @@ class PRDetectionUseCase @Inject constructor(
 
     /**
      * Check if a completed set represents a new personal record.
-     * Returns detailed information about which types of PRs were achieved.
+     * Uses professional-standard PR detection:
+     * - Weight PR: Heavier than ever before
+     * - Volume PR: Higher set volume (weight × reps) than ever before
+     * - Estimated 1RM PR: Higher estimated 1RM than any previous set
      */
     suspend fun checkForPR(
         exerciseId: Int,
@@ -37,26 +47,45 @@ class PRDetectionUseCase @Inject constructor(
 
         val existingRecord = personalRecordRepository.getByExerciseId(exerciseId)
         val volume = weight * reps
+        val estimated1RM = calculateEstimated1RM(weight, reps)
+        
+        // Get best estimated 1RM from rep range records
+        val bestExisting1RM = repRangeRecordRepository.getBestEstimated1RM(exerciseId) ?: 0f
 
         if (existingRecord == null) {
             // First time doing this exercise - it's a PR!
             PRCheckResult(
                 isNewWeightPR = true,
                 isNewRepsPR = true,
-                isNewVolumePR = true
+                isNewVolumePR = true,
+                isNew1RMPR = true,
+                estimated1RM = estimated1RM
             )
         } else {
             PRCheckResult(
                 isNewWeightPR = weight > existingRecord.maxWeight,
                 isNewRepsPR = reps > existingRecord.maxReps,
-                isNewVolumePR = volume > existingRecord.maxVolume
+                isNewVolumePR = volume > existingRecord.maxVolume,
+                isNew1RMPR = estimated1RM > bestExisting1RM,
+                estimated1RM = estimated1RM
             )
         }
     }
 
     /**
-     * Check for rep-range specific PR.
-     * This is the new granular system that tracks PRs per rep range (1RM, 3RM, 5RM, etc.)
+     * Check for rep-range specific PR using professional standards.
+     * 
+     * A rep-range PR is awarded when:
+     * 1. It's a new best weight for this specific rep range (e.g., best 5RM), AND
+     * 2. The estimated 1RM is at least as good as the overall best 1RM
+     * 
+     * This ensures that a lower rep count at the same weight (which produces a lower 1RM)
+     * is NOT incorrectly marked as a PR.
+     * 
+     * Example:
+     * - 22kg × 12 reps → Est 1RM = 30.8kg → PR ✓ (new best)
+     * - 22kg × 8 reps → Est 1RM = 27.9kg → NOT PR (lower 1RM than existing best)
+     * - 25kg × 8 reps → Est 1RM = 31.7kg → PR ✓ (beats previous best 1RM)
      */
     suspend fun checkForRepRangePR(
         exerciseId: Int,
@@ -81,10 +110,21 @@ class PRDetectionUseCase @Inject constructor(
         // Get existing record for this rep range
         val existingRepRangeRecord = repRangeRecordRepository.getByExerciseIdAndRepRange(exerciseId, repRange)
 
-        // Get best estimated 1RM across all rep ranges
+        // Get best estimated 1RM across ALL rep ranges (the overall best performance)
         val bestEstimated1RM = repRangeRecordRepository.getBestEstimated1RM(exerciseId) ?: 0f
 
-        val isNewRepRangePR = existingRepRangeRecord == null || weight > existingRepRangeRecord.bestWeight
+        // Professional PR detection:
+        // A rep-range PR requires the set to represent ACTUAL improvement
+        val isWeightBetterForRepRange = existingRepRangeRecord == null || weight > existingRepRangeRecord.bestWeight
+        
+        // Critical check: The new 1RM must be at least as good as the best ever
+        // This prevents 22kg×8 (1RM=27.9) from being a PR when 22kg×12 (1RM=30.8) exists
+        val isEstimated1RMGoodEnough = estimated1RM >= bestEstimated1RM
+        
+        // Only count as rep-range PR if BOTH conditions are met
+        val isNewRepRangePR = isWeightBetterForRepRange && isEstimated1RMGoodEnough
+        
+        // This is a new overall 1RM if it strictly beats the previous best
         val isNew1RMPR = estimated1RM > bestEstimated1RM
 
         RepRangePRResult(
@@ -111,7 +151,7 @@ class PRDetectionUseCase @Inject constructor(
         val prResult = checkForPR(exerciseId, weight, reps)
         val repRangePRResult = checkForRepRangePR(exerciseId, weight, reps)
 
-        // Update legacy overall PR record
+        // Update legacy overall PR record if any metric improved
         if (prResult.isAnyPR) {
             val existingRecord = personalRecordRepository.getByExerciseId(exerciseId)
             val volume = weight * reps
@@ -130,7 +170,8 @@ class PRDetectionUseCase @Inject constructor(
             )
         }
 
-        // Update rep-range specific record
+        // Update rep-range specific record ONLY if it's truly a PR
+        // (weight is better AND estimated 1RM is at least as good as overall best)
         if (repRangePRResult.isNewRepRangePR) {
             val currentTime = System.currentTimeMillis()
             repRangeRecordRepository.upsertRecord(
@@ -143,10 +184,11 @@ class PRDetectionUseCase @Inject constructor(
             )
         }
 
-        // Return a PRCheckResult that also reflects rep-range PR
-        // If it's a new rep-range PR, treat it as a weight PR for the badge
+        // Return a PRCheckResult that reflects true PR achievement
+        // A PR badge should show if: new weight PR, new volume PR, new 1RM PR, OR valid rep-range PR
         prResult.copy(
-            isNewWeightPR = prResult.isNewWeightPR || repRangePRResult.isNewRepRangePR
+            isNewWeightPR = prResult.isNewWeightPR || repRangePRResult.isNewRepRangePR,
+            isNew1RMPR = prResult.isNew1RMPR || repRangePRResult.isNew1RMPR
         )
     }
 
@@ -181,7 +223,7 @@ class PRDetectionUseCase @Inject constructor(
             )
         }
 
-        // Update rep-range specific record
+        // Update rep-range specific record only if it's a valid PR
         if (repRangePRResult.isNewRepRangePR) {
             val currentTime = System.currentTimeMillis()
             repRangeRecordRepository.upsertRecord(
@@ -268,8 +310,11 @@ class PRDetectionUseCase @Inject constructor(
     }
 
     /**
-     * Calculate estimated 1RM using Epley formula.
+     * Calculate estimated 1RM using the Epley formula (industry standard).
      * 1RM = weight × (1 + reps/30)
+     * 
+     * This formula is accurate for rep ranges up to ~12 reps.
+     * For higher rep ranges, it may overestimate.
      */
     fun calculateEstimated1RM(weight: Float, reps: Int): Float {
         if (reps <= 0 || weight <= 0) return 0f
