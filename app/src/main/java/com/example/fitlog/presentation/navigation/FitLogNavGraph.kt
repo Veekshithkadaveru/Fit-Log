@@ -1,5 +1,12 @@
 package com.example.fitlog.presentation.navigation
 
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -17,9 +24,10 @@ import com.example.fitlog.presentation.screens.bodyweight.BodyweightScreen
 import com.example.fitlog.presentation.screens.cardio.CardioScreen
 import com.example.fitlog.presentation.screens.progress.ExerciseProgressScreen
 import com.example.fitlog.presentation.screens.progress.ProgressDashboardScreen
+import com.example.fitlog.ui.theme.AnimationDuration
 
 /**
- * Main navigation graph for the FitLog app
+ * Main navigation graph for the FitLog app with professional animations
  */
 @Composable
 fun FitLogNavGraph(
@@ -27,11 +35,84 @@ fun FitLogNavGraph(
     startDestination: String = FitLogDestinations.HOME,
     modifier: Modifier = Modifier
 ) {
+    // Bottom nav destinations for special handling
+    val bottomNavRoutes = setOf(
+        FitLogDestinations.HOME,
+        FitLogDestinations.WORKOUT,
+        FitLogDestinations.EXERCISES,
+        FitLogDestinations.HISTORY,
+        FitLogDestinations.SETTINGS
+    )
+
     NavHost(
         navController = navController,
         startDestination = startDestination,
-        modifier = modifier
+        modifier = modifier,
+        // Default enter/exit transitions for all screens
+        enterTransition = {
+            val isBottomNav = initialState.destination.route in bottomNavRoutes &&
+                             targetState.destination.route in bottomNavRoutes
+            if (isBottomNav) {
+                // Bottom nav: crossfade with subtle scale
+                fadeIn(
+                    animationSpec = tween(AnimationDuration.medium, easing = FastOutSlowInEasing)
+                ) + scaleIn(
+                    animationSpec = tween(AnimationDuration.medium, easing = FastOutSlowInEasing),
+                    initialScale = 0.94f
+                )
+            } else {
+                // Detail screens: slide from right
+                fadeIn(
+                    animationSpec = tween(AnimationDuration.medium)
+                ) + slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Start,
+                    animationSpec = tween(AnimationDuration.medium, easing = FastOutSlowInEasing),
+                    initialOffset = { fullWidth -> fullWidth / 4 }
+                )
+            }
+        },
+        exitTransition = {
+            val isBottomNav = initialState.destination.route in bottomNavRoutes &&
+                             targetState.destination.route in bottomNavRoutes
+            if (isBottomNav) {
+                fadeOut(
+                    animationSpec = tween(AnimationDuration.short, easing = FastOutSlowInEasing)
+                ) + scaleOut(
+                    animationSpec = tween(AnimationDuration.short, easing = FastOutSlowInEasing),
+                    targetScale = 0.94f
+                )
+            } else {
+                fadeOut(
+                    animationSpec = tween(AnimationDuration.short)
+                ) + slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Start,
+                    animationSpec = tween(AnimationDuration.medium, easing = FastOutSlowInEasing),
+                    targetOffset = { fullWidth -> -fullWidth / 4 }
+                )
+            }
+        },
+        popEnterTransition = {
+            // Coming back: slide from left
+            fadeIn(
+                animationSpec = tween(AnimationDuration.medium)
+            ) + slideIntoContainer(
+                towards = AnimatedContentTransitionScope.SlideDirection.End,
+                animationSpec = tween(AnimationDuration.medium, easing = FastOutSlowInEasing),
+                initialOffset = { fullWidth -> -fullWidth / 4 }
+            )
+        },
+        popExitTransition = {
+            // Going back: slide out to right
+            fadeOut(
+                animationSpec = tween(AnimationDuration.short)
+            ) + slideOutOfContainer(
+                towards = AnimatedContentTransitionScope.SlideDirection.End,
+                animationSpec = tween(AnimationDuration.medium, easing = FastOutSlowInEasing),
+                targetOffset = { fullWidth -> fullWidth / 4 }
+            )
+        }
     ) {
+        // Bottom Navigation Destinations
         composable(FitLogDestinations.HOME) {
             ProgressDashboardScreen(
                 onNavigateToBodyweight = {
@@ -39,14 +120,14 @@ fun FitLogNavGraph(
                 }
             )
         }
-        
+
         composable(FitLogDestinations.WORKOUT) {
             com.example.fitlog.presentation.screens.workout.ActiveWorkoutScreen(
                 navController = navController,
                 routineId = null
             )
         }
-        
+
         composable(FitLogDestinations.EXERCISES) {
             ExerciseLibraryScreen(
                 onExerciseClick = { exerciseId ->
@@ -54,14 +135,16 @@ fun FitLogNavGraph(
                 }
             )
         }
-        
+
         composable(FitLogDestinations.HISTORY) {
             HistoryScreen(navController = navController)
         }
-        
+
         composable(FitLogDestinations.SETTINGS) {
             PlaceholderScreen(title = "Settings", navController = navController)
         }
+
+        // Detail Screens with slide animations
         composable(
             route = FitLogDestinations.EXERCISE_DETAIL,
             arguments = listOf(
@@ -76,6 +159,7 @@ fun FitLogNavGraph(
                 onNavigateBack = { navController.popBackStack() }
             )
         }
+
         composable(
             route = FitLogDestinations.WORKOUT_DETAIL,
             arguments = listOf(
@@ -88,6 +172,7 @@ fun FitLogNavGraph(
                 onNavigateBack = { navController.popBackStack() }
             )
         }
+
         composable(
             route = "active_workout?routineId={routineId}",
             arguments = listOf(
@@ -104,8 +189,6 @@ fun FitLogNavGraph(
                 routineId = routineId
             )
         }
-        
-        
 
         composable(FitLogDestinations.ROUTINE_LIST) {
             com.example.fitlog.presentation.screens.routines.RoutineListScreen(
@@ -147,7 +230,6 @@ fun FitLogNavGraph(
             )
         }
 
-
         composable(FitLogDestinations.TEMPLATE_PICKER) {
             com.example.fitlog.presentation.screens.routines.TemplatePickerScreen(
                 navController = navController,
@@ -156,6 +238,7 @@ fun FitLogNavGraph(
                 }
             )
         }
+
         composable(FitLogDestinations.ACTIVE_WORKOUT_EXERCISE_PICKER) {
             com.example.fitlog.presentation.screens.workout.ActiveWorkoutExercisePickerScreen(
                 navController = navController
@@ -177,7 +260,6 @@ fun FitLogNavGraph(
             )
         }
 
-
         composable(
             route = FitLogDestinations.EXERCISE_PROGRESS_WITH_ID,
             arguments = listOf(
@@ -194,7 +276,7 @@ fun FitLogNavGraph(
                 onNavigateBack = { navController.popBackStack() }
             )
         }
-        
+
         composable(FitLogDestinations.PREMIUM) {
             PlaceholderScreen(title = "Premium", navController = navController)
         }

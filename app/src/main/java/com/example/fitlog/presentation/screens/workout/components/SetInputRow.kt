@@ -106,7 +106,7 @@ fun SetInputRow(
         OutlinedTextField(
             value = if (workoutSet.weight == 0f) "" else workoutSet.weight.toString(),
             onValueChange = onWeightChange,
-            label = { Text("lbs") },
+            label = { Text("kg") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             singleLine = true,
             modifier = Modifier.weight(1f),
