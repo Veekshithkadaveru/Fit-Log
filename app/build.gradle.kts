@@ -7,11 +7,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.fitlog"
+    namespace = "app.krafted.fitlog"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.fitlog"
+        applicationId = "app.krafted.fitlog"
         minSdk = 24
         targetSdk = 35
         versionCode = 1
@@ -20,9 +20,22 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        create("release") {
+            // Use properties from local.properties or environment variables
+            // Defaults to debug keystore if not configured, to avoid build errors 
+            // IMPORTANT: User must configure these in local.properties for actual release signing
+            storeFile = file(project.findProperty("RELEASE_STORE_FILE") as? String ?: "release.keystore")
+            storePassword = project.findProperty("RELEASE_STORE_PASSWORD") as? String ?: "android"
+            keyAlias = project.findProperty("RELEASE_KEY_ALIAS") as? String ?: "androiddebugkey"
+            keyPassword = project.findProperty("RELEASE_KEY_PASSWORD") as? String ?: "android"
+        }
+    }
+
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -102,4 +115,6 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    // Test helpers for Room migrations
+    androidTestImplementation(libs.androidx.room.testing)
 }
