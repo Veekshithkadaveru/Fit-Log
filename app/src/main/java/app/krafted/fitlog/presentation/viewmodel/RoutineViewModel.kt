@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import app.krafted.fitlog.domain.model.Routine
 import app.krafted.fitlog.domain.model.RoutineExercise
 import app.krafted.fitlog.domain.repository.RoutineRepository
+import timber.log.Timber
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -56,31 +57,14 @@ class RoutineViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
             try {
-                // 1. Create new routine from template
-                val newRoutine = template.copy(
-                    id = 0, // Reset ID for auto-generation
-                    isTemplate = false,
-                    dayOrder = 0
-                )
-                val newRoutineId = routineRepository.insertRoutine(newRoutine)
-
-                // 2. Copy exercises
-                if (template.exercises.isNotEmpty()) {
-                    val newExercises = template.exercises.map { 
-                        it.copy(
-                            id = 0,
-                            routineId = newRoutineId.toInt(),
-                            exercise = null // Don't duplicate the full exercise object in the relationship, just IDs
-                        )
-                    }
-                    routineRepository.insertRoutineExercises(newExercises)
-                }
+                // 1. Create new routine from template using transaction
+                val newRoutineId = routineRepository.cloneRoutineFromTemplate(template)
 
                 // 3. Navigate to editor
                 _navigationEvent.send(RoutineNavigationEvent.NavigateToEditor(newRoutineId.toInt()))
             } catch (e: Exception) {
                 // Handle error
-                e.printStackTrace()
+                Timber.e(e)
             } finally {
                 _uiState.value = _uiState.value.copy(isLoading = false)
             }
@@ -174,7 +158,7 @@ class RoutineViewModel @Inject constructor(
                     _navigationEvent.send(RoutineNavigationEvent.NavigateBack)
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                Timber.e(e)
             } finally {
                 _editorUiState.value = _editorUiState.value.copy(isSaving = false)
             }
@@ -191,7 +175,7 @@ class RoutineViewModel @Inject constructor(
                 }
                 _navigationEvent.send(RoutineNavigationEvent.NavigateBack)
             } catch (e: Exception) {
-                e.printStackTrace()
+                Timber.e(e)
             } finally {
                 _editorUiState.value = _editorUiState.value.copy(isSaving = false)
             }
@@ -207,7 +191,7 @@ class RoutineViewModel @Inject constructor(
                 val routineId = _editorUiState.value.routine?.id ?: return@launch
                 loadRoutine(routineId)
             } catch (e: Exception) {
-                e.printStackTrace()
+                Timber.e(e)
             }
         }
     }

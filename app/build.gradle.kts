@@ -102,6 +102,9 @@ dependencies {
     implementation(libs.vico.compose.m3)
     implementation(libs.vico.core)
 
+    // Logging
+    implementation("com.jakewharton.timber:timber:5.0.1")
+
     // DataStore Preferences
     implementation(libs.androidx.datastore.preferences)
 

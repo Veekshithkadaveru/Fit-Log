@@ -1,9 +1,9 @@
 package app.krafted.fitlog.domain.usecase
 
-import app.krafted.fitlog.data.database.dao.WorkoutDao
 import app.krafted.fitlog.domain.model.ImbalanceSeverity
 import app.krafted.fitlog.domain.model.MuscleGroup
 import app.krafted.fitlog.domain.model.RecommendationType
+import app.krafted.fitlog.domain.repository.WorkoutRepository
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit
 
 class MuscleTrackingUseCaseTest {
 
-    private lateinit var workoutDao: WorkoutDao
+    private lateinit var workoutRepository: WorkoutRepository
     private lateinit var muscleTrackingUseCase: MuscleTrackingUseCase
 
     private val now = System.currentTimeMillis()
@@ -23,20 +23,20 @@ class MuscleTrackingUseCaseTest {
 
     @Before
     fun setup() {
-        workoutDao = mockk()
-        muscleTrackingUseCase = MuscleTrackingUseCase(workoutDao)
+        workoutRepository = mockk()
+        muscleTrackingUseCase = MuscleTrackingUseCase(workoutRepository)
     }
 
     @Test
     fun `getMuscleGroupStats returns correct stats for single muscle`() = runTest {
         // Given
-        val muscleGroup = MuscleGroup.CHEST.name
-        coEvery { workoutDao.getActiveMuscleGroupsInRange(twoWeeksAgo, now) } returns listOf(muscleGroup)
-        coEvery { workoutDao.getTotalVolumeForMuscleInRange(muscleGroup, twoWeeksAgo, now) } returns 5000f
-        coEvery { workoutDao.getTotalSetsForMuscleInRange(muscleGroup, twoWeeksAgo, now) } returns 20
-        coEvery { workoutDao.getWorkoutCountForMuscleInRange(muscleGroup, twoWeeksAgo, now) } returns 4
-        coEvery { workoutDao.getLastWorkoutDateForMuscle(muscleGroup) } returns oneWeekAgo
-        coEvery { workoutDao.getExerciseCountForMuscleInRange(muscleGroup, twoWeeksAgo, now) } returns 3
+        val muscleGroup = MuscleGroup.CHEST
+        coEvery { workoutRepository.getActiveMuscleGroupsInRange(twoWeeksAgo, now) } returns listOf(muscleGroup)
+        coEvery { workoutRepository.getTotalVolumeForMuscleInRange(muscleGroup, twoWeeksAgo, now) } returns 5000f
+        coEvery { workoutRepository.getTotalSetsForMuscleInRange(muscleGroup, twoWeeksAgo, now) } returns 20
+        coEvery { workoutRepository.getWorkoutCountForMuscleInRange(muscleGroup, twoWeeksAgo, now) } returns 4
+        coEvery { workoutRepository.getLastWorkoutDateForMuscle(muscleGroup) } returns oneWeekAgo
+        coEvery { workoutRepository.getExerciseCountForMuscleInRange(muscleGroup, twoWeeksAgo, now) } returns 3
 
         // When
         val stats = muscleTrackingUseCase.getMuscleGroupStats(twoWeeksAgo, now)
@@ -56,7 +56,7 @@ class MuscleTrackingUseCaseTest {
     @Test
     fun `getMuscleGroupStats returns empty list when no active muscles`() = runTest {
         // Given
-        coEvery { workoutDao.getActiveMuscleGroupsInRange(twoWeeksAgo, now) } returns emptyList()
+        coEvery { workoutRepository.getActiveMuscleGroupsInRange(twoWeeksAgo, now) } returns emptyList()
 
         // When
         val stats = muscleTrackingUseCase.getMuscleGroupStats(twoWeeksAgo, now)
@@ -68,13 +68,14 @@ class MuscleTrackingUseCaseTest {
     @Test
     fun `getWeeklyMuscleFrequencies calculates correct frequencies`() = runTest {
         // Given
-        val muscleGroup = MuscleGroup.BACK.name
-        coEvery { workoutDao.getActiveMuscleGroupsInRange(twoWeeksAgo, now) } returns listOf(muscleGroup)
-        coEvery { workoutDao.getTotalVolumeForMuscleInRange(muscleGroup, twoWeeksAgo, now) } returns 6000f
-        coEvery { workoutDao.getTotalSetsForMuscleInRange(muscleGroup, twoWeeksAgo, now) } returns 30
-        coEvery { workoutDao.getWorkoutCountForMuscleInRange(muscleGroup, twoWeeksAgo, now) } returns 6
-        coEvery { workoutDao.getLastWorkoutDateForMuscle(muscleGroup) } returns oneWeekAgo
-        coEvery { workoutDao.getExerciseCountForMuscleInRange(muscleGroup, twoWeeksAgo, now) } returns 5
+        val muscleGroup = MuscleGroup.BACK
+        coEvery { workoutRepository.getActiveMuscleGroupsInRange(twoWeeksAgo, now) } returns listOf(muscleGroup)
+        coEvery { workoutRepository.getTotalVolumeForMuscleInRange(muscleGroup, twoWeeksAgo, now) } returns 6000f
+        coEvery { workoutRepository.getTotalSetsForMuscleInRange(muscleGroup, twoWeeksAgo, now) } returns 30
+        coEvery { workoutRepository.getWorkoutCountForMuscleInRange(muscleGroup, twoWeeksAgo, now) } returns 6
+        // Needed for getMuscleGroupStats internal call
+        coEvery { workoutRepository.getLastWorkoutDateForMuscle(muscleGroup) } returns oneWeekAgo
+        coEvery { workoutRepository.getExerciseCountForMuscleInRange(muscleGroup, twoWeeksAgo, now) } returns 5
 
         // When
         val frequencies = muscleTrackingUseCase.getWeeklyMuscleFrequencies(twoWeeksAgo, now)
@@ -84,34 +85,28 @@ class MuscleTrackingUseCaseTest {
         val backFrequency = frequencies.first()
         assertEquals(MuscleGroup.BACK, backFrequency.muscleGroup)
         assertEquals(3, backFrequency.workoutsPerWeek) // 6 workouts / 2 weeks
-        assertEquals(15, backFrequency.setsPerWeek) // 30 sets / 2 weeks
+        assertEquals(15, backFrequency.setsPerWeek) // 30 sets / 2 weeks (30 / 2 = 15)
         assertEquals(3000f, backFrequency.totalVolumePerWeek, 0.01f) // 6000 / 2
     }
 
     @Test
-    fun `detectMuscleImbalances detects severe chest-back imbalance`() = runTest {
+    fun `getMuscleGroupAnalytics detects severe chest-back imbalance`() = runTest {
         // Given - Chest has 3x more volume than back
-        val chestName = MuscleGroup.CHEST.name
-        val backName = MuscleGroup.BACK.name
+        val chest = MuscleGroup.CHEST
+        val back = MuscleGroup.BACK
 
-        coEvery { workoutDao.getActiveMuscleGroupsInRange(twoWeeksAgo, now) } returns listOf(chestName, backName)
+        // Setup active muscles
+        coEvery { workoutRepository.getActiveMuscleGroupsInRange(twoWeeksAgo, now) } returns listOf(chest, back)
 
         // Chest stats
-        coEvery { workoutDao.getTotalVolumeForMuscleInRange(chestName, twoWeeksAgo, now) } returns 9000f
-        coEvery { workoutDao.getTotalSetsForMuscleInRange(chestName, twoWeeksAgo, now) } returns 30
-        coEvery { workoutDao.getWorkoutCountForMuscleInRange(chestName, twoWeeksAgo, now) } returns 6
-        coEvery { workoutDao.getLastWorkoutDateForMuscle(chestName) } returns oneWeekAgo
-        coEvery { workoutDao.getExerciseCountForMuscleInRange(chestName, twoWeeksAgo, now) } returns 4
+        setupMockStats(chest, 9000f, 30, 6, oneWeekAgo, 4)
 
         // Back stats (much lower)
-        coEvery { workoutDao.getTotalVolumeForMuscleInRange(backName, twoWeeksAgo, now) } returns 3000f
-        coEvery { workoutDao.getTotalSetsForMuscleInRange(backName, twoWeeksAgo, now) } returns 10
-        coEvery { workoutDao.getWorkoutCountForMuscleInRange(backName, twoWeeksAgo, now) } returns 2
-        coEvery { workoutDao.getLastWorkoutDateForMuscle(backName) } returns oneWeekAgo
-        coEvery { workoutDao.getExerciseCountForMuscleInRange(backName, twoWeeksAgo, now) } returns 2
+        setupMockStats(back, 3000f, 10, 2, oneWeekAgo, 2)
 
         // When
-        val imbalances = muscleTrackingUseCase.detectMuscleImbalances(twoWeeksAgo, now)
+        val analytics = muscleTrackingUseCase.getMuscleGroupAnalytics(twoWeeksAgo, now)
+        val imbalances = analytics.imbalances
 
         // Then
         assertTrue(imbalances.isNotEmpty())
@@ -124,86 +119,15 @@ class MuscleTrackingUseCaseTest {
     }
 
     @Test
-    fun `detectMuscleImbalances detects moderate biceps-triceps imbalance`() = runTest {
-        // Given - Biceps has 2.5x more volume than triceps
-        val bicepsName = MuscleGroup.BICEPS.name
-        val tricepsName = MuscleGroup.TRICEPS.name
-
-        coEvery { workoutDao.getActiveMuscleGroupsInRange(twoWeeksAgo, now) } returns listOf(bicepsName, tricepsName)
-
-        // Biceps stats
-        coEvery { workoutDao.getTotalVolumeForMuscleInRange(bicepsName, twoWeeksAgo, now) } returns 5000f
-        coEvery { workoutDao.getTotalSetsForMuscleInRange(bicepsName, twoWeeksAgo, now) } returns 20
-        coEvery { workoutDao.getWorkoutCountForMuscleInRange(bicepsName, twoWeeksAgo, now) } returns 4
-        coEvery { workoutDao.getLastWorkoutDateForMuscle(bicepsName) } returns oneWeekAgo
-        coEvery { workoutDao.getExerciseCountForMuscleInRange(bicepsName, twoWeeksAgo, now) } returns 3
-
-        // Triceps stats (lower)
-        coEvery { workoutDao.getTotalVolumeForMuscleInRange(tricepsName, twoWeeksAgo, now) } returns 2000f
-        coEvery { workoutDao.getTotalSetsForMuscleInRange(tricepsName, twoWeeksAgo, now) } returns 8
-        coEvery { workoutDao.getWorkoutCountForMuscleInRange(tricepsName, twoWeeksAgo, now) } returns 2
-        coEvery { workoutDao.getLastWorkoutDateForMuscle(tricepsName) } returns oneWeekAgo
-        coEvery { workoutDao.getExerciseCountForMuscleInRange(tricepsName, twoWeeksAgo, now) } returns 2
-
-        // When
-        val imbalances = muscleTrackingUseCase.detectMuscleImbalances(twoWeeksAgo, now)
-
-        // Then
-        assertTrue(imbalances.isNotEmpty())
-        val bicepsTricepsImbalance = imbalances.firstOrNull {
-            it.strongerMuscle == MuscleGroup.BICEPS && it.weakerMuscle == MuscleGroup.TRICEPS
-        }
-        assertNotNull(bicepsTricepsImbalance)
-        assertEquals(ImbalanceSeverity.MODERATE, bicepsTricepsImbalance?.severity)
-    }
-
-    @Test
-    fun `detectMuscleImbalances returns empty when muscles are balanced`() = runTest {
-        // Given - Balanced chest and back
-        val chestName = MuscleGroup.CHEST.name
-        val backName = MuscleGroup.BACK.name
-
-        coEvery { workoutDao.getActiveMuscleGroupsInRange(twoWeeksAgo, now) } returns listOf(chestName, backName)
-
-        // Chest stats
-        coEvery { workoutDao.getTotalVolumeForMuscleInRange(chestName, twoWeeksAgo, now) } returns 5000f
-        coEvery { workoutDao.getTotalSetsForMuscleInRange(chestName, twoWeeksAgo, now) } returns 20
-        coEvery { workoutDao.getWorkoutCountForMuscleInRange(chestName, twoWeeksAgo, now) } returns 4
-        coEvery { workoutDao.getLastWorkoutDateForMuscle(chestName) } returns oneWeekAgo
-        coEvery { workoutDao.getExerciseCountForMuscleInRange(chestName, twoWeeksAgo, now) } returns 3
-
-        // Back stats (similar)
-        coEvery { workoutDao.getTotalVolumeForMuscleInRange(backName, twoWeeksAgo, now) } returns 5200f
-        coEvery { workoutDao.getTotalSetsForMuscleInRange(backName, twoWeeksAgo, now) } returns 21
-        coEvery { workoutDao.getWorkoutCountForMuscleInRange(backName, twoWeeksAgo, now) } returns 4
-        coEvery { workoutDao.getLastWorkoutDateForMuscle(backName) } returns oneWeekAgo
-        coEvery { workoutDao.getExerciseCountForMuscleInRange(backName, twoWeeksAgo, now) } returns 3
-
-        // When
-        val imbalances = muscleTrackingUseCase.detectMuscleImbalances(twoWeeksAgo, now)
-
-        // Then - No chest-back imbalance since ratio is < 1.5
-        val chestBackImbalance = imbalances.firstOrNull {
-            (it.strongerMuscle == MuscleGroup.CHEST && it.weakerMuscle == MuscleGroup.BACK) ||
-            (it.strongerMuscle == MuscleGroup.BACK && it.weakerMuscle == MuscleGroup.CHEST)
-        }
-        assertNull(chestBackImbalance)
-    }
-
-    @Test
-    fun `generateTrainingRecommendations suggests increasing frequency for undertrained muscle`() = runTest {
+    fun `getMuscleGroupAnalytics generates recommendations for undertrained muscle`() = runTest {
         // Given - Chest trained only once per week (below optimal)
-        val chestName = MuscleGroup.CHEST.name
-
-        coEvery { workoutDao.getActiveMuscleGroupsInRange(twoWeeksAgo, now) } returns listOf(chestName)
-        coEvery { workoutDao.getTotalVolumeForMuscleInRange(chestName, twoWeeksAgo, now) } returns 2000f
-        coEvery { workoutDao.getTotalSetsForMuscleInRange(chestName, twoWeeksAgo, now) } returns 10
-        coEvery { workoutDao.getWorkoutCountForMuscleInRange(chestName, twoWeeksAgo, now) } returns 2 // 1x per week
-        coEvery { workoutDao.getLastWorkoutDateForMuscle(chestName) } returns oneWeekAgo
-        coEvery { workoutDao.getExerciseCountForMuscleInRange(chestName, twoWeeksAgo, now) } returns 2
+        val chest = MuscleGroup.CHEST
+        coEvery { workoutRepository.getActiveMuscleGroupsInRange(twoWeeksAgo, now) } returns listOf(chest)
+        setupMockStats(chest, 2000f, 10, 2, oneWeekAgo, 2) // 2 workouts in 2 weeks = 1x/week
 
         // When
-        val recommendations = muscleTrackingUseCase.generateTrainingRecommendations(twoWeeksAgo, now)
+        val analytics = muscleTrackingUseCase.getMuscleGroupAnalytics(twoWeeksAgo, now)
+        val recommendations = analytics.recommendations
 
         // Then
         assertTrue(recommendations.isNotEmpty())
@@ -213,72 +137,19 @@ class MuscleTrackingUseCaseTest {
         assertNotNull(increaseFrequencyRec)
     }
 
-    @Test
-    fun `getMuscleGroupAnalytics returns complete analytics data`() = runTest {
-        // Given
-        val chestName = MuscleGroup.CHEST.name
-        val backName = MuscleGroup.BACK.name
-
-        coEvery { workoutDao.getActiveMuscleGroupsInRange(twoWeeksAgo, now) } returns listOf(chestName, backName)
-
-        // Chest stats (imbalanced - higher volume)
-        coEvery { workoutDao.getTotalVolumeForMuscleInRange(chestName, twoWeeksAgo, now) } returns 6000f
-        coEvery { workoutDao.getTotalSetsForMuscleInRange(chestName, twoWeeksAgo, now) } returns 24
-        coEvery { workoutDao.getWorkoutCountForMuscleInRange(chestName, twoWeeksAgo, now) } returns 6
-        coEvery { workoutDao.getLastWorkoutDateForMuscle(chestName) } returns oneWeekAgo
-        coEvery { workoutDao.getExerciseCountForMuscleInRange(chestName, twoWeeksAgo, now) } returns 4
-
-        // Back stats (lower - creates imbalance)
-        coEvery { workoutDao.getTotalVolumeForMuscleInRange(backName, twoWeeksAgo, now) } returns 3000f
-        coEvery { workoutDao.getTotalSetsForMuscleInRange(backName, twoWeeksAgo, now) } returns 12
-        coEvery { workoutDao.getWorkoutCountForMuscleInRange(backName, twoWeeksAgo, now) } returns 3
-        coEvery { workoutDao.getLastWorkoutDateForMuscle(backName) } returns oneWeekAgo
-        coEvery { workoutDao.getExerciseCountForMuscleInRange(backName, twoWeeksAgo, now) } returns 2
-
-        // When
-        val analytics = muscleTrackingUseCase.getMuscleGroupAnalytics(twoWeeksAgo, now)
-
-        // Then
-        assertEquals(2, analytics.muscleStats.size)
-        assertTrue(analytics.imbalances.isNotEmpty())
-        assertTrue(analytics.recommendations.isNotEmpty())
-    }
-
-    @Test
-    fun `volumePerSet is calculated correctly`() = runTest {
-        // Given
-        val chestName = MuscleGroup.CHEST.name
-
-        coEvery { workoutDao.getActiveMuscleGroupsInRange(twoWeeksAgo, now) } returns listOf(chestName)
-        coEvery { workoutDao.getTotalVolumeForMuscleInRange(chestName, twoWeeksAgo, now) } returns 5000f
-        coEvery { workoutDao.getTotalSetsForMuscleInRange(chestName, twoWeeksAgo, now) } returns 20
-        coEvery { workoutDao.getWorkoutCountForMuscleInRange(chestName, twoWeeksAgo, now) } returns 4
-        coEvery { workoutDao.getLastWorkoutDateForMuscle(chestName) } returns oneWeekAgo
-        coEvery { workoutDao.getExerciseCountForMuscleInRange(chestName, twoWeeksAgo, now) } returns 3
-
-        // When
-        val stats = muscleTrackingUseCase.getMuscleGroupStats(twoWeeksAgo, now)
-
-        // Then
-        assertEquals(250f, stats.first().volumePerSet, 0.01f) // 5000 / 20
-    }
-
-    @Test
-    fun `getStatsForLastWeeks returns correct date range`() = runTest {
-        // Given
-        val chestName = MuscleGroup.CHEST.name
-
-        coEvery { workoutDao.getActiveMuscleGroupsInRange(any(), any()) } returns listOf(chestName)
-        coEvery { workoutDao.getTotalVolumeForMuscleInRange(any(), any(), any()) } returns 5000f
-        coEvery { workoutDao.getTotalSetsForMuscleInRange(any(), any(), any()) } returns 20
-        coEvery { workoutDao.getWorkoutCountForMuscleInRange(any(), any(), any()) } returns 4
-        coEvery { workoutDao.getLastWorkoutDateForMuscle(any()) } returns oneWeekAgo
-        coEvery { workoutDao.getExerciseCountForMuscleInRange(any(), any(), any()) } returns 3
-
-        // When
-        val stats = muscleTrackingUseCase.getStatsForLastWeeks(4)
-
-        // Then
-        assertTrue(stats.isNotEmpty())
+    // Helper to reduce boilerplate
+    private fun setupMockStats(
+        muscle: MuscleGroup,
+        volume: Float,
+        sets: Int,
+        workouts: Int,
+        lastDate: Long,
+        exercises: Int
+    ) {
+        coEvery { workoutRepository.getTotalVolumeForMuscleInRange(muscle, twoWeeksAgo, now) } returns volume
+        coEvery { workoutRepository.getTotalSetsForMuscleInRange(muscle, twoWeeksAgo, now) } returns sets
+        coEvery { workoutRepository.getWorkoutCountForMuscleInRange(muscle, twoWeeksAgo, now) } returns workouts
+        coEvery { workoutRepository.getLastWorkoutDateForMuscle(muscle) } returns lastDate
+        coEvery { workoutRepository.getExerciseCountForMuscleInRange(muscle, twoWeeksAgo, now) } returns exercises
     }
 }

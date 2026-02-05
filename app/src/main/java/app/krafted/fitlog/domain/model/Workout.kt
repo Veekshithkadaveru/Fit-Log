@@ -1,7 +1,5 @@
 package app.krafted.fitlog.domain.model
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -29,11 +27,9 @@ data class Workout(
         get() = durationMillis?.let { (it / 60000).toInt() }
 
     val startDateTime: LocalDateTime
-        @RequiresApi(Build.VERSION_CODES.O)
         get() = LocalDateTime.ofInstant(Instant.ofEpochMilli(startTime), ZoneId.systemDefault())
 
     val endDateTime: LocalDateTime?
-        @RequiresApi(Build.VERSION_CODES.O)
         get() = endTime?.let { LocalDateTime.ofInstant(Instant.ofEpochMilli(it), ZoneId.systemDefault()) }
 
     val totalVolume: Float

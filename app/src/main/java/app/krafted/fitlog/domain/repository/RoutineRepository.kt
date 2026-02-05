@@ -44,4 +44,6 @@ interface RoutineRepository {
     suspend fun reorderExercises(routineId: Int, exerciseIds: List<Int>)
 
     fun getAllExercises(): Flow<List<app.krafted.fitlog.domain.model.Exercise>>
+
+    suspend fun cloneRoutineFromTemplate(template: Routine): Int
 }

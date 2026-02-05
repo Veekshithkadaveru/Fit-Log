@@ -8,6 +8,9 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.preferencesDataStore
 import app.krafted.fitlog.data.database.dao.ExerciseDao
 import app.krafted.fitlog.data.database.dao.RoutineDao
+import app.krafted.fitlog.data.database.AppDatabase
+import androidx.room.withTransaction
+import timber.log.Timber
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -23,6 +26,7 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(na
 class DatabaseInitializer @Inject constructor(
     private val exerciseDao: ExerciseDao,
     private val routineDao: RoutineDao,
+    private val database: AppDatabase,
     @ApplicationContext private val context: Context
 ) {
     
@@ -64,7 +68,7 @@ class DatabaseInitializer @Inject constructor(
             exerciseDao.insertAll(SeedData.exercises)
         } catch (e: Exception) {
             // Log error but don't crash the app
-            e.printStackTrace()
+            Timber.e(e)
         }
     }
     
@@ -73,18 +77,20 @@ class DatabaseInitializer @Inject constructor(
      */
     private suspend fun seedRoutineTemplates() {
         try {
-            // Insert routine templates first
-            for (routine in SeedData.routineTemplates) {
-                routineDao.insertRoutine(routine)
-                // Clear existing exercises for this template to avoid duplicates on re-seed
-                routineDao.deleteAllExercisesFromRoutine(routine.id)
+            database.withTransaction {
+                // Insert routine templates first
+                for (routine in SeedData.routineTemplates) {
+                    routineDao.insertRoutine(routine)
+                    // Clear existing exercises for this template to avoid duplicates on re-seed
+                    routineDao.deleteAllExercisesFromRoutine(routine.id)
+                }
+                
+                // Then insert routine exercises
+                routineDao.insertRoutineExercises(SeedData.routineExercises)
             }
-            
-            // Then insert routine exercises
-            routineDao.insertRoutineExercises(SeedData.routineExercises)
         } catch (e: Exception) {
             // Log error but don't crash the app
-            e.printStackTrace()
+            Timber.e(e)
         }
     }
     
@@ -100,7 +106,7 @@ class DatabaseInitializer @Inject constructor(
             // Clear exercise table
             exerciseDao.deleteAll()
         } catch (e: Exception) {
-            e.printStackTrace()
+            Timber.e(e)
         }
     }
     

@@ -12,14 +12,16 @@ import app.krafted.fitlog.domain.model.RoutineExercise
 import app.krafted.fitlog.domain.repository.RoutineRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import app.krafted.fitlog.data.mapper.toRoutineExerciseWithDetailsDomainModels
+import app.krafted.fitlog.data.database.AppDatabase
+import androidx.room.withTransaction
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class RoutineRepositoryImpl @Inject constructor(
     private val routineDao: RoutineDao,
-    private val exerciseDao: app.krafted.fitlog.data.database.dao.ExerciseDao
+    private val exerciseDao: app.krafted.fitlog.data.database.dao.ExerciseDao,
+    private val database: AppDatabase
 ) : RoutineRepository {
 
     override suspend fun insertRoutine(routine: Routine): Long {
@@ -115,6 +117,31 @@ class RoutineRepositoryImpl @Inject constructor(
     override fun getAllExercises(): Flow<List<app.krafted.fitlog.domain.model.Exercise>> {
         return exerciseDao.getAllExercises().map { entities ->
             entities.map { it.toDomainModel() }
+        }
+    }
+
+    override suspend fun cloneRoutineFromTemplate(template: Routine): Int {
+        return database.withTransaction {
+            // 1. Create new routine from template
+            val newRoutine = template.copy(
+                id = 0, // Reset ID for auto-generation
+                isTemplate = false,
+                dayOrder = 0
+            )
+            val newRoutineId = routineDao.insertRoutine(newRoutine.toEntity())
+
+            // 2. Copy exercises
+            if (template.exercises.isNotEmpty()) {
+                val newExercises = template.exercises.map {
+                    it.copy(
+                        id = 0,
+                        routineId = newRoutineId.toInt(),
+                        exercise = null // Don't duplicate the full exercise object
+                    )
+                }
+                routineDao.insertRoutineExercises(newExercises.toRoutineExerciseEntities())
+            }
+            newRoutineId.toInt()
         }
     }
 }

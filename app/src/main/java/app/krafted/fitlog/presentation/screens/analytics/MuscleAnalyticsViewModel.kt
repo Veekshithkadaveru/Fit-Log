@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.krafted.fitlog.domain.model.*
 import app.krafted.fitlog.domain.usecase.MuscleTrackingUseCase
+import timber.log.Timber
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -70,7 +71,7 @@ class MuscleAnalyticsViewModel @Inject constructor(
                 _analytics.value = analytics
                 _weeklyFrequencies.value = frequencies
             } catch (e: Exception) {
-                e.printStackTrace()
+                Timber.e(e)
                 _analytics.value = null
                 _weeklyFrequencies.value = emptyList()
             } finally {

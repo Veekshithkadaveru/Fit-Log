@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import app.krafted.fitlog.domain.model.Exercise
 import app.krafted.fitlog.domain.repository.ExerciseRepository
 import app.krafted.fitlog.domain.repository.RoutineRepository
+import timber.log.Timber
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -95,7 +96,7 @@ class ExerciseViewModel @Inject constructor(
                 
                 _navigationEvent.send(Unit)
             } catch (e: Exception) {
-                e.printStackTrace()
+                Timber.e(e)
             } finally {
                 _isLoading.value = false
             }

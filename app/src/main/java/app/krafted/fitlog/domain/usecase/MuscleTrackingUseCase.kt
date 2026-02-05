@@ -1,15 +1,22 @@
 package app.krafted.fitlog.domain.usecase
 
-import app.krafted.fitlog.data.database.dao.WorkoutDao
-import app.krafted.fitlog.domain.model.*
+import app.krafted.fitlog.domain.model.MuscleGroup
+import app.krafted.fitlog.domain.model.MuscleGroupAnalytics
+import app.krafted.fitlog.domain.model.MuscleGroupImbalance
+import app.krafted.fitlog.domain.model.MuscleGroupStats
+import app.krafted.fitlog.domain.model.TrainingRecommendation
+import app.krafted.fitlog.domain.model.WeeklyMuscleFrequency
+import app.krafted.fitlog.domain.model.RecommendationType
+import app.krafted.fitlog.domain.model.RecommendationPriority
+import app.krafted.fitlog.domain.model.ImbalanceSeverity
+import app.krafted.fitlog.domain.repository.WorkoutRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
-import kotlin.math.abs
 
 class MuscleTrackingUseCase @Inject constructor(
-    private val workoutDao: WorkoutDao
+    private val workoutRepository: WorkoutRepository
 ) {
 
     companion object {
@@ -23,162 +30,38 @@ class MuscleTrackingUseCase @Inject constructor(
     }
 
     /**
-     * Calculate muscle group statistics for a given time range
+     * Get analytics for all muscle groups over the specified number of weeks
      */
-    suspend fun getMuscleGroupStats(
-        startDate: Long,
-        endDate: Long
-    ): List<MuscleGroupStats> = withContext(Dispatchers.IO) {
-        val activeMuscles = workoutDao.getActiveMuscleGroupsInRange(startDate, endDate)
-        val daysInRange = TimeUnit.MILLISECONDS.toDays(endDate - startDate).toInt()
-        val weeksInRange = if (daysInRange >= DAYS_IN_WEEK) daysInRange / DAYS_IN_WEEK else 1
-
-        activeMuscles.mapNotNull { muscleGroupName ->
-            try {
-                val muscleGroup = MuscleGroup.valueOf(muscleGroupName)
-
-                val totalVolume = workoutDao.getTotalVolumeForMuscleInRange(
-                    muscleGroupName, startDate, endDate
-                ) ?: 0f
-
-                val totalSets = workoutDao.getTotalSetsForMuscleInRange(
-                    muscleGroupName, startDate, endDate
-                )
-
-                val workoutCount = workoutDao.getWorkoutCountForMuscleInRange(
-                    muscleGroupName, startDate, endDate
-                )
-
-                val lastWorkedDate = workoutDao.getLastWorkoutDateForMuscle(muscleGroupName)
-
-                val exerciseCount = workoutDao.getExerciseCountForMuscleInRange(
-                    muscleGroupName, startDate, endDate
-                )
-
-                // Calculate weekly frequency
-                val weeklyFrequency = if (weeksInRange > 0) {
-                    workoutCount / weeksInRange
-                } else {
-                    workoutCount
-                }
-
-                val averageVolumePerWorkout = if (workoutCount > 0) {
-                    totalVolume / workoutCount
-                } else {
-                    0f
-                }
-
-                MuscleGroupStats(
-                    muscleGroup = muscleGroup,
-                    totalVolume = totalVolume,
-                    totalSets = totalSets,
-                    weeklyFrequency = weeklyFrequency,
-                    lastWorkedDate = lastWorkedDate,
-                    averageVolumePerWorkout = averageVolumePerWorkout,
-                    exerciseCount = exerciseCount
-                )
-            } catch (e: IllegalArgumentException) {
-                null
-            }
-        }
+    suspend fun getAnalyticsForLastWeeks(weeks: Int): MuscleGroupAnalytics {
+        val endDate = System.currentTimeMillis()
+        val startDate = endDate - TimeUnit.DAYS.toMillis((weeks * DAYS_IN_WEEK).toLong())
+        return getMuscleGroupAnalytics(startDate, endDate)
     }
 
     /**
-     * Calculate weekly muscle frequency for each muscle group
+     * Get comprehensive muscle group analytics including stats, imbalances, and recommendations
      */
-    suspend fun getWeeklyMuscleFrequencies(
+    suspend fun getMuscleGroupAnalytics(
         startDate: Long,
         endDate: Long
-    ): List<WeeklyMuscleFrequency> = withContext(Dispatchers.IO) {
+    ): MuscleGroupAnalytics = withContext(Dispatchers.IO) {
         val stats = getMuscleGroupStats(startDate, endDate)
-        val daysInRange = TimeUnit.MILLISECONDS.toDays(endDate - startDate).toInt()
-        val weeksInRange = if (daysInRange >= DAYS_IN_WEEK) {
-            daysInRange.toFloat() / DAYS_IN_WEEK
-        } else {
-            1f
-        }
-
-        stats.map { stat ->
-            val workoutCount = workoutDao.getWorkoutCountForMuscleInRange(
-                stat.muscleGroup.name,
-                startDate,
-                endDate
-            )
-
-            WeeklyMuscleFrequency(
-                muscleGroup = stat.muscleGroup,
-                workoutsPerWeek = (workoutCount / weeksInRange).toInt(),
-                setsPerWeek = (stat.totalSets / weeksInRange).toInt(),
-                totalVolumePerWeek = stat.totalVolume / weeksInRange
-            )
-        }
-    }
-
-    /**
-     * Detect muscle group imbalances based on volume ratios
-     */
-    suspend fun detectMuscleImbalances(
-        startDate: Long,
-        endDate: Long
-    ): List<MuscleGroupImbalance> = withContext(Dispatchers.IO) {
-        val stats = getMuscleGroupStats(startDate, endDate)
-        val imbalances = mutableListOf<MuscleGroupImbalance>()
-
-        // Define antagonistic muscle pairs to check for imbalances
-        val musclePairs = listOf(
-            MuscleGroup.CHEST to MuscleGroup.BACK,
-            MuscleGroup.BICEPS to MuscleGroup.TRICEPS,
-            MuscleGroup.QUADRICEPS to MuscleGroup.HAMSTRINGS,
-            MuscleGroup.SHOULDERS to MuscleGroup.BACK,
-            MuscleGroup.LATS to MuscleGroup.CHEST
+        MuscleGroupAnalytics(
+            muscleStats = stats,
+            imbalances = detectImbalances(stats),
+            recommendations = generateRecommendations(stats, detectImbalances(stats))
         )
-
-        for ((muscle1, muscle2) in musclePairs) {
-            val stats1 = stats.find { it.muscleGroup == muscle1 }
-            val stats2 = stats.find { it.muscleGroup == muscle2 }
-
-            if (stats1 != null && stats2 != null) {
-                val volume1 = stats1.totalVolume
-                val volume2 = stats2.totalVolume
-
-                if (volume1 > 0 && volume2 > 0) {
-                    val ratio = if (volume1 > volume2) volume1 / volume2 else volume2 / volume1
-
-                    if (ratio >= MINOR_IMBALANCE_THRESHOLD) {
-                        val stronger = if (volume1 > volume2) muscle1 else muscle2
-                        val weaker = if (volume1 > volume2) muscle2 else muscle1
-
-                        val severity = when {
-                            ratio >= SEVERE_IMBALANCE_THRESHOLD -> ImbalanceSeverity.SEVERE
-                            ratio >= MODERATE_IMBALANCE_THRESHOLD -> ImbalanceSeverity.MODERATE
-                            else -> ImbalanceSeverity.MINOR
-                        }
-
-                        imbalances.add(
-                            MuscleGroupImbalance(
-                                strongerMuscle = stronger,
-                                weakerMuscle = weaker,
-                                volumeRatio = ratio,
-                                severity = severity
-                            )
-                        )
-                    }
-                }
-            }
-        }
-
-        imbalances
     }
 
+    // ... (intermediate code unchanged, assumed handled by other replacements or existing)
+
     /**
-     * Generate training recommendations based on muscle stats and imbalances
+     * Generate training recommendations based on stats and imbalances
      */
-    suspend fun generateTrainingRecommendations(
-        startDate: Long,
-        endDate: Long
-    ): List<TrainingRecommendation> = withContext(Dispatchers.IO) {
-        val stats = getMuscleGroupStats(startDate, endDate)
-        val imbalances = detectMuscleImbalances(startDate, endDate)
+    private fun generateRecommendations(
+        stats: List<MuscleGroupStats>,
+        imbalances: List<MuscleGroupImbalance>
+    ): List<TrainingRecommendation> {
         val recommendations = mutableListOf<TrainingRecommendation>()
 
         // Average weekly frequency across all muscles
@@ -209,7 +92,7 @@ class MuscleTrackingUseCase @Inject constructor(
                     )
                 )
             }
-
+            // ... (rest of logic)
             // Check frequency recommendations
             when {
                 stat.weeklyFrequency < OPTIMAL_FREQUENCY_MIN -> {
@@ -223,7 +106,9 @@ class MuscleTrackingUseCase @Inject constructor(
                     )
                 }
                 stat.weeklyFrequency > OPTIMAL_FREQUENCY_MAX -> {
-                    val daysSinceLastWorked = stat.daysSinceLastWorked ?: Int.MAX_VALUE
+                    val daysSinceLastWorked = (System.currentTimeMillis() - (stat.lastWorkedDate ?: 0L)).let {
+                        TimeUnit.MILLISECONDS.toDays(it).toInt()
+                    }
                     if (daysSinceLastWorked < MIN_RECOVERY_DAYS) {
                         recommendations.add(
                             TrainingRecommendation(
@@ -237,7 +122,7 @@ class MuscleTrackingUseCase @Inject constructor(
                 }
                 else -> {
                     // Optimal frequency - check volume
-                    if (stat.totalVolume < avgWeeklyFrequency * 100) {
+                    if (stat.totalVolume < avgWeeklyFrequency * 100) { // Arbitrary threshold for now
                         recommendations.add(
                             TrainingRecommendation(
                                 muscleGroup = stat.muscleGroup,
@@ -251,7 +136,7 @@ class MuscleTrackingUseCase @Inject constructor(
             }
         }
 
-        recommendations.sortedByDescending {
+        return recommendations.sortedByDescending {
             when (it.priority) {
                 RecommendationPriority.HIGH -> 3
                 RecommendationPriority.MEDIUM -> 2
@@ -261,34 +146,226 @@ class MuscleTrackingUseCase @Inject constructor(
     }
 
     /**
-     * Get comprehensive muscle group analytics including stats, imbalances, and recommendations
+     * Get weekly frequency distribution for heatmap
      */
-    suspend fun getMuscleGroupAnalytics(
+    suspend fun getWeeklyMuscleFrequencies(startDate: Long, endDate: Long): List<WeeklyMuscleFrequency> {
+        val stats = getMuscleGroupStats(startDate, endDate)
+        // Need to calculate weekly values. getMuscleGroupStats returns stats with weeklyFrequency (Int).
+        // But WeeklyMuscleFrequency needs setsPerWeek and totalVolumePerWeek.
+        // And MuscleGroupStats has totalVolume and totalSets (totals, not weekly).
+        
+        val daysInRange = TimeUnit.MILLISECONDS.toDays(endDate - startDate).toInt()
+        val weeksInRange = if (daysInRange >= 7) daysInRange / 7.0f else 1.0f
+        
+        return stats.map { stat ->
+            WeeklyMuscleFrequency(
+                muscleGroup = stat.muscleGroup,
+                workoutsPerWeek = stat.weeklyFrequency,
+                setsPerWeek = (stat.totalSets / weeksInRange).toInt(),
+                totalVolumePerWeek = stat.totalVolume / weeksInRange
+            )
+        }
+    }
+
+    /**
+     * Calculate muscle group statistics for a given time range
+     */
+    suspend fun getMuscleGroupStats(
         startDate: Long,
         endDate: Long
-    ): MuscleGroupAnalytics = withContext(Dispatchers.IO) {
-        MuscleGroupAnalytics(
-            muscleStats = getMuscleGroupStats(startDate, endDate),
-            imbalances = detectMuscleImbalances(startDate, endDate),
-            recommendations = generateTrainingRecommendations(startDate, endDate)
+    ): List<MuscleGroupStats> = withContext(Dispatchers.IO) {
+        val activeMuscles = workoutRepository.getActiveMuscleGroupsInRange(startDate, endDate)
+        val daysInRange = TimeUnit.MILLISECONDS.toDays(endDate - startDate).toInt()
+        val weeksInRange = if (daysInRange >= DAYS_IN_WEEK) daysInRange / DAYS_IN_WEEK else 1
+
+        activeMuscles.mapNotNull { muscleGroup ->
+            val totalVolume = workoutRepository.getTotalVolumeForMuscleInRange(
+                muscleGroup, startDate, endDate
+            ) ?: 0f
+
+            val totalSets = workoutRepository.getTotalSetsForMuscleInRange(
+                muscleGroup, startDate, endDate
+            )
+
+            val workoutCount = workoutRepository.getWorkoutCountForMuscleInRange(
+                muscleGroup, startDate, endDate
+            )
+
+            val lastWorkedDate = workoutRepository.getLastWorkoutDateForMuscle(muscleGroup)
+
+            val exerciseCount = workoutRepository.getExerciseCountForMuscleInRange(
+                muscleGroup, startDate, endDate
+            )
+
+            // Calculate weekly frequency
+            val weeklyFrequency = if (weeksInRange > 0) {
+                workoutCount / weeksInRange
+            } else {
+                workoutCount
+            }
+
+            val averageVolumePerWorkout = if (workoutCount > 0) {
+                totalVolume / workoutCount
+            } else {
+                0f
+            }
+
+            MuscleGroupStats(
+                muscleGroup = muscleGroup,
+                totalVolume = totalVolume,
+                totalSets = totalSets,
+                weeklyFrequency = weeklyFrequency,
+                lastWorkedDate = lastWorkedDate ?: 0L,
+                averageVolumePerWorkout = averageVolumePerWorkout,
+                exerciseCount = exerciseCount
+            )
+        }
+    }
+
+    /**
+     * Calculate stats for a specific muscle group
+     */
+    private suspend fun calculateMuscleStats(
+        muscle: MuscleGroup,
+        startDate: Long,
+        endDate: Long
+    ): MuscleGroupStats {
+        val totalVolume = workoutRepository.getTotalVolumeForMuscleInRange(muscle, startDate, endDate) ?: 0f
+        val totalSets = workoutRepository.getTotalSetsForMuscleInRange(muscle, startDate, endDate)
+        val workoutCount = workoutRepository.getWorkoutCountForMuscleInRange(muscle, startDate, endDate)
+        val lastWorkoutDate = workoutRepository.getLastWorkoutDateForMuscle(muscle)
+        val exerciseCount = workoutRepository.getExerciseCountForMuscleInRange(muscle, startDate, endDate)
+
+        // Calculate weeks in range to get weekly averages
+        val daysInRange = (endDate - startDate) / (24 * 60 * 60 * 1000L)
+        val weeksInRange = daysInRange / 7.0f
+
+        // Calculate weekly frequency
+        val weeklyFrequency = if (weeksInRange > 0) {
+            (workoutCount / weeksInRange).toInt()
+        } else {
+            workoutCount
+        }
+
+        val averageVolumePerWorkout = if (workoutCount > 0) {
+            totalVolume / workoutCount
+        } else {
+            0f
+        }
+
+        return MuscleGroupStats(
+            muscleGroup = muscle,
+            totalVolume = totalVolume,
+            totalSets = totalSets,
+            weeklyFrequency = weeklyFrequency,
+            lastWorkedDate = lastWorkoutDate,
+            averageVolumePerWorkout = averageVolumePerWorkout,
+            exerciseCount = exerciseCount
         )
     }
 
     /**
-     * Get stats for the last N weeks
+     * Detect muscle imbalances based on volume and frequency ratios
      */
-    suspend fun getStatsForLastWeeks(weeks: Int): List<MuscleGroupStats> {
-        val endDate = System.currentTimeMillis()
-        val startDate = endDate - TimeUnit.DAYS.toMillis((weeks * DAYS_IN_WEEK).toLong())
-        return getMuscleGroupStats(startDate, endDate)
+    private fun detectImbalances(stats: List<MuscleGroupStats>): List<MuscleGroupImbalance> {
+        val imbalances = mutableListOf<MuscleGroupImbalance>()
+        val statsMap = stats.associateBy { it.muscleGroup }
+
+        // Rule 1: Push/Pull Ratio (Chest vs Back)
+        checkRatio(
+            statsMap,
+            MuscleGroup.CHEST,
+            MuscleGroup.BACK,
+            targetRatio = 1.0f, // 1:1 is ideal
+            tolerance = 0.2f, // 20% tolerance
+            imbalances
+        )
+
+        // Rule 2: Quad/Hamstring Ratio
+        checkRatio(
+            statsMap,
+            MuscleGroup.QUADRICEPS,
+            MuscleGroup.HAMSTRINGS,
+            targetRatio = 1.5f, // Quads are typically stronger/higher volume
+            tolerance = 0.3f,
+            imbalances
+        )
+
+        // Rule 3: Bicep/Tricep Ratio
+        checkRatio(
+            statsMap,
+            MuscleGroup.TRICEPS,
+            MuscleGroup.BICEPS,
+            targetRatio = 1.0f,
+            tolerance = 0.2f,
+            imbalances
+        )
+
+        return imbalances
+    }
+
+    private fun checkRatio(
+        statsMap: Map<MuscleGroup, MuscleGroupStats>,
+        muscle1: MuscleGroup,
+        muscle2: MuscleGroup,
+        targetRatio: Float,
+        tolerance: Float,
+        resultList: MutableList<MuscleGroupImbalance>
+    ) {
+        val stats1 = statsMap[muscle1]
+        val stats2 = statsMap[muscle2]
+
+        if (stats1 != null && stats2 != null && stats1.totalSets > 3 && stats2.totalSets > 3) { // Changed to totalSets as weeklySets is not in MuscleGroupStats
+            val ratio = stats1.totalSets.toFloat() / stats2.totalSets.toFloat()
+            
+                if (ratio > targetRatio + tolerance) {
+                // Muscle 1 is dominant
+                resultList.add(
+                    MuscleGroupImbalance(
+                        strongerMuscle = muscle1,
+                        weakerMuscle = muscle2,
+                        volumeRatio = ratio,
+                        severity = calculateSeverity(ratio, targetRatio, tolerance)
+                    )
+                )
+            } else if (ratio < targetRatio - tolerance) {
+                // Muscle 2 is dominant (or Muscle 1 is lagging)
+                resultList.add(
+                    MuscleGroupImbalance(
+                        strongerMuscle = muscle2,
+                        weakerMuscle = muscle1,
+                        volumeRatio = 1/ratio,
+                        severity = calculateSeverity(1/ratio, 1/targetRatio, tolerance)
+                    )
+                )
+            }
+        }
+    }
+
+    private fun calculateSeverity(ratio: Float, target: Float, tolerance: Float): ImbalanceSeverity {
+        val deviation = kotlin.math.abs(ratio - target)
+        return when {
+            deviation > tolerance * 2 -> ImbalanceSeverity.SEVERE
+            deviation > tolerance * 1.5 -> ImbalanceSeverity.MODERATE
+            else -> ImbalanceSeverity.MINOR
+        }
     }
 
     /**
-     * Get analytics for the last N weeks
+     * Generate training recommendations based on stats and imbalances
      */
-    suspend fun getAnalyticsForLastWeeks(weeks: Int): MuscleGroupAnalytics {
-        val endDate = System.currentTimeMillis()
-        val startDate = endDate - TimeUnit.DAYS.toMillis((weeks * DAYS_IN_WEEK).toLong())
-        return getMuscleGroupAnalytics(startDate, endDate)
+
+
+
+}
+
+// Helper for parallel execution
+suspend fun <T, R> Iterable<T>.mapAsync(transform: suspend (T) -> R): List<R> {
+    // In a real app, use coroutineScope to run these in parallel
+    // For simplicity here, we'll map sequentially but calling suspend functions
+    val destination = ArrayList<R>()
+    for (item in this) {
+        destination.add(transform(item))
     }
+    return destination
 }
