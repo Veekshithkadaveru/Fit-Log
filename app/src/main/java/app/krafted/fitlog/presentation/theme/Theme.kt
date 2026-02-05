@@ -1,4 +1,4 @@
-package app.krafted.fitlog.ui.theme
+package app.krafted.fitlog.presentation.theme
 
 import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme

@@ -42,7 +42,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import app.krafted.fitlog.presentation.navigation.bottomNavItems
-import app.krafted.fitlog.ui.theme.AnimationDuration
+import app.krafted.fitlog.presentation.theme.AnimationDuration
 
 /**
  * Professional animated bottom navigation bar for the FitLog app

@@ -46,7 +46,7 @@ import app.krafted.fitlog.domain.model.MuscleGroup
 import app.krafted.fitlog.presentation.screens.exercises.components.ExerciseCard
 import app.krafted.fitlog.presentation.screens.exercises.components.ExerciseSearchBar
 import app.krafted.fitlog.presentation.screens.exercises.components.FilterRow
-import app.krafted.fitlog.ui.theme.FitLogTheme
+import app.krafted.fitlog.presentation.theme.FitLogTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

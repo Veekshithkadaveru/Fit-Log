@@ -1,4 +1,4 @@
-package app.krafted.fitlog.ui.theme
+package app.krafted.fitlog.presentation.theme
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationSpec

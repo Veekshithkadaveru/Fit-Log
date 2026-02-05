@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.dp
 import app.krafted.fitlog.domain.model.Equipment
 import app.krafted.fitlog.domain.model.ExerciseCategory
 import app.krafted.fitlog.domain.model.MuscleGroup
-import app.krafted.fitlog.ui.theme.FitLogTheme
+import app.krafted.fitlog.presentation.theme.FitLogTheme
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable

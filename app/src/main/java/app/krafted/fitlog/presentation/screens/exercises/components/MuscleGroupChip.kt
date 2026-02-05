@@ -17,7 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import app.krafted.fitlog.domain.model.MuscleGroup
-import app.krafted.fitlog.ui.theme.FitLogTheme
+import app.krafted.fitlog.presentation.theme.FitLogTheme
 
 @Composable
 fun MuscleGroupChip(

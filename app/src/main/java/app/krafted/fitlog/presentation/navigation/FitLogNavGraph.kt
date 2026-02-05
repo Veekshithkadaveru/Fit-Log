@@ -24,7 +24,7 @@ import app.krafted.fitlog.presentation.screens.bodyweight.BodyweightScreen
 import app.krafted.fitlog.presentation.screens.cardio.CardioScreen
 import app.krafted.fitlog.presentation.screens.progress.ExerciseProgressScreen
 import app.krafted.fitlog.presentation.screens.progress.ProgressDashboardScreen
-import app.krafted.fitlog.ui.theme.AnimationDuration
+import app.krafted.fitlog.presentation.theme.AnimationDuration
 
 /**
  * Main navigation graph for the FitLog app with professional animations

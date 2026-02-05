@@ -49,7 +49,7 @@ import app.krafted.fitlog.domain.model.MuscleGroup
 import app.krafted.fitlog.presentation.components.ExerciseImage
 import app.krafted.fitlog.presentation.screens.exercises.components.CategoryBadge
 import app.krafted.fitlog.presentation.screens.exercises.components.MuscleGroupChip
-import app.krafted.fitlog.ui.theme.FitLogTheme
+import app.krafted.fitlog.presentation.theme.FitLogTheme
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable

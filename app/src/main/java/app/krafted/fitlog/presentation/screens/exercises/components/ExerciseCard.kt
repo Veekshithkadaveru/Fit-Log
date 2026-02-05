@@ -32,7 +32,7 @@ import app.krafted.fitlog.domain.model.Exercise
 import app.krafted.fitlog.domain.model.ExerciseCategory
 import app.krafted.fitlog.domain.model.MuscleGroup
 import app.krafted.fitlog.presentation.components.ExerciseImage
-import app.krafted.fitlog.ui.theme.FitLogTheme
+import app.krafted.fitlog.presentation.theme.FitLogTheme
 
 @Composable
 fun ExerciseCard(

@@ -36,8 +36,8 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
-import app.krafted.fitlog.ui.theme.AnimationDuration
-import app.krafted.fitlog.ui.theme.ListAnimations
+import app.krafted.fitlog.presentation.theme.AnimationDuration
+import app.krafted.fitlog.presentation.theme.ListAnimations
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
