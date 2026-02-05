@@ -49,7 +49,7 @@ fun SetInputGrid(
 
         // Set Rows
         sets.forEachIndexed { index, set ->
-            SetInputRowSmart(
+            SetInputRow(
                 setNumber = index + 1,
                 workoutSet = set,
                 onWeightChange = { weight -> onWeightChange(set.id, weight) },
