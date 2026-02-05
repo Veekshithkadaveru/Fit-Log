@@ -1,0 +1,34 @@
+package app.krafted.fitlog
+
+import android.app.Application
+import app.krafted.fitlog.data.database.DatabaseInitializer
+import timber.log.Timber
+import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+@HiltAndroidApp
+class FitLogApplication : Application() {
+    
+    @Inject
+    lateinit var databaseInitializer: DatabaseInitializer
+    
+    private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    
+    override fun onCreate() {
+        super.onCreate()
+
+        if (app.krafted.fitlog.BuildConfig.DEBUG) {
+            Timber.plant(Timber.DebugTree())
+        }
+        
+        // Initialize database with seed data on app startup
+        applicationScope.launch {
+            databaseInitializer.initializeDatabase()
+        }
+    }
+}
+

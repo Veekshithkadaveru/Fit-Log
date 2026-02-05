@@ -19,3 +19,20 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Room
+-keep class androidx.room.RoomDatabase { *; }
+-keep class * extends androidx.room.RoomDatabase { *; }
+-keep class * extends androidx.room.RoomDatabase$Builder { *; }
+-keep interface androidx.room.Dao { *; }
+-keep class * implements androidx.room.Dao { *; }
+-dontwarn androidx.room.paging.**
+
+# Coroutines
+-keepnames class kotlinx.coroutines.internal.MainDispatcherFactory {}
+-keepnames class kotlinx.coroutines.CoroutineExceptionHandler {}
+-keep class kotlinx.coroutines.android.AndroidExceptionPreHandler {}
+-keep class kotlinx.coroutines.android.AndroidDispatcherFactory {}
+
+# Hilt
+-keep class * extends dagger.hilt.internal.define.ComponentProcessor { *; }

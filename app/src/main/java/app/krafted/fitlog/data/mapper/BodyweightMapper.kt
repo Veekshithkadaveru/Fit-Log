@@ -1,0 +1,27 @@
+package app.krafted.fitlog.data.mapper
+
+import app.krafted.fitlog.data.database.entity.BodyweightEntity
+import app.krafted.fitlog.domain.model.Bodyweight
+
+fun BodyweightEntity.toDomainModel(): Bodyweight {
+    return Bodyweight(
+        id = id,
+        date = date,
+        weight = weight,
+        notes = notes
+    )
+}
+
+fun Bodyweight.toEntity(): BodyweightEntity {
+    return BodyweightEntity(
+        id = id,
+        date = date,
+        weight = weight,
+        notes = notes
+    )
+}
+
+fun List<BodyweightEntity>.toBodyweightDomainModels(): List<Bodyweight> {
+    return map { it.toDomainModel() }
+}
+
