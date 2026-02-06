@@ -16,3 +16,9 @@ local.properties
 
 # Planning files
 workoutlog_pro_phase_1_888bdf77.plan.md
+
+# Keystore files
+*.jks
+*.keystore
+*.pem
+*.pk8

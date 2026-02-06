@@ -50,18 +50,40 @@ fun MuscleFrequencyChart(
     // Create chart model producer
     val chartEntryModelProducer = remember { ChartEntryModelProducer() }
 
-    // Update chart data when frequencies change
-    LaunchedEffect(frequencies) {
-        val entries = frequencies.mapIndexed { index, frequency ->
+    // Pre-calculate safe data to ensure chart and axis are always in sync
+    val safeModel = remember(frequencies) {
+        if (frequencies.isEmpty()) return@remember null
+        
+        val sorted = frequencies
+            .sortedByDescending { it.workoutsPerWeek }
+            .take(15)
+            
+        val entries = sorted.mapIndexed { index, frequency ->
             entryOf(index.toFloat(), frequency.workoutsPerWeek.toFloat())
         }
-        chartEntryModelProducer.setEntries(entries)
+        
+        Triple(sorted, entries, sorted.associate { it.muscleGroup to it.workoutsPerWeek })
+    }
+
+    if (safeModel == null) return
+
+    val (safeSortedFrequencies, safeEntries, _) = safeModel
+
+    // Update chart data
+    LaunchedEffect(safeEntries) {
+        chartEntryModelProducer.setEntries(safeEntries)
     }
 
     // Create axis value formatter for muscle names
-    val bottomAxisValueFormatter = remember(frequencies) {
+    val bottomAxisValueFormatter = remember(safeSortedFrequencies) {
         AxisValueFormatter<AxisPosition.Horizontal.Bottom> { value, _ ->
-            frequencies.getOrNull(value.toInt())?.muscleGroup?.displayName?.take(8) ?: ""
+            // Safe index lookup
+            val index = value.toInt()
+            if (index in safeSortedFrequencies.indices) {
+                safeSortedFrequencies[index].muscleGroup.displayName.take(8)
+            } else {
+                ""
+            }
         }
     }
 

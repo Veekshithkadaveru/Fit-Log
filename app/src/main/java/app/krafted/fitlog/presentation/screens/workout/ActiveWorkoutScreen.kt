@@ -152,27 +152,16 @@ fun ActiveWorkoutScreen(
                 }
 
                 else -> {
+                    val actions = rememberActiveWorkoutActions(
+                        viewModel = viewModel,
+                        onNavigateToAddExercise = {
+                            navController.navigate(FitLogDestinations.ACTIVE_WORKOUT_EXERCISE_PICKER)
+                        }
+                    )
+                    
                     ActiveWorkoutContent(
                         uiState = uiState,
-                        onEndWorkout = { viewModel.endWorkout() },
-                        onDiscardWorkout = { viewModel.discardWorkout() },
-                        onAddSet = { exerciseId -> viewModel.addSet(exerciseId, autoFill = false) },
-                        onAddSetWithAutoFill = { exerciseId -> viewModel.addSet(exerciseId, autoFill = true) },
-                        onUpdateSetWeight = { setId, weight ->
-                            viewModel.updateSet(setId, weight = weight.toFloatOrNull() ?: 0f)
-                        },
-                        onUpdateSetReps = { setId, reps ->
-                            viewModel.updateSet(setId, reps = reps.toIntOrNull() ?: 0)
-                        },
-                        onToggleSetCompleted = { setId -> viewModel.toggleSetCompleted(setId) },
-                        onDeleteSet = { setId -> viewModel.deleteSet(setId) },
-                        onDuplicateSet = { setId -> viewModel.duplicateSet(setId) },
-                        onAddExercise = {
-                            navController.navigate(FitLogDestinations.ACTIVE_WORKOUT_EXERCISE_PICKER)
-                        },
-                        onExerciseClick = { exerciseId ->
-                            viewModel.navigateToExerciseDetail(exerciseId)
-                        }
+                        actions = actions
                     )
                 }
             }
@@ -222,18 +211,8 @@ fun ActiveWorkoutScreen(
  */
 @Composable
 private fun ActiveWorkoutContent(
-    uiState: app.krafted.fitlog.presentation.viewmodel.ActiveWorkoutUiState,
-    onEndWorkout: () -> Unit,
-    onDiscardWorkout: () -> Unit,
-    onAddSet: (exerciseId: Int) -> Unit,
-    onAddSetWithAutoFill: (exerciseId: Int) -> Unit,
-    onUpdateSetWeight: (setId: Int, weight: String) -> Unit,
-    onUpdateSetReps: (setId: Int, reps: String) -> Unit,
-    onToggleSetCompleted: (setId: Int) -> Unit,
-    onDeleteSet: (setId: Int) -> Unit,
-    onDuplicateSet: (setId: Int) -> Unit,
-    onAddExercise: () -> Unit,
-    onExerciseClick: (exerciseId: Int) -> Unit,
+    uiState: ActiveWorkoutUiState,
+    actions: ActiveWorkoutActions,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -261,7 +240,7 @@ private fun ActiveWorkoutContent(
 
                 if (uiState.workoutExercises.isEmpty()) {
                     item {
-                        NoExercisesPlaceholder(onAddExercise = onAddExercise)
+                        NoExercisesPlaceholder(onAddExercise = actions.onAddExercise)
                     }
                 } else {
                     items(
@@ -271,14 +250,14 @@ private fun ActiveWorkoutContent(
                         ExerciseSection(
                             exercise = exercise,
                             sets = exercise.sets,
-                            onWeightChange = onUpdateSetWeight,
-                            onRepsChange = onUpdateSetReps,
-                            onSetCompleted = onToggleSetCompleted,
-                            onDeleteSet = onDeleteSet,
-                            onDuplicateSet = onDuplicateSet,
-                            onAddSet = { onAddSet(exercise.exercise.id) },
-                            onAddSetWithAutoFill = { onAddSetWithAutoFill(exercise.exercise.id) },
-                            onExerciseClick = { onExerciseClick(exercise.exercise.id) }
+                            onWeightChange = actions.onUpdateSetWeight,
+                            onRepsChange = actions.onUpdateSetReps,
+                            onSetCompleted = actions.onToggleSetCompleted,
+                            onDeleteSet = actions.onDeleteSet,
+                            onDuplicateSet = actions.onDuplicateSet,
+                            onAddSet = { actions.onAddSet(exercise.exercise.id) },
+                            onAddSetWithAutoFill = { actions.onAddSetWithAutoFill(exercise.exercise.id) },
+                            onExerciseClick = { actions.onExerciseClick(exercise.exercise.id) }
                         )
                     }
                 }
@@ -286,15 +265,15 @@ private fun ActiveWorkoutContent(
 
             // Workout Controls at bottom
             WorkoutControls(
-                onEndWorkout = onEndWorkout,
-                onDiscardWorkout = onDiscardWorkout
+                onEndWorkout = actions.onEndWorkout,
+                onDiscardWorkout = actions.onDiscardWorkout
             )
         }
 
         // Floating Action Button to add exercises (only show when there are existing exercises)
         if (uiState.workoutExercises.isNotEmpty()) {
             FloatingActionButton(
-                onClick = onAddExercise,
+                onClick = actions.onAddExercise,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(bottom = 80.dp, end = 16.dp)
@@ -307,6 +286,7 @@ private fun ActiveWorkoutContent(
         }
     }
 }
+
 
 // Private components removed. Use app.krafted.fitlog.presentation.screens.workout.components.EmptyWorkoutState instead.
 

@@ -62,11 +62,15 @@ class MuscleAnalyticsViewModel @Inject constructor(
             _isLoading.value = true
             try {
                 val weeks = _selectedWeeks.value
-                val analytics = muscleTrackingUseCase.getAnalyticsForLastWeeks(weeks)
-                val frequencies = muscleTrackingUseCase.getWeeklyMuscleFrequencies(
-                    startDate = System.currentTimeMillis() - (weeks * 7 * 24 * 60 * 60 * 1000L),
-                    endDate = System.currentTimeMillis()
-                )
+                val endDate = System.currentTimeMillis()
+                val startDate = endDate - (weeks * 7 * 24 * 60 * 60 * 1000L)
+                
+                // Fetch stats ONCE
+                val stats = muscleTrackingUseCase.getMuscleGroupStats(startDate, endDate)
+                
+                // Use the fetched stats for both analytics and frequencies
+                val analytics = muscleTrackingUseCase.generateAnalyticsFromStats(stats)
+                val frequencies = muscleTrackingUseCase.calculateWeeklyFrequenciesFromStats(stats, startDate, endDate)
 
                 _analytics.value = analytics
                 _weeklyFrequencies.value = frequencies

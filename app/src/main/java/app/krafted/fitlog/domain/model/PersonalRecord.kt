@@ -1,14 +1,5 @@
 package app.krafted.fitlog.domain.model
 
-import android.os.Build
-import androidx.annotation.RequiresApi
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneId
-
-/**
- * Domain model representing a personal record for an exercise
- */
 data class PersonalRecord(
     val id: Int = 0,
     val exerciseId: Int,
@@ -17,11 +8,8 @@ data class PersonalRecord(
     val maxReps: Int = 0,
     val maxVolume: Float = 0f,
     val achievedDate: Long
-) {
-    val achievedLocalDate: LocalDate
-        @RequiresApi(Build.VERSION_CODES.O)
-        get() = Instant.ofEpochMilli(achievedDate).atZone(ZoneId.systemDefault()).toLocalDate()
-}
+)
+
 
 /**
  * Result of a PR check.

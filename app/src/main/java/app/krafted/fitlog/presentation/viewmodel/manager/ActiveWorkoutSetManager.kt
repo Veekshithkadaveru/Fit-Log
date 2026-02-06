@@ -20,6 +20,7 @@ import javax.inject.Inject
  * - Toggling completion
  * - Detecting PRs
  */
+@javax.inject.Singleton
 class ActiveWorkoutSetManager @Inject constructor(
     private val workoutRepository: WorkoutRepository,
     private val exerciseRepository: ExerciseRepository,
@@ -93,7 +94,7 @@ class ActiveWorkoutSetManager @Inject constructor(
         var updatedSet = currentSet.copy(isCompleted = isCompleting)
         var isPRFound = false
 
-        if (isCompleting && currentSet.weight > 0 && currentSet.reps > 0) {
+        if (isCompleting && currentSet.weight >= 0 && currentSet.reps > 0) {
             val (prResult, repRangePRResult) = prDetectionUseCase.checkAndUpdatePRWithRepRange(
                 exerciseId = currentSet.exerciseId,
                 weight = currentSet.weight,

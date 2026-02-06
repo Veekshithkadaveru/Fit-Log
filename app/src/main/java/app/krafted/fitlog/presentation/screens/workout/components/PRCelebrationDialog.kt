@@ -23,6 +23,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -571,7 +574,8 @@ fun WorkoutSummaryDialog(
 
             Card(
                 modifier = Modifier
-                    .fillMaxWidth(0.9f),
+                    .fillMaxWidth(0.9f)
+                    .heightIn(max = 700.dp), // Limit height to ensure scrolling checks in on smaller screens
                 shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surface
@@ -636,10 +640,11 @@ fun WorkoutSummaryDialog(
                         }
                     }
 
-                    // Content
+// Content
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .verticalScroll(rememberScrollState())
                             .padding(24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(16.dp)

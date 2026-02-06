@@ -23,18 +23,20 @@ android {
     signingConfigs {
         create("release") {
             // Use properties from local.properties or environment variables
-            // Defaults to debug keystore if not configured, to avoid build errors 
-            // IMPORTANT: User must configure these in local.properties for actual release signing
-            storeFile = file(project.findProperty("RELEASE_STORE_FILE") as? String ?: "release.keystore")
-            storePassword = project.findProperty("RELEASE_STORE_PASSWORD") as? String ?: "android"
-            keyAlias = project.findProperty("RELEASE_KEY_ALIAS") as? String ?: "androiddebugkey"
-            keyPassword = project.findProperty("RELEASE_KEY_PASSWORD") as? String ?: "android"
+            // FAIL if properties are missing to prevent silent debug signing in release
+            val storeFileProperty = project.findProperty("RELEASE_STORE_FILE") as? String
+            storeFile = if (storeFileProperty != null) file(storeFileProperty) else null
+            
+            storePassword = project.findProperty("RELEASE_STORE_PASSWORD") as? String
+            keyAlias = project.findProperty("RELEASE_KEY_ALIAS") as? String
+            keyPassword = project.findProperty("RELEASE_KEY_PASSWORD") as? String
         }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = true
+            isShrinkResources = true
             signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
