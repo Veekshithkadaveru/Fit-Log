@@ -1,10 +1,10 @@
 package app.krafted.fitlog.di
 
 import android.content.Context
+import app.krafted.fitlog.data.database.AppDatabase
 import app.krafted.fitlog.data.database.DatabaseInitializer
 import app.krafted.fitlog.data.database.dao.ExerciseDao
 import app.krafted.fitlog.data.database.dao.RoutineDao
-import app.krafted.fitlog.data.database.AppDatabase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -18,7 +18,8 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
-    
+
+
     @Provides
     @Singleton
     fun provideDatabaseInitializer(

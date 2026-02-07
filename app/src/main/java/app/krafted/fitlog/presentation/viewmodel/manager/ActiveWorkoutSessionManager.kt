@@ -22,6 +22,7 @@ import javax.inject.Inject
 /**
  * Manages the lifecycle of an active workout session (start, stop, timer).
  */
+@javax.inject.Singleton
 class ActiveWorkoutSessionManager @Inject constructor(
     private val workoutRepository: WorkoutRepository,
     private val routineRepository: RoutineRepository,
@@ -124,37 +125,41 @@ class ActiveWorkoutSessionManager @Inject constructor(
     }
 
     suspend fun endWorkout() {
-        _sessionState.value = _sessionState.value.copy(isLoading = true)
-        try {
-            stopWorkoutTimer()
-            val currentWorkout = _sessionState.value.currentWorkout
-            if (currentWorkout != null) {
-                val completedWorkout = currentWorkout.copy(endTime = System.currentTimeMillis())
-                workoutRepository.updateWorkout(completedWorkout)
+        mutex.withLock {
+            _sessionState.value = _sessionState.value.copy(isLoading = true)
+            try {
+                stopWorkoutTimer()
+                val currentWorkout = _sessionState.value.currentWorkout
+                if (currentWorkout != null) {
+                    val completedWorkout = currentWorkout.copy(endTime = System.currentTimeMillis())
+                    workoutRepository.updateWorkout(completedWorkout)
+                }
+                _sessionState.value = _sessionState.value.copy(isLoading = false)
+            } catch (e: Exception) {
+                _sessionState.value = _sessionState.value.copy(
+                    isLoading = false,
+                    error = "Failed to end workout: ${e.message}"
+                )
             }
-            _sessionState.value = _sessionState.value.copy(isLoading = false)
-        } catch (e: Exception) {
-            _sessionState.value = _sessionState.value.copy(
-                isLoading = false,
-                error = "Failed to end workout: ${e.message}"
-            )
         }
     }
 
     suspend fun discardWorkout() {
-        _sessionState.value = _sessionState.value.copy(isLoading = true)
-        try {
-            stopWorkoutTimer()
-            val currentWorkout = _sessionState.value.currentWorkout
-            if (currentWorkout != null) {
-                workoutRepository.deleteWorkoutById(currentWorkout.id)
+        mutex.withLock {
+            _sessionState.value = _sessionState.value.copy(isLoading = true)
+            try {
+                stopWorkoutTimer()
+                val currentWorkout = _sessionState.value.currentWorkout
+                if (currentWorkout != null) {
+                    workoutRepository.deleteWorkoutById(currentWorkout.id)
+                }
+                _sessionState.value = ActiveWorkoutUiState(isLoading = false) // Reset state
+            } catch (e: Exception) {
+                _sessionState.value = _sessionState.value.copy(
+                    isLoading = false,
+                    error = "Failed to discard workout: ${e.message}"
+                )
             }
-            _sessionState.value = ActiveWorkoutUiState(isLoading = false) // Reset state
-        } catch (e: Exception) {
-            _sessionState.value = _sessionState.value.copy(
-                isLoading = false,
-                error = "Failed to discard workout: ${e.message}"
-            )
         }
     }
     
@@ -266,7 +271,16 @@ class ActiveWorkoutSessionManager @Inject constructor(
         _sessionState.value = _sessionState.value.copy(error = null)
     }
     
-    fun updateUiState(update: (ActiveWorkoutUiState) -> ActiveWorkoutUiState) {
-        _sessionState.value = update(_sessionState.value)
+    fun setError(message: String) {
+        _sessionState.value = _sessionState.value.copy(error = message)
+    }
+
+    fun incrementSessionPRCount() {
+        val currentCount = _sessionState.value.sessionPRCount
+        _sessionState.value = _sessionState.value.copy(sessionPRCount = currentCount + 1)
+    }
+
+    fun setShowWorkoutSummary(show: Boolean) {
+        _sessionState.value = _sessionState.value.copy(showWorkoutSummary = show)
     }
 }

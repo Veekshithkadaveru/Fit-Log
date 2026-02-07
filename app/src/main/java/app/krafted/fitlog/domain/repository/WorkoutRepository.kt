@@ -84,37 +84,5 @@ interface WorkoutRepository {
 
     suspend fun getAverageWorkoutDuration(): Long?
 
-    // ==================== Muscle Group Analytics Operations ====================
-
-    suspend fun getTotalVolumeForMuscleInRange(
-        muscleGroup: MuscleGroup,
-        startDate: Long,
-        endDate: Long
-    ): Float?
-
-    suspend fun getTotalSetsForMuscleInRange(
-        muscleGroup: MuscleGroup,
-        startDate: Long,
-        endDate: Long
-    ): Int
-
-    suspend fun getWorkoutCountForMuscleInRange(
-        muscleGroup: MuscleGroup,
-        startDate: Long,
-        endDate: Long
-    ): Int
-
-    suspend fun getLastWorkoutDateForMuscle(muscleGroup: MuscleGroup): Long?
-
-    suspend fun getExerciseCountForMuscleInRange(
-        muscleGroup: MuscleGroup,
-        startDate: Long,
-        endDate: Long
-    ): Int
-
-    suspend fun getActiveMuscleGroupsInRange(
-        startDate: Long,
-        endDate: Long
-    ): List<MuscleGroup>
 }
 

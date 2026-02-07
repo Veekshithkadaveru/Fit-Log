@@ -1,11 +1,5 @@
 package app.krafted.fitlog.domain.model
 
-import android.os.Build
-import androidx.annotation.RequiresApi
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneId
-
 /**
  * Represents the rep ranges we track PRs for
  */
@@ -24,9 +18,6 @@ enum class RepRange(val minReps: Int, val maxReps: Int, val displayName: String)
     }
 }
 
-/**
- * Domain model for rep-range specific personal records
- */
 data class RepRangeRecord(
     val id: Int = 0,
     val exerciseId: Int,
@@ -36,11 +27,8 @@ data class RepRangeRecord(
     val repsAtBestWeight: Int,
     val estimated1RM: Float,
     val achievedDate: Long
-) {
-    val achievedLocalDate: LocalDate
-        @RequiresApi(Build.VERSION_CODES.O)
-        get() = Instant.ofEpochMilli(achievedDate).atZone(ZoneId.systemDefault()).toLocalDate()
-}
+)
+
 
 /**
  * Result of checking for rep-range specific PRs

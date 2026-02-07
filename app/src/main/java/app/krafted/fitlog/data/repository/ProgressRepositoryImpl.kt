@@ -52,7 +52,11 @@ class ProgressRepositoryImpl @Inject constructor(
         startDate: Long,
         endDate: Long
     ): ExerciseProgressData? {
-        val exercise = exerciseDao.getById(exerciseId) ?: return null
+        val exerciseEntity = exerciseDao.getById(exerciseId) ?: return null
+        
+        // Map DAO entity to domain string directly or use a mapper if available
+        // Assuming simple string mapping for now as per immediate fix requirement
+        val exerciseName = exerciseEntity.name
 
         val weightProgress = getWeightProgressForExercise(exerciseId, startDate, endDate)
         val volumeProgress = getVolumeProgressForExercise(exerciseId, startDate, endDate)
@@ -61,7 +65,7 @@ class ProgressRepositoryImpl @Inject constructor(
 
         return ExerciseProgressData(
             exerciseId = exerciseId,
-            exerciseName = exercise.name,
+            exerciseName = exerciseName,
             weightProgress = weightProgress,
             volumeProgress = volumeProgress,
             bestWeight = bestWeight,

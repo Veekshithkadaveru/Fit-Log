@@ -76,12 +76,7 @@ class ActiveWorkoutViewModel @Inject constructor(
         viewModelScope.launch {
             setManager.prEvents.collect { event ->
                 _prEvent.send(event)
-                sessionManager.updateUiState { state ->
-                    state.copy(
-                        sessionPRCount = state.sessionPRCount + 1,
-                        sessionPRs = state.sessionPRs + event
-                    )
-                }
+                sessionManager.incrementSessionPRCount()
             }
         }
     }
@@ -104,7 +99,7 @@ class ActiveWorkoutViewModel @Inject constructor(
             sessionManager.endWorkout()
             
             if (sessionPRs.isNotEmpty()) {
-                sessionManager.updateUiState { it.copy(showWorkoutSummary = true) }
+                sessionManager.setShowWorkoutSummary(true)
             } else {
                 _navigationEvent.send(WorkoutNavigationEvent.NavigateToHistory)
             }
@@ -152,18 +147,38 @@ class ActiveWorkoutViewModel @Inject constructor(
         }
     }
 
+    // Channel to debounce set completion toggles
+    private val setCompletionEvents = Channel<Int>(Channel.CONFLATED)
+
+    init {
+        sessionManager.loadActiveWorkout(viewModelScope)
+        setupDebouncing()
+        setupEventCollection()
+        setupSetCompletionDebouncing()
+    }
+
+    @OptIn(FlowPreview::class)
+    private fun setupSetCompletionDebouncing() {
+        setCompletionEvents.receiveAsFlow()
+            .debounce(300L) // Prevent double taps
+            .onEach { setId ->
+                val workout = uiState.value.currentWorkout ?: return@onEach
+                val set = workout.sets.find { it.id == setId } ?: return@onEach
+                
+                val isPR = setManager.toggleSetCompleted(set)
+                
+                reloadContent(workout.id)
+                
+                if (!set.isCompleted) { 
+                    sessionManager.startRestTimer(90)
+                }
+            }
+            .launchIn(viewModelScope)
+    }
+
     fun toggleSetCompleted(setId: Int) {
         viewModelScope.launch {
-            val workout = uiState.value.currentWorkout ?: return@launch
-            val set = workout.sets.find { it.id == setId } ?: return@launch
-            
-            val isPR = setManager.toggleSetCompleted(set)
-            
-            reloadContent(workout.id)
-            
-            if (!set.isCompleted) { 
-                sessionManager.startRestTimer(90)
-            }
+            setCompletionEvents.send(setId)
         }
     }
 
@@ -178,7 +193,7 @@ class ActiveWorkoutViewModel @Inject constructor(
         viewModelScope.launch {
             val workout = uiState.value.currentWorkout ?: return@launch
              if (uiState.value.workoutExercises.any { it.exercise.id == exerciseId }) {
-                 sessionManager.updateUiState { it.copy(error = "Exercise already added") }
+                 sessionManager.setError("Exercise already added")
                  return@launch
              }
              addSet(exerciseId, autoFill = false)

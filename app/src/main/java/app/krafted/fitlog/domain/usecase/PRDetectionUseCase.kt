@@ -10,6 +10,8 @@ import app.krafted.fitlog.domain.repository.RepRangeRecordRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
 
 /**
@@ -41,7 +43,7 @@ class PRDetectionUseCase @Inject constructor(
         weight: Float,
         reps: Int
     ): PRCheckResult = withContext(Dispatchers.IO) {
-        if (weight <= 0 || reps <= 0) {
+        if (weight < 0 || reps <= 0) {
             return@withContext PRCheckResult()
         }
 
@@ -92,7 +94,7 @@ class PRDetectionUseCase @Inject constructor(
         weight: Float,
         reps: Int
     ): RepRangePRResult = withContext(Dispatchers.IO) {
-        if (weight <= 0 || reps <= 0) {
+        if (weight < 0 || reps <= 0) {
             return@withContext RepRangePRResult(
                 repRange = RepRange.fromReps(1),
                 isNewRepRangePR = false,
@@ -138,6 +140,8 @@ class PRDetectionUseCase @Inject constructor(
         )
     }
 
+    private val mutex = kotlinx.coroutines.sync.Mutex()
+
     /**
      * Update personal records if the set represents a new PR.
      * Returns the PR check result and updates the database if needed.
@@ -147,7 +151,30 @@ class PRDetectionUseCase @Inject constructor(
         exerciseId: Int,
         weight: Float,
         reps: Int
-    ): PRCheckResult = withContext(Dispatchers.IO) {
+    ): PRCheckResult {
+        return handlePRUpdate(exerciseId, weight, reps).first
+    }
+
+    /**
+     * Check and update PR, returning the detailed rep-range result.
+     * Use this when you need to show which specific rep range PR was achieved.
+     */
+    suspend fun checkAndUpdatePRWithRepRange(
+        exerciseId: Int,
+        weight: Float,
+        reps: Int
+    ): Pair<PRCheckResult, RepRangePRResult> {
+        return handlePRUpdate(exerciseId, weight, reps)
+    }
+
+    private suspend fun handlePRUpdate(
+        exerciseId: Int,
+        weight: Float,
+        reps: Int
+    ): Pair<PRCheckResult, RepRangePRResult> = mutex.withLock {
+        // Critical Section: Re-fetch latest state inside lock to prevent TOCTOU
+        // Note: checkForPR and checkForRepRangePR are pure calculations based on *current* DB state.
+        // Inside mutex, they act on the state at the moment of execution.
         val prResult = checkForPR(exerciseId, weight, reps)
         val repRangePRResult = checkForRepRangePR(exerciseId, weight, reps)
 
@@ -171,7 +198,6 @@ class PRDetectionUseCase @Inject constructor(
         }
 
         // Update rep-range specific record ONLY if it's truly a PR
-        // (weight is better AND estimated 1RM is at least as good as overall best)
         if (repRangePRResult.isNewRepRangePR) {
             val currentTime = System.currentTimeMillis()
             repRangeRecordRepository.upsertRecord(
@@ -183,60 +209,15 @@ class PRDetectionUseCase @Inject constructor(
                 achievedDate = currentTime
             )
         }
-
-        // Return a PRCheckResult that reflects true PR achievement
-        // A PR badge should show if: new weight PR, new volume PR, new 1RM PR, OR valid rep-range PR
-        prResult.copy(
+        
+        // Return a PRCheckResult that reflects true PR achievement 
+        // (merging rep range achievements into the general result)
+        val mergedPRResult = prResult.copy(
             isNewWeightPR = prResult.isNewWeightPR || repRangePRResult.isNewRepRangePR,
             isNew1RMPR = prResult.isNew1RMPR || repRangePRResult.isNew1RMPR
         )
-    }
 
-    /**
-     * Check and update PR, returning the detailed rep-range result.
-     * Use this when you need to show which specific rep range PR was achieved.
-     */
-    suspend fun checkAndUpdatePRWithRepRange(
-        exerciseId: Int,
-        weight: Float,
-        reps: Int
-    ): Pair<PRCheckResult, RepRangePRResult> = withContext(Dispatchers.IO) {
-        val prResult = checkForPR(exerciseId, weight, reps)
-        val repRangePRResult = checkForRepRangePR(exerciseId, weight, reps)
-
-        // Update legacy overall PR record
-        if (prResult.isAnyPR) {
-            val existingRecord = personalRecordRepository.getByExerciseId(exerciseId)
-            val volume = weight * reps
-            val currentTime = System.currentTimeMillis()
-
-            val newMaxWeight = if (prResult.isNewWeightPR) weight else (existingRecord?.maxWeight ?: 0f)
-            val newMaxReps = if (prResult.isNewRepsPR) reps else (existingRecord?.maxReps ?: 0)
-            val newMaxVolume = if (prResult.isNewVolumePR) volume else (existingRecord?.maxVolume ?: 0f)
-
-            personalRecordRepository.upsertRecord(
-                exerciseId = exerciseId,
-                maxWeight = newMaxWeight,
-                maxReps = newMaxReps,
-                maxVolume = newMaxVolume,
-                achievedDate = currentTime
-            )
-        }
-
-        // Update rep-range specific record only if it's a valid PR
-        if (repRangePRResult.isNewRepRangePR) {
-            val currentTime = System.currentTimeMillis()
-            repRangeRecordRepository.upsertRecord(
-                exerciseId = exerciseId,
-                repRange = repRangePRResult.repRange,
-                bestWeight = weight,
-                repsAtBestWeight = reps,
-                estimated1RM = repRangePRResult.newEstimated1RM,
-                achievedDate = currentTime
-            )
-        }
-
-        Pair(prResult, repRangePRResult)
+        return Pair(mergedPRResult, repRangePRResult)
     }
 
     /**
@@ -317,7 +298,7 @@ class PRDetectionUseCase @Inject constructor(
      * For higher rep ranges, it may overestimate.
      */
     fun calculateEstimated1RM(weight: Float, reps: Int): Float {
-        if (reps <= 0 || weight <= 0) return 0f
+        if (reps <= 0 || weight < 0) return 0f
         if (reps == 1) return weight
         return weight * (1 + reps / 30f)
     }

@@ -9,14 +9,13 @@ import app.krafted.fitlog.domain.model.WeeklyMuscleFrequency
 import app.krafted.fitlog.domain.model.RecommendationType
 import app.krafted.fitlog.domain.model.RecommendationPriority
 import app.krafted.fitlog.domain.model.ImbalanceSeverity
-import app.krafted.fitlog.domain.repository.WorkoutRepository
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import app.krafted.fitlog.domain.repository.MuscleAnalyticsRepository
+import kotlinx.coroutines.*
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 class MuscleTrackingUseCase @Inject constructor(
-    private val workoutRepository: WorkoutRepository
+    private val muscleAnalyticsRepository: MuscleAnalyticsRepository
 ) {
 
     companion object {
@@ -146,25 +145,46 @@ class MuscleTrackingUseCase @Inject constructor(
     }
 
     /**
+     * Generate analytics from pre-fetched stats
+     */
+    fun generateAnalyticsFromStats(stats: List<MuscleGroupStats>): MuscleGroupAnalytics {
+        return MuscleGroupAnalytics(
+            muscleStats = stats,
+            imbalances = detectImbalances(stats),
+            recommendations = generateRecommendations(stats, detectImbalances(stats))
+        )
+    }
+
+    /**
+     * Calculate weekly frequencies from pre-fetched stats
+     */
+    fun calculateWeeklyFrequenciesFromStats(
+        stats: List<MuscleGroupStats>, 
+        startDate: Long, 
+        endDate: Long
+    ): List<WeeklyMuscleFrequency> {
+        val daysInRange = TimeUnit.MILLISECONDS.toDays(endDate - startDate).toInt()
+        // Ensure weeksInRange is at least 1 to prevent division by zero or tiny fractions blowing up numbers
+        val weeksInRange = if (daysInRange >= 7) daysInRange / 7.0f else 1.0f
+        
+        return stats.map { stat ->
+            val safeWeeks = if (weeksInRange <= 0f) 1.0f else weeksInRange
+            
+            WeeklyMuscleFrequency(
+                muscleGroup = stat.muscleGroup,
+                workoutsPerWeek = stat.weeklyFrequency,
+                setsPerWeek = (stat.totalSets / safeWeeks).toInt().coerceAtLeast(0),
+                totalVolumePerWeek = (stat.totalVolume / safeWeeks).coerceAtLeast(0f)
+            )
+        }
+    }
+
+    /**
      * Get weekly frequency distribution for heatmap
      */
     suspend fun getWeeklyMuscleFrequencies(startDate: Long, endDate: Long): List<WeeklyMuscleFrequency> {
         val stats = getMuscleGroupStats(startDate, endDate)
-        // Need to calculate weekly values. getMuscleGroupStats returns stats with weeklyFrequency (Int).
-        // But WeeklyMuscleFrequency needs setsPerWeek and totalVolumePerWeek.
-        // And MuscleGroupStats has totalVolume and totalSets (totals, not weekly).
-        
-        val daysInRange = TimeUnit.MILLISECONDS.toDays(endDate - startDate).toInt()
-        val weeksInRange = if (daysInRange >= 7) daysInRange / 7.0f else 1.0f
-        
-        return stats.map { stat ->
-            WeeklyMuscleFrequency(
-                muscleGroup = stat.muscleGroup,
-                workoutsPerWeek = stat.weeklyFrequency,
-                setsPerWeek = (stat.totalSets / weeksInRange).toInt(),
-                totalVolumePerWeek = stat.totalVolume / weeksInRange
-            )
-        }
+        return calculateWeeklyFrequenciesFromStats(stats, startDate, endDate)
     }
 
     /**
@@ -174,52 +194,62 @@ class MuscleTrackingUseCase @Inject constructor(
         startDate: Long,
         endDate: Long
     ): List<MuscleGroupStats> = withContext(Dispatchers.IO) {
-        val activeMuscles = workoutRepository.getActiveMuscleGroupsInRange(startDate, endDate)
+        val activeMuscles = muscleAnalyticsRepository.getActiveMuscleGroupsInRange(startDate, endDate)
         val daysInRange = TimeUnit.MILLISECONDS.toDays(endDate - startDate).toInt()
         val weeksInRange = if (daysInRange >= DAYS_IN_WEEK) daysInRange / DAYS_IN_WEEK else 1
 
-        activeMuscles.mapNotNull { muscleGroup ->
-            val totalVolume = workoutRepository.getTotalVolumeForMuscleInRange(
-                muscleGroup, startDate, endDate
-            ) ?: 0f
+        // Execute DB queries in parallel for performance
+        val statsDeferred = activeMuscles.map { muscleGroup ->
+            async<MuscleGroupStats?> {
+                try {
+                    val totalVolume = muscleAnalyticsRepository.getTotalVolumeForMuscleInRange(
+                        muscleGroup, startDate, endDate
+                    ) ?: 0f
 
-            val totalSets = workoutRepository.getTotalSetsForMuscleInRange(
-                muscleGroup, startDate, endDate
-            )
+                    val totalSets = muscleAnalyticsRepository.getTotalSetsForMuscleInRange(
+                        muscleGroup, startDate, endDate
+                    )
 
-            val workoutCount = workoutRepository.getWorkoutCountForMuscleInRange(
-                muscleGroup, startDate, endDate
-            )
+                    val workoutCount = muscleAnalyticsRepository.getWorkoutCountForMuscleInRange(
+                        muscleGroup, startDate, endDate
+                    )
 
-            val lastWorkedDate = workoutRepository.getLastWorkoutDateForMuscle(muscleGroup)
+                    val lastWorkedDate = muscleAnalyticsRepository.getLastWorkoutDateForMuscle(muscleGroup)
 
-            val exerciseCount = workoutRepository.getExerciseCountForMuscleInRange(
-                muscleGroup, startDate, endDate
-            )
+                    val exerciseCount = muscleAnalyticsRepository.getExerciseCountForMuscleInRange(
+                        muscleGroup, startDate, endDate
+                    )
 
-            // Calculate weekly frequency
-            val weeklyFrequency = if (weeksInRange > 0) {
-                workoutCount / weeksInRange
-            } else {
-                workoutCount
+                    // Calculate weekly frequency
+                    val weeklyFrequency = if (weeksInRange > 0) {
+                        workoutCount / weeksInRange
+                    } else {
+                        workoutCount
+                    }
+
+                    val averageVolumePerWorkout = if (workoutCount > 0) {
+                        totalVolume / workoutCount
+                    } else {
+                        0f
+                    }
+
+                    MuscleGroupStats(
+                        muscleGroup = muscleGroup,
+                        totalVolume = totalVolume,
+                        totalSets = totalSets,
+                        weeklyFrequency = weeklyFrequency,
+                        lastWorkedDate = lastWorkedDate ?: 0L,
+                        averageVolumePerWorkout = averageVolumePerWorkout,
+                        exerciseCount = exerciseCount
+                    )
+                } catch (e: Exception) {
+                    // Log error and return null so this muscle group is skipped if stats fail
+                    null
+                }
             }
-
-            val averageVolumePerWorkout = if (workoutCount > 0) {
-                totalVolume / workoutCount
-            } else {
-                0f
-            }
-
-            MuscleGroupStats(
-                muscleGroup = muscleGroup,
-                totalVolume = totalVolume,
-                totalSets = totalSets,
-                weeklyFrequency = weeklyFrequency,
-                lastWorkedDate = lastWorkedDate ?: 0L,
-                averageVolumePerWorkout = averageVolumePerWorkout,
-                exerciseCount = exerciseCount
-            )
         }
+        
+        statsDeferred.awaitAll().filterNotNull()
     }
 
     /**
@@ -230,11 +260,11 @@ class MuscleTrackingUseCase @Inject constructor(
         startDate: Long,
         endDate: Long
     ): MuscleGroupStats {
-        val totalVolume = workoutRepository.getTotalVolumeForMuscleInRange(muscle, startDate, endDate) ?: 0f
-        val totalSets = workoutRepository.getTotalSetsForMuscleInRange(muscle, startDate, endDate)
-        val workoutCount = workoutRepository.getWorkoutCountForMuscleInRange(muscle, startDate, endDate)
-        val lastWorkoutDate = workoutRepository.getLastWorkoutDateForMuscle(muscle)
-        val exerciseCount = workoutRepository.getExerciseCountForMuscleInRange(muscle, startDate, endDate)
+        val totalVolume = muscleAnalyticsRepository.getTotalVolumeForMuscleInRange(muscle, startDate, endDate) ?: 0f
+        val totalSets = muscleAnalyticsRepository.getTotalSetsForMuscleInRange(muscle, startDate, endDate)
+        val workoutCount = muscleAnalyticsRepository.getWorkoutCountForMuscleInRange(muscle, startDate, endDate)
+        val lastWorkoutDate = muscleAnalyticsRepository.getLastWorkoutDateForMuscle(muscle)
+        val exerciseCount = muscleAnalyticsRepository.getExerciseCountForMuscleInRange(muscle, startDate, endDate)
 
         // Calculate weeks in range to get weekly averages
         val daysInRange = (endDate - startDate) / (24 * 60 * 60 * 1000L)
