@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,8 +22,7 @@ import com.patrykandpatrick.vico.core.axis.AxisPosition
 import com.patrykandpatrick.vico.core.axis.formatter.AxisValueFormatter
 import com.patrykandpatrick.vico.core.chart.column.ColumnChart
 import com.patrykandpatrick.vico.core.component.shape.Shapes
-import com.patrykandpatrick.vico.core.entry.ChartEntryModelProducer
-import com.patrykandpatrick.vico.core.entry.entryOf
+import com.patrykandpatrick.vico.core.entry.entryModelOf
 
 @Composable
 fun MuscleFrequencyChart(
@@ -47,31 +45,20 @@ fun MuscleFrequencyChart(
     val primaryColor = MaterialTheme.colorScheme.primary
     val onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
 
-    // Create chart model producer
-    val chartEntryModelProducer = remember { ChartEntryModelProducer() }
-
     // Pre-calculate safe data to ensure chart and axis are always in sync
-    val safeModel = remember(frequencies) {
-        if (frequencies.isEmpty()) return@remember null
-        
-        val sorted = frequencies
+    val safeSortedFrequencies = remember(frequencies) {
+        frequencies
             .sortedByDescending { it.workoutsPerWeek }
             .take(15)
-            
-        val entries = sorted.mapIndexed { index, frequency ->
-            entryOf(index.toFloat(), frequency.workoutsPerWeek.toFloat())
-        }
-        
-        Triple(sorted, entries, sorted.associate { it.muscleGroup to it.workoutsPerWeek })
     }
 
-    if (safeModel == null) return
 
-    val (safeSortedFrequencies, safeEntries, _) = safeModel
-
-    // Update chart data
-    LaunchedEffect(safeEntries) {
-        chartEntryModelProducer.setEntries(safeEntries)
+    val chartEntryModel = remember(safeSortedFrequencies) {
+        entryModelOf(
+            *safeSortedFrequencies.mapIndexed { index, frequency ->
+                (index to frequency.workoutsPerWeek) as Pair<Number, Number>
+            }.toTypedArray()
+        )
     }
 
     // Create axis value formatter for muscle names
@@ -113,7 +100,7 @@ fun MuscleFrequencyChart(
                     spacing = 8.dp,
                     mergeMode = ColumnChart.MergeMode.Grouped
                 ),
-                chartModelProducer = chartEntryModelProducer,
+                model = chartEntryModel,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(200.dp),
