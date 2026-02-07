@@ -288,7 +288,7 @@ private fun ActiveWorkoutContent(
 }
 
 
-// Private components removed. Use app.krafted.fitlog.presentation.screens.workout.components.EmptyWorkoutState instead.
+
 
 /**
  * Placeholder shown when workout has no exercises
