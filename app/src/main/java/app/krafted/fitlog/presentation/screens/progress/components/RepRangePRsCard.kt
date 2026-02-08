@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.krafted.fitlog.domain.model.RepRange
 import app.krafted.fitlog.domain.model.RepRangeRecord
+import app.krafted.fitlog.domain.model.WeightUnit
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -35,6 +36,7 @@ import java.util.Locale
 @Composable
 fun RepRangePRsCard(
     records: List<RepRangeRecord>,
+    weightUnit: WeightUnit = WeightUnit.KG,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -66,12 +68,12 @@ fun RepRangePRsCard(
                 return@Card
             }
 
-            
+
 
             val sortedRecords = records.sortedBy { it.repRange.ordinal }
 
             sortedRecords.forEachIndexed { index, record ->
-                RepRangeRow(record = record)
+                RepRangeRow(record = record, weightUnit = weightUnit)
                 if (index < sortedRecords.size - 1) {
                     Spacer(modifier = Modifier.height(12.dp))
                 }
@@ -83,6 +85,7 @@ fun RepRangePRsCard(
 @Composable
 private fun RepRangeRow(
     record: RepRangeRecord,
+    weightUnit: WeightUnit = WeightUnit.KG,
     modifier: Modifier = Modifier
 ) {
     val dateFormat = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
@@ -127,7 +130,7 @@ private fun RepRangeRow(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "${record.bestWeight.toInt()} kg",
+                    text = "${weightUnit.fromKg(record.bestWeight).toInt()} ${weightUnit.label}",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -169,7 +172,7 @@ private fun RepRangeRow(
                 )
             }
             Text(
-                text = "${record.estimated1RM.toInt()} kg",
+                text = "${weightUnit.fromKg(record.estimated1RM).toInt()} ${weightUnit.label}",
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = secondaryColor

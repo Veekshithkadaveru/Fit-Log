@@ -63,6 +63,7 @@ fun ActiveWorkoutScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val restTimerState by viewModel.restTimerState.collectAsState()
+    val weightUnit by viewModel.weightUnit.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     var currentPREvent by remember { mutableStateOf<PREvent?>(null) }
 
@@ -161,7 +162,8 @@ fun ActiveWorkoutScreen(
                     
                     ActiveWorkoutContent(
                         uiState = uiState,
-                        actions = actions
+                        actions = actions,
+                        weightUnitLabel = weightUnit.label
                     )
                 }
             }
@@ -176,7 +178,8 @@ fun ActiveWorkoutScreen(
                 ) {
                     PRToastNotification(
                         prEvent = prEvent,
-                        onDismiss = { currentPREvent = null }
+                        onDismiss = { currentPREvent = null },
+                        weightUnitLabel = weightUnit.label
                     )
                 }
             }
@@ -201,7 +204,8 @@ fun ActiveWorkoutScreen(
             sessionPRs = uiState.sessionPRs,
             workoutDuration = uiState.workoutDuration,
             totalSets = uiState.totalSetsCount,
-            onDismiss = { viewModel.dismissWorkoutSummary() }
+            onDismiss = { viewModel.dismissWorkoutSummary() },
+            weightUnitLabel = weightUnit.label
         )
     }
 }
@@ -213,6 +217,7 @@ fun ActiveWorkoutScreen(
 private fun ActiveWorkoutContent(
     uiState: ActiveWorkoutUiState,
     actions: ActiveWorkoutActions,
+    weightUnitLabel: String = "kg",
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -257,7 +262,8 @@ private fun ActiveWorkoutContent(
                             onDuplicateSet = actions.onDuplicateSet,
                             onAddSet = { actions.onAddSet(exercise.exercise.id) },
                             onAddSetWithAutoFill = { actions.onAddSetWithAutoFill(exercise.exercise.id) },
-                            onExerciseClick = { actions.onExerciseClick(exercise.exercise.id) }
+                            onExerciseClick = { actions.onExerciseClick(exercise.exercise.id) },
+                            weightUnitLabel = weightUnitLabel
                         )
                     }
                 }

@@ -3,6 +3,8 @@ package app.krafted.fitlog.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.krafted.fitlog.domain.model.Workout
+import app.krafted.fitlog.domain.model.WeightUnit
+import app.krafted.fitlog.domain.repository.UserPreferencesRepository
 import app.krafted.fitlog.domain.repository.WorkoutRepository
 import app.krafted.fitlog.presentation.viewmodel.manager.ActiveWorkoutSessionManager
 import app.krafted.fitlog.presentation.viewmodel.manager.ActiveWorkoutSetManager
@@ -10,9 +12,12 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -23,7 +28,8 @@ import javax.inject.Inject
 class ActiveWorkoutViewModel @Inject constructor(
     private val sessionManager: ActiveWorkoutSessionManager,
     private val setManager: ActiveWorkoutSetManager,
-    private val workoutRepository: WorkoutRepository
+    private val workoutRepository: WorkoutRepository,
+    private val userPreferencesRepository: UserPreferencesRepository
 ) : ViewModel() {
 
     val uiState: StateFlow<ActiveWorkoutUiState> = sessionManager.sessionState
@@ -36,9 +42,14 @@ class ActiveWorkoutViewModel @Inject constructor(
 
     val restTimerState: StateFlow<RestTimerState> = sessionManager.restTimerState
 
+    private val _weightUnit = MutableStateFlow(WeightUnit.KG)
+    val weightUnit: StateFlow<WeightUnit> = _weightUnit
+
+    private var restTimerDurationSeconds = 90
+
     private val weightUpdates = MutableSharedFlow<Triple<Int, Float, Int>>()
     private val repsUpdates = MutableSharedFlow<Triple<Int, Float, Int>>()
-    
+
     private val setUpdates = MutableSharedFlow<SetUpdateData>()
 
     data class SetUpdateData(
@@ -155,6 +166,24 @@ class ActiveWorkoutViewModel @Inject constructor(
         setupDebouncing()
         setupEventCollection()
         setupSetCompletionDebouncing()
+        observePreferences()
+    }
+
+    private fun observePreferences() {
+        viewModelScope.launch {
+            userPreferencesRepository.restTimerDuration
+                .catch { /* keep default on error */ }
+                .collect { seconds -> restTimerDurationSeconds = seconds }
+        }
+        // Snapshot weight unit once at workout start — changing the setting
+        // mid-workout should NOT alter the units shown on the active screen.
+        viewModelScope.launch {
+            try {
+                _weightUnit.value = userPreferencesRepository.weightUnit.first()
+            } catch (_: Exception) {
+                /* keep default KG on error */
+            }
+        }
     }
 
     @OptIn(FlowPreview::class)
@@ -169,8 +198,8 @@ class ActiveWorkoutViewModel @Inject constructor(
                 
                 reloadContent(workout.id)
                 
-                if (!set.isCompleted) { 
-                    sessionManager.startRestTimer(90)
+                if (!set.isCompleted) {
+                    sessionManager.startRestTimer(restTimerDurationSeconds)
                 }
             }
             .launchIn(viewModelScope)

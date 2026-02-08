@@ -80,7 +80,8 @@ private val PRGoldLight = Color(0xFFFFF4CC)
 @Composable
 fun PRCelebrationDialog(
     prEvent: PREvent,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    weightUnitLabel: String = "kg"
 ) {
     Dialog(
         onDismissRequest = onDismiss,
@@ -102,7 +103,8 @@ fun PRCelebrationDialog(
             // Main celebration card
             PRCelebrationCard(
                 prEvent = prEvent,
-                onDismiss = onDismiss
+                onDismiss = onDismiss,
+                weightUnitLabel = weightUnitLabel
             )
         }
     }
@@ -158,7 +160,8 @@ private fun ConfettiEffect() {
 @Composable
 private fun PRCelebrationCard(
     prEvent: PREvent,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    weightUnitLabel: String = "kg"
 ) {
     val scale = remember { Animatable(0.8f) }
 
@@ -272,7 +275,7 @@ private fun PRCelebrationCard(
                 ) {
                     StatBox(
                         value = "${prEvent.weight.toInt()}",
-                        label = "kg",
+                        label = weightUnitLabel,
                         icon = Icons.Default.FitnessCenter
                     )
 
@@ -432,6 +435,7 @@ fun PRCountBadge(
 fun PRToastNotification(
     prEvent: PREvent,
     onDismiss: () -> Unit,
+    weightUnitLabel: String = "kg",
     modifier: Modifier = Modifier
 ) {
     // Auto-dismiss after 3 seconds
@@ -517,14 +521,14 @@ fun PRToastNotification(
                     }
                 }
                 Text(
-                    text = "${prEvent.exerciseName}: ${prEvent.weight.toInt()} kg × ${prEvent.reps}",
+                    text = "${prEvent.exerciseName}: ${prEvent.weight.toInt()} $weightUnitLabel × ${prEvent.reps}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.White.copy(alpha = 0.9f)
                 )
                 // Show estimated 1RM if available
                 if (prEvent.estimated1RM > 0) {
                     Text(
-                        text = "Est. 1RM: ${prEvent.estimated1RM.toInt()} kg",
+                        text = "Est. 1RM: ${prEvent.estimated1RM.toInt()} $weightUnitLabel",
                         style = MaterialTheme.typography.bodySmall,
                         color = Color.White.copy(alpha = 0.7f)
                     )
@@ -551,7 +555,8 @@ fun WorkoutSummaryDialog(
     sessionPRs: List<PREvent>,
     workoutDuration: Long,
     totalSets: Int,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    weightUnitLabel: String = "kg"
 ) {
     Dialog(
         onDismissRequest = onDismiss,
@@ -683,7 +688,7 @@ fun WorkoutSummaryDialog(
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 sessionPRs.forEach { pr ->
-                                    PRSummaryItem(prEvent = pr)
+                                    PRSummaryItem(prEvent = pr, weightUnitLabel = weightUnitLabel)
                                 }
                             }
                         }
@@ -736,7 +741,7 @@ private fun WorkoutStatItem(
 }
 
 @Composable
-private fun PRSummaryItem(prEvent: PREvent) {
+private fun PRSummaryItem(prEvent: PREvent, weightUnitLabel: String = "kg") {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         color = PRGoldLight,
@@ -783,14 +788,14 @@ private fun PRSummaryItem(prEvent: PREvent) {
                     }
                 }
                 Text(
-                    text = "${prEvent.weight.toInt()} kg × ${prEvent.reps} reps",
+                    text = "${prEvent.weight.toInt()} $weightUnitLabel × ${prEvent.reps} reps",
                     style = MaterialTheme.typography.bodyMedium,
                     color = PRGoldDark.copy(alpha = 0.8f)
                 )
                 // Show estimated 1RM if it's also a new 1RM PR
                 if (prEvent.isNew1RMPR && prEvent.estimated1RM > 0) {
                     Text(
-                        text = "New Est. 1RM: ${prEvent.estimated1RM.toInt()} kg",
+                        text = "New Est. 1RM: ${prEvent.estimated1RM.toInt()} $weightUnitLabel",
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.SemiBold,
                         color = PRGoldDark.copy(alpha = 0.7f)

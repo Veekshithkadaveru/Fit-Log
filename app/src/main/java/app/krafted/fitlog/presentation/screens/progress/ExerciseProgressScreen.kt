@@ -47,6 +47,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import app.krafted.fitlog.domain.model.Exercise
+import app.krafted.fitlog.domain.model.WeightUnit
 import app.krafted.fitlog.presentation.screens.progress.components.DateRangeSelector
 import app.krafted.fitlog.presentation.screens.progress.components.ExerciseWeightChart
 import app.krafted.fitlog.presentation.screens.progress.components.RepRangePRsCard
@@ -118,6 +119,7 @@ fun ExerciseProgressScreen(
                 } else {
                     ExerciseProgressContent(
                         uiState = uiState,
+                        weightUnit = uiState.weightUnit,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -222,6 +224,7 @@ private fun ExerciseSelector(
 @Composable
 private fun ExerciseProgressContent(
     uiState: ExerciseProgressUiState,
+    weightUnit: WeightUnit = WeightUnit.KG,
     modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
@@ -240,7 +243,7 @@ private fun ExerciseProgressContent(
         ) {
             StatCard(
                 title = "Best Weight",
-                value = uiState.bestWeight?.let { "${it.toInt()} kg" } ?: "-",
+                value = uiState.bestWeight?.let { "${weightUnit.fromKg(it).toInt()} ${weightUnit.label}" } ?: "-",
                 modifier = Modifier.weight(1f)
             )
             StatCard(
@@ -263,6 +266,7 @@ private fun ExerciseProgressContent(
             Spacer(modifier = Modifier.height(12.dp))
             ExerciseWeightChart(
                 weightProgress = uiState.weightProgress,
+                weightUnit = weightUnit,
                 modifier = Modifier.fillMaxWidth()
             )
         } else {
@@ -300,6 +304,7 @@ private fun ExerciseProgressContent(
             Spacer(modifier = Modifier.height(12.dp))
             RepRangePRsCard(
                 records = uiState.repRangeRecords,
+                weightUnit = weightUnit,
                 modifier = Modifier.fillMaxWidth()
             )
         }

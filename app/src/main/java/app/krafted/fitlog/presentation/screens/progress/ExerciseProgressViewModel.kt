@@ -2,6 +2,7 @@ package app.krafted.fitlog.presentation.screens.progress
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.krafted.fitlog.domain.model.WeightUnit
 import app.krafted.fitlog.domain.model.DateRangeFilter
 import app.krafted.fitlog.domain.model.Exercise
 import app.krafted.fitlog.domain.model.RepRangeRecord
@@ -10,10 +11,12 @@ import app.krafted.fitlog.domain.model.VolumeProgressPoint
 import app.krafted.fitlog.domain.repository.ExerciseRepository
 import app.krafted.fitlog.domain.repository.ProgressRepository
 import app.krafted.fitlog.domain.repository.RepRangeRecordRepository
+import app.krafted.fitlog.domain.repository.UserPreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -31,6 +34,7 @@ data class ExerciseProgressUiState(
     val totalWorkouts: Int = 0,
     val isExercisePickerVisible: Boolean = false,
     val searchQuery: String = "",
+    val weightUnit: WeightUnit = WeightUnit.KG,
     val error: String? = null
 )
 
@@ -38,7 +42,8 @@ data class ExerciseProgressUiState(
 class ExerciseProgressViewModel @Inject constructor(
     private val exerciseRepository: ExerciseRepository,
     private val progressRepository: ProgressRepository,
-    private val repRangeRecordRepository: RepRangeRecordRepository
+    private val repRangeRecordRepository: RepRangeRecordRepository,
+    private val userPreferencesRepository: UserPreferencesRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ExerciseProgressUiState())
@@ -46,6 +51,17 @@ class ExerciseProgressViewModel @Inject constructor(
 
     init {
         loadExercises()
+        observeWeightUnit()
+    }
+
+    private fun observeWeightUnit() {
+        viewModelScope.launch {
+            userPreferencesRepository.weightUnit
+                .catch { /* keep default on error */ }
+                .collect { unit ->
+                    _uiState.value = _uiState.value.copy(weightUnit = unit)
+                }
+        }
     }
 
     private fun loadExercises() {

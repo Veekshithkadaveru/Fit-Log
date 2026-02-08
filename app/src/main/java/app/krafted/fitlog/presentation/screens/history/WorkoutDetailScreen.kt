@@ -275,6 +275,7 @@ private fun WorkoutDetailContent(
                 ExerciseSetsCard(
                     exerciseWithSets = exerciseWithSets,
                     isEditMode = uiState.isEditMode,
+                    weightUnit = uiState.weightUnit,
                     getWeight = { setId -> viewModel.getSetWeight(setId) },
                     getReps = { setId -> viewModel.getSetReps(setId) },
                     onWeightChange = { setId, weight -> viewModel.updateSetWeight(setId, weight) },

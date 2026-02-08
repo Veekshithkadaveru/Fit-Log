@@ -8,10 +8,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import app.krafted.fitlog.domain.model.MuscleGroupStats
+import app.krafted.fitlog.domain.model.WeightUnit
 
 @Composable
 fun MuscleStatsCard(
     stats: MuscleGroupStats,
+    weightUnit: WeightUnit = WeightUnit.KG,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -51,7 +53,7 @@ fun MuscleStatsCard(
                 )
                 StatItem(
                     label = "Total Volume",
-                    value = "${stats.totalVolume.toInt()} kg",
+                    value = "${weightUnit.fromKg(stats.totalVolume).toInt()} ${weightUnit.label}",
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -78,7 +80,7 @@ fun MuscleStatsCard(
             ) {
                 StatItem(
                     label = "Avg Volume/Workout",
-                    value = "${stats.averageVolumePerWorkout.toInt()} kg",
+                    value = "${weightUnit.fromKg(stats.averageVolumePerWorkout).toInt()} ${weightUnit.label}",
                     modifier = Modifier.weight(1f)
                 )
                 StatItem(
@@ -98,7 +100,7 @@ fun MuscleStatsCard(
                 trackColor = MaterialTheme.colorScheme.surfaceVariant
             )
             Text(
-                text = "Avg Volume/Set: ${stats.volumePerSet.toInt()} kg",
+                text = "Avg Volume/Set: ${weightUnit.fromKg(stats.volumePerSet).toInt()} ${weightUnit.label}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

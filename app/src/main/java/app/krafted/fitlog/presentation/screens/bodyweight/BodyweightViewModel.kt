@@ -3,7 +3,9 @@ package app.krafted.fitlog.presentation.screens.bodyweight
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.krafted.fitlog.domain.model.Bodyweight
+import app.krafted.fitlog.domain.model.WeightUnit
 import app.krafted.fitlog.domain.repository.BodyweightRepository
+import app.krafted.fitlog.domain.repository.UserPreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,7 +29,8 @@ data class BodyweightUiState(
     val weightChange: Float? = null,
     val entries: List<Bodyweight> = emptyList(),
     val todayEntry: Bodyweight? = null,
-    val error: String? = null
+    val error: String? = null,
+    val weightUnit: WeightUnit = WeightUnit.KG
 )
 
 /**
@@ -43,7 +46,8 @@ sealed class BodyweightEvent {
  */
 @HiltViewModel
 class BodyweightViewModel @Inject constructor(
-    private val bodyweightRepository: BodyweightRepository
+    private val bodyweightRepository: BodyweightRepository,
+    private val userPreferencesRepository: UserPreferencesRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(BodyweightUiState())
@@ -54,6 +58,17 @@ class BodyweightViewModel @Inject constructor(
 
     init {
         loadData()
+        observeWeightUnit()
+    }
+
+    private fun observeWeightUnit() {
+        viewModelScope.launch {
+            userPreferencesRepository.weightUnit
+                .catch { /* keep default on error */ }
+                .collect { unit ->
+                    _uiState.value = _uiState.value.copy(weightUnit = unit)
+                }
+        }
     }
 
     private fun loadData() {
@@ -117,13 +132,16 @@ class BodyweightViewModel @Inject constructor(
      * Save or update today's bodyweight entry
      */
     fun saveWeight() {
-        val weightValue = _uiState.value.weightInput.toFloatOrNull()
-        if (weightValue == null || weightValue <= 0) {
+        val inputValue = _uiState.value.weightInput.toFloatOrNull()
+        if (inputValue == null || inputValue <= 0) {
             viewModelScope.launch {
                 _events.emit(BodyweightEvent.SaveError("Please enter a valid weight"))
             }
             return
         }
+
+        // Convert from display unit to KG for storage
+        val weightInKg = _uiState.value.weightUnit.toKg(inputValue)
 
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isSaving = true, error = null)
@@ -135,7 +153,7 @@ class BodyweightViewModel @Inject constructor(
                 if (todayEntry != null) {
 
                     val updatedEntry = todayEntry.copy(
-                        weight = weightValue,
+                        weight = weightInKg,
                         notes = _uiState.value.notes.takeIf { it.isNotBlank() }
                     )
                     bodyweightRepository.update(updatedEntry)
@@ -143,7 +161,7 @@ class BodyweightViewModel @Inject constructor(
 
                     val newEntry = Bodyweight(
                         date = currentTime,
-                        weight = weightValue,
+                        weight = weightInKg,
                         notes = _uiState.value.notes.takeIf { it.isNotBlank() }
                     )
                     bodyweightRepository.insert(newEntry)

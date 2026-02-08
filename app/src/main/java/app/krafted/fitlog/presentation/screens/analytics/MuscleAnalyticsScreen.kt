@@ -119,7 +119,7 @@ fun MuscleAnalyticsScreen(
                     )
 
                     uiState.muscleStats.forEach { stats ->
-                        MuscleStatsCard(stats = stats)
+                        MuscleStatsCard(stats = stats, weightUnit = uiState.weightUnit)
                     }
                 }
 

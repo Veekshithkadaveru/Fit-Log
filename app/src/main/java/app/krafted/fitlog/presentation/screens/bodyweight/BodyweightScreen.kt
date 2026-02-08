@@ -21,6 +21,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import app.krafted.fitlog.domain.model.Bodyweight
+import app.krafted.fitlog.domain.model.WeightUnit
 import app.krafted.fitlog.presentation.screens.progress.components.BodyweightTrendChart
 import kotlinx.coroutines.flow.collectLatest
 import java.text.SimpleDateFormat
@@ -105,7 +106,8 @@ fun BodyweightScreen(
                     CurrentStatsCard(
                         latestWeight = uiState.latestWeight,
                         weightChange = uiState.weightChange,
-                        entryCount = uiState.entries.size
+                        entryCount = uiState.entries.size,
+                        weightUnit = uiState.weightUnit
                     )
                 }
 
@@ -118,14 +120,16 @@ fun BodyweightScreen(
                         isUpdate = uiState.todayEntry != null,
                         onWeightInputChanged = viewModel::onWeightInputChanged,
                         onNotesChanged = viewModel::onNotesChanged,
-                        onSave = viewModel::saveWeight
+                        onSave = viewModel::saveWeight,
+                        weightUnitLabel = uiState.weightUnit.label
                     )
                 }
 
 
                 item {
                     ChartSection(
-                        entries = uiState.entries
+                        entries = uiState.entries,
+                        weightUnit = uiState.weightUnit
                     )
                 }
 
@@ -143,7 +147,8 @@ fun BodyweightScreen(
                     items(uiState.entries.take(10)) { entry ->
                         HistoryEntryCard(
                             entry = entry,
-                            onDelete = { viewModel.deleteEntry(entry) }
+                            onDelete = { viewModel.deleteEntry(entry) },
+                            weightUnit = uiState.weightUnit
                         )
                     }
                 }
@@ -157,6 +162,7 @@ private fun CurrentStatsCard(
     latestWeight: Float?,
     weightChange: Float?,
     entryCount: Int,
+    weightUnit: WeightUnit = WeightUnit.KG,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -185,13 +191,13 @@ private fun CurrentStatsCard(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = latestWeight?.let { "%.1f".format(it) } ?: "--",
+                    text = latestWeight?.let { "%.1f".format(weightUnit.fromKg(it)) } ?: "--",
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
                 Text(
-                    text = "kg",
+                    text = weightUnit.label,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                 )
@@ -221,7 +227,7 @@ private fun CurrentStatsCard(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = weightChange?.let { "%+.1f".format(it) } ?: "--",
+                    text = weightChange?.let { "%+.1f".format(weightUnit.fromKg(it)) } ?: "--",
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -277,6 +283,7 @@ private fun WeightInputCard(
     onWeightInputChanged: (String) -> Unit,
     onNotesChanged: (String) -> Unit,
     onSave: () -> Unit,
+    weightUnitLabel: String = "kg",
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -318,7 +325,7 @@ private fun WeightInputCard(
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text("Weight") },
                 placeholder = { Text("Enter your weight") },
-                suffix = { Text("kg") },
+                suffix = { Text(weightUnitLabel) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 singleLine = true,
                 shape = RoundedCornerShape(12.dp),
@@ -379,6 +386,7 @@ private fun WeightInputCard(
 private fun HistoryEntryCard(
     entry: Bodyweight,
     onDelete: () -> Unit,
+    weightUnit: WeightUnit = WeightUnit.KG,
     modifier: Modifier = Modifier
 ) {
     val dateFormat = remember { SimpleDateFormat("EEE, MMM d, yyyy", Locale.getDefault()) }
@@ -404,13 +412,13 @@ private fun HistoryEntryCard(
                     verticalAlignment = Alignment.Bottom
                 ) {
                     Text(
-                        text = "%.1f".format(entry.weight),
+                        text = "%.1f".format(weightUnit.fromKg(entry.weight)),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "kg",
+                        text = weightUnit.label,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -451,6 +459,7 @@ private enum class ChartRange(val label: String, val days: Int) {
 @Composable
 private fun ChartSection(
     entries: List<Bodyweight>,
+    weightUnit: WeightUnit = WeightUnit.KG,
     modifier: Modifier = Modifier
 ) {
     var selectedRange by remember { mutableStateOf(ChartRange.MONTH) }
@@ -505,7 +514,7 @@ private fun ChartSection(
 
         if (filteredEntries.size >= 2) {
             Spacer(modifier = Modifier.height(16.dp))
-            RangeStatsCard(entries = filteredEntries, rangeName = selectedRange.label)
+            RangeStatsCard(entries = filteredEntries, rangeName = selectedRange.label, weightUnit = weightUnit)
         }
     }
 }
@@ -514,6 +523,7 @@ private fun ChartSection(
 private fun RangeStatsCard(
     entries: List<Bodyweight>,
     rangeName: String,
+    weightUnit: WeightUnit = WeightUnit.KG,
     modifier: Modifier = Modifier
 ) {
     val sortedEntries = remember(entries) { entries.sortedBy { it.date } }
@@ -551,17 +561,17 @@ private fun RangeStatsCard(
             ) {
                 StatColumn(
                     label = "Change",
-                    value = "%+.1f kg".format(change),
+                    value = "%+.1f %s".format(weightUnit.fromKg(change), weightUnit.label),
                     valueColor = if (change >= 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
                 )
                 StatColumn(
                     label = "Average",
-                    value = "%.1f kg".format(avgWeight),
+                    value = "%.1f %s".format(weightUnit.fromKg(avgWeight), weightUnit.label),
                     valueColor = MaterialTheme.colorScheme.tertiary
                 )
                 StatColumn(
                     label = "Range",
-                    value = "%.1f - %.1f".format(minWeight, maxWeight),
+                    value = "%.1f - %.1f".format(weightUnit.fromKg(minWeight), weightUnit.fromKg(maxWeight)),
                     valueColor = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
