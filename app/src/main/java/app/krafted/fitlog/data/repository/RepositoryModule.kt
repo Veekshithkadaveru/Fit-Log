@@ -8,6 +8,7 @@ import app.krafted.fitlog.domain.repository.MuscleAnalyticsRepository
 import app.krafted.fitlog.domain.repository.ProgressRepository
 import app.krafted.fitlog.domain.repository.RepRangeRecordRepository
 import app.krafted.fitlog.domain.repository.RoutineRepository
+import app.krafted.fitlog.domain.repository.UserPreferencesRepository
 import app.krafted.fitlog.domain.repository.WorkoutRepository
 import dagger.Binds
 import dagger.Module
@@ -72,5 +73,11 @@ abstract class RepositoryModule {
     abstract fun bindMuscleAnalyticsRepository(
         muscleAnalyticsRepositoryImpl: MuscleAnalyticsRepositoryImpl
     ): MuscleAnalyticsRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindUserPreferencesRepository(
+        userPreferencesRepositoryImpl: UserPreferencesRepositoryImpl
+    ): UserPreferencesRepository
 }
 

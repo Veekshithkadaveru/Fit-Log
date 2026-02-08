@@ -16,6 +16,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import app.krafted.fitlog.presentation.screens.PlaceholderScreen
 import app.krafted.fitlog.presentation.screens.exercises.ExerciseDetailScreen
+import app.krafted.fitlog.presentation.screens.settings.SettingsScreen
 import app.krafted.fitlog.presentation.screens.exercises.ExerciseLibraryScreen
 import app.krafted.fitlog.presentation.screens.calendar.CalendarScreen
 import app.krafted.fitlog.presentation.screens.history.HistoryScreen
@@ -141,7 +142,7 @@ fun FitLogNavGraph(
         }
 
         composable(FitLogDestinations.SETTINGS) {
-            PlaceholderScreen(title = "Settings", navController = navController)
+            SettingsScreen()
         }
 
         // Detail Screens with slide animations
