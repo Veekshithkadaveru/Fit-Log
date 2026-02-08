@@ -4,10 +4,12 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.krafted.fitlog.domain.model.Exercise
+import app.krafted.fitlog.domain.model.WeightUnit
 import app.krafted.fitlog.domain.model.Workout
 import app.krafted.fitlog.domain.model.WorkoutSet
 import app.krafted.fitlog.domain.repository.ExerciseRepository
 import app.krafted.fitlog.domain.repository.RoutineRepository
+import app.krafted.fitlog.domain.repository.UserPreferencesRepository
 import app.krafted.fitlog.domain.repository.WorkoutRepository
 import app.krafted.fitlog.presentation.navigation.FitLogDestinations
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,6 +19,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -33,6 +36,7 @@ data class WorkoutDetailUiState(
     val showDeleteConfirmation: Boolean = false,
     val isSaving: Boolean = false,
     val isDeleting: Boolean = false,
+    val weightUnit: WeightUnit = WeightUnit.KG,
     // Track edited sets: Map<setId, EditedSetData>
     val editedSets: Map<Int, EditedSetData> = emptyMap()
 )
@@ -83,7 +87,8 @@ class WorkoutDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val workoutRepository: WorkoutRepository,
     private val exerciseRepository: ExerciseRepository,
-    private val routineRepository: RoutineRepository
+    private val routineRepository: RoutineRepository,
+    private val userPreferencesRepository: UserPreferencesRepository
 ) : ViewModel() {
 
     private val workoutId: Int = savedStateHandle.get<Int>(FitLogDestinations.Args.WORKOUT_ID) ?: 0
@@ -96,6 +101,17 @@ class WorkoutDetailViewModel @Inject constructor(
 
     init {
         loadWorkoutDetails()
+        observeWeightUnit()
+    }
+
+    private fun observeWeightUnit() {
+        viewModelScope.launch {
+            userPreferencesRepository.weightUnit
+                .catch { /* keep default on error */ }
+                .collect { unit ->
+                    _uiState.value = _uiState.value.copy(weightUnit = unit)
+                }
+        }
     }
 
     private fun loadWorkoutDetails() {

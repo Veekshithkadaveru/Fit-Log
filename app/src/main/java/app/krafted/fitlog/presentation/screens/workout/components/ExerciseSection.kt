@@ -39,6 +39,7 @@ fun ExerciseSection(
     onAddSet: () -> Unit,
     onAddSetWithAutoFill: () -> Unit,
     onExerciseClick: (() -> Unit)? = null,
+    weightUnitLabel: String = "kg",
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -114,9 +115,9 @@ fun ExerciseSection(
                 onSetCompleted = onSetCompleted,
                 onDeleteSet = onDeleteSet,
                 onDuplicateSet = onDuplicateSet,
-                
                 onAddSet = onAddSet,
-                onAddSetWithAutoFill = onAddSetWithAutoFill
+                onAddSetWithAutoFill = onAddSetWithAutoFill,
+                weightUnitLabel = weightUnitLabel
             )
         }
     }

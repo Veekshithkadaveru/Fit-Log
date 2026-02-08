@@ -3,6 +3,7 @@ package app.krafted.fitlog.presentation.screens.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.krafted.fitlog.domain.model.ThemeMode
+import app.krafted.fitlog.domain.model.WeightUnit
 import app.krafted.fitlog.domain.repository.UserPreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,6 +15,8 @@ import javax.inject.Inject
 
 data class SettingsUiState(
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
+    val weightUnit: WeightUnit = WeightUnit.KG,
+    val restTimerSeconds: Int = 90,
     val isLoading: Boolean = true
 )
 
@@ -27,6 +30,8 @@ class SettingsViewModel @Inject constructor(
 
     init {
         observeThemeMode()
+        observeWeightUnit()
+        observeRestTimerDuration()
     }
 
     private fun observeThemeMode() {
@@ -42,9 +47,41 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    private fun observeWeightUnit() {
+        viewModelScope.launch {
+            userPreferencesRepository.weightUnit
+                .catch { /* keep current state on error */ }
+                .collect { weightUnit ->
+                    _uiState.value = _uiState.value.copy(weightUnit = weightUnit)
+                }
+        }
+    }
+
+    private fun observeRestTimerDuration() {
+        viewModelScope.launch {
+            userPreferencesRepository.restTimerDuration
+                .catch { /* keep current state on error */ }
+                .collect { seconds ->
+                    _uiState.value = _uiState.value.copy(restTimerSeconds = seconds)
+                }
+        }
+    }
+
     fun onThemeModeSelected(themeMode: ThemeMode) {
         viewModelScope.launch {
             userPreferencesRepository.setThemeMode(themeMode)
+        }
+    }
+
+    fun onWeightUnitSelected(weightUnit: WeightUnit) {
+        viewModelScope.launch {
+            userPreferencesRepository.setWeightUnit(weightUnit)
+        }
+    }
+
+    fun onRestTimerDurationSelected(seconds: Int) {
+        viewModelScope.launch {
+            userPreferencesRepository.setRestTimerDuration(seconds)
         }
     }
 }

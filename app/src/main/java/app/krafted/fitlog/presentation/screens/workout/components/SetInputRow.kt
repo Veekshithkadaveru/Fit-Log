@@ -53,6 +53,7 @@ fun SetInputRow(
     onRepsChange: (String) -> Unit,
     onCompletedToggle: () -> Unit,
     onDelete: () -> Unit,
+    weightUnitLabel: String = "kg",
     modifier: Modifier = Modifier
 ) {
     val isPR = workoutSet.isPR
@@ -134,7 +135,7 @@ fun SetInputRow(
                     weightInput = it
                     onWeightChange(it)
                 },
-                label = { Text("kg") },
+                label = { Text(weightUnitLabel) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 singleLine = true,
                 modifier = Modifier.weight(1f),

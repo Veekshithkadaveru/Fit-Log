@@ -21,6 +21,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import app.krafted.fitlog.domain.model.WeightUnit
 import app.krafted.fitlog.domain.model.WorkoutSet
 import app.krafted.fitlog.presentation.screens.history.ExerciseWithSets
 
@@ -33,6 +34,7 @@ fun ExerciseSetsCard(
     exerciseWithSets: ExerciseWithSets,
     modifier: Modifier = Modifier,
     isEditMode: Boolean = false,
+    weightUnit: WeightUnit = WeightUnit.KG,
     getWeight: ((Int) -> Float)? = null,
     getReps: ((Int) -> Int)? = null,
     onWeightChange: ((Int, Float) -> Unit)? = null,
@@ -67,12 +69,14 @@ fun ExerciseSetsCard(
                         weight = getWeight?.invoke(set.id) ?: set.weight,
                         reps = getReps?.invoke(set.id) ?: set.reps,
                         onWeightChange = { onWeightChange?.invoke(set.id, it) },
-                        onRepsChange = { onRepsChange?.invoke(set.id, it) }
+                        onRepsChange = { onRepsChange?.invoke(set.id, it) },
+                        weightUnit = weightUnit
                     )
                 } else {
                     SetRow(
                         setNumber = index + 1,
-                        set = set
+                        set = set,
+                        weightUnit = weightUnit
                     )
                 }
                 if (index < exerciseWithSets.sets.size - 1) {
@@ -82,7 +86,7 @@ fun ExerciseSetsCard(
 
             if (exerciseWithSets.sets.size > 1 && !isEditMode) {
                 Spacer(modifier = Modifier.height(12.dp))
-                ExerciseSummary(exerciseWithSets = exerciseWithSets)
+                ExerciseSummary(exerciseWithSets = exerciseWithSets, weightUnit = weightUnit)
             }
         }
     }
@@ -195,6 +199,7 @@ private fun SetsTableHeader(
 private fun SetRow(
     setNumber: Int,
     set: WorkoutSet,
+    weightUnit: WeightUnit = WeightUnit.KG,
     modifier: Modifier = Modifier
 ) {
     val backgroundColor = when {
@@ -238,7 +243,7 @@ private fun SetRow(
         }
 
         Text(
-            text = formatWeight(set.weight),
+            text = formatWeight(set.weight, weightUnit),
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Medium,
             modifier = Modifier.width(72.dp)
@@ -300,6 +305,7 @@ private fun EditableSetRow(
     reps: Int,
     onWeightChange: (Float) -> Unit,
     onRepsChange: (Int) -> Unit,
+    weightUnit: WeightUnit = WeightUnit.KG,
     modifier: Modifier = Modifier
 ) {
     val backgroundColor = when {
@@ -347,7 +353,7 @@ private fun EditableSetRow(
         EditableNumberField(
             value = weight,
             onValueChange = onWeightChange,
-            suffix = "kg",
+            suffix = weightUnit.label,
             modifier = Modifier.width(80.dp)
         )
 
@@ -441,6 +447,7 @@ private fun EditableIntField(
 @Composable
 private fun ExerciseSummary(
     exerciseWithSets: ExerciseWithSets,
+    weightUnit: WeightUnit = WeightUnit.KG,
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -466,7 +473,7 @@ private fun ExerciseSummary(
                 val maxWeight = exerciseWithSets.sets.maxOf { it.weight }
                 SummaryItem(
                     label = "Max Weight",
-                    value = formatWeight(maxWeight)
+                    value = formatWeight(maxWeight, weightUnit)
                 )
             }
         }
@@ -499,11 +506,12 @@ private fun SummaryItem(
 
 // Utility functions
 
-private fun formatWeight(weight: Float): String {
-    return if (weight == weight.toInt().toFloat()) {
-        "${weight.toInt()} kg"
+private fun formatWeight(weight: Float, unit: WeightUnit = WeightUnit.KG): String {
+    val converted = unit.fromKg(weight)
+    return if (converted == converted.toInt().toFloat()) {
+        "${converted.toInt()} ${unit.label}"
     } else {
-        String.format("%.1f kg", weight)
+        String.format("%.1f %s", converted, unit.label)
     }
 }
 

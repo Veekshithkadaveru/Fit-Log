@@ -30,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.krafted.fitlog.domain.model.WeightProgressPoint
+import app.krafted.fitlog.domain.model.WeightUnit
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -37,6 +38,7 @@ import java.util.Locale
 @Composable
 fun ExerciseWeightChart(
     weightProgress: List<WeightProgressPoint>,
+    weightUnit: WeightUnit = WeightUnit.KG,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -225,17 +227,17 @@ fun ExerciseWeightChart(
             ) {
                 StatItem(
                     label = "Current",
-                    value = "${latestWeight.toInt()} kg",
+                    value = "${weightUnit.fromKg(latestWeight).toInt()} ${weightUnit.label}",
                     color = primaryColor
                 )
                 StatItem(
                     label = "Change",
-                    value = String.format(Locale.US, "%+.0f kg", change),
+                    value = String.format(Locale.US, "%+.0f %s", weightUnit.fromKg(change), weightUnit.label),
                     color = if (change >= 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
                 )
                 StatItem(
                     label = "Peak",
-                    value = "${peakWeight.toInt()} kg",
+                    value = "${weightUnit.fromKg(peakWeight).toInt()} ${weightUnit.label}",
                     color = primaryColor
                 )
             }

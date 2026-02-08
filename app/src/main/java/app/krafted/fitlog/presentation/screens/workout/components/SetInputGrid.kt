@@ -31,6 +31,7 @@ fun SetInputGrid(
     onDuplicateSet: (setId: Int) -> Unit,
     onAddSet: () -> Unit,
     onAddSetWithAutoFill: () -> Unit,
+    weightUnitLabel: String = "kg",
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -55,7 +56,8 @@ fun SetInputGrid(
                 onWeightChange = { weight -> onWeightChange(set.id, weight) },
                 onRepsChange = { reps -> onRepsChange(set.id, reps) },
                 onCompletedToggle = { onSetCompleted(set.id) },
-                onDelete = { onDeleteSet(set.id) }
+                onDelete = { onDeleteSet(set.id) },
+                weightUnitLabel = weightUnitLabel
             )
         }
 
