@@ -695,6 +695,60 @@ object SeedData {
             category = ExerciseCategory.COMPOUND.name,
             equipment = Equipment.BODYWEIGHT.name,
             thumbnailRes = "ic_jump_squats"
+        ),
+        ExerciseEntity(
+             id = 75,
+             name = "Cable Woodchoppers",
+             primaryMuscle = MuscleGroup.CORE.name,
+             secondaryMuscles = "${MuscleGroup.SHOULDERS.name},${MuscleGroup.BACK.name}",
+             category = ExerciseCategory.ISOLATION.name,
+             equipment = Equipment.CABLE.name,
+             thumbnailRes = "ic_cable_woodchoppers"
+         ),
+         ExerciseEntity(
+             id = 76,
+             name = "Hyperextensions",
+             primaryMuscle = MuscleGroup.BACK.name,
+             secondaryMuscles = "${MuscleGroup.GLUTES.name},${MuscleGroup.HAMSTRINGS.name}",
+             category = ExerciseCategory.ISOLATION.name,
+             equipment = Equipment.OTHER.name,
+             thumbnailRes = "ic_hyperextensions"
+         ),
+         ExerciseEntity(
+             id = 77,
+             name = "Machine Chest Press",
+             primaryMuscle = MuscleGroup.CHEST.name,
+             secondaryMuscles = "${MuscleGroup.SHOULDERS.name},${MuscleGroup.TRICEPS.name}",
+             category = ExerciseCategory.COMPOUND.name,
+             equipment = Equipment.MACHINE.name,
+             thumbnailRes = "ic_machine_chest_press"
+         ),
+        ExerciseEntity(
+            id = 78,
+            name = "Straight Arm Pulldown",
+            primaryMuscle = MuscleGroup.LATS.name,
+            secondaryMuscles = "${MuscleGroup.TRICEPS.name},${MuscleGroup.CORE.name}",
+            category = ExerciseCategory.ISOLATION.name,
+            equipment = Equipment.CABLE.name,
+            thumbnailRes = "ic_straight_arm_pulldown"
+        ),
+        ExerciseEntity(
+            id = 79,
+            name = "Wrist Curls",
+            primaryMuscle = MuscleGroup.FOREARMS.name,
+            secondaryMuscles = "",
+            category = ExerciseCategory.ISOLATION.name,
+            equipment = Equipment.BARBELL.name,
+            thumbnailRes = "ic_wrist_curls"
+        ),
+        ExerciseEntity(
+            id = 80,
+            name = "Tricep Kickbacks",
+            primaryMuscle = MuscleGroup.TRICEPS.name,
+            secondaryMuscles = MuscleGroup.SHOULDERS.name,
+            category = ExerciseCategory.ISOLATION.name,
+            equipment = Equipment.DUMBBELL.name,
+            thumbnailRes = "ic_tricep_kickbacks"
         )
     )
 

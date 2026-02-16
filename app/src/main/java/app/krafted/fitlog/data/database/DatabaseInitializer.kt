@@ -31,7 +31,7 @@ class DatabaseInitializer @Inject constructor(
 ) {
     
     companion object {
-        private val DATABASE_INITIALIZED = booleanPreferencesKey("database_initialized_v8")
+        private val DATABASE_INITIALIZED = booleanPreferencesKey("database_initialized_v9")
     }
     
     /**
