@@ -69,6 +69,7 @@ data class RestTimerState(
  * PR event for celebration/notification
  */
 data class PREvent(
+    val setId: Int,
     val exerciseName: String,
     val weight: Float,
     val reps: Int,

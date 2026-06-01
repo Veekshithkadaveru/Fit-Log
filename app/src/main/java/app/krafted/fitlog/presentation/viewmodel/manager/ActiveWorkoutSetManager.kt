@@ -38,10 +38,21 @@ class ActiveWorkoutSetManager @Inject constructor(
         var reps = 0
 
         if (autoFill) {
-            val recentSets = workoutRepository.getRecentSetsForExercise(exerciseId, WorkoutConstants.RECENT_SETS_HISTORY_LIMIT)
-            if (recentSets.isNotEmpty()) {
-                weight = recentSets.map { it.weight }.average().toFloat()
-                reps = recentSets.map { it.reps }.average().toInt()
+            // Check if there are sets in the current session first
+            val lastSetInSession = existingSets.lastOrNull { it.weight > 0f || it.reps > 0 }
+            if (lastSetInSession != null) {
+                weight = lastSetInSession.weight
+                reps = lastSetInSession.reps
+            } else {
+                // Get the single most recent completed set across all workouts
+                val recentSets = workoutRepository.getRecentSetsForExercise(
+                    exerciseId = exerciseId,
+                    limit = 1
+                )
+                if (recentSets.isNotEmpty()) {
+                    weight = recentSets.first().weight
+                    reps = recentSets.first().reps
+                }
             }
         }
 
@@ -78,10 +89,44 @@ class ActiveWorkoutSetManager @Inject constructor(
     }
 
     suspend fun updateSet(setId: Int, weight: Float? = null, reps: Int? = null, currentSet: WorkoutSet) {
-        val updatedSet = currentSet.copy(
-            weight = weight ?: currentSet.weight,
-            reps = reps ?: currentSet.reps
+        val newWeight = weight ?: currentSet.weight
+        val newReps = reps ?: currentSet.reps
+        var updatedSet = currentSet.copy(
+            weight = newWeight,
+            reps = newReps
         )
+
+        // If the set is completed, we should recheck its PR status
+        if (currentSet.isCompleted) {
+            // First reset isPR to false so we don't carry over stale PR state
+            updatedSet = updatedSet.copy(isPR = false)
+
+            if (newWeight >= 0f && newReps > 0) {
+                val (prResult, repRangePRResult) = prDetectionUseCase.checkAndUpdatePRWithRepRange(
+                    exerciseId = currentSet.exerciseId,
+                    weight = newWeight,
+                    reps = newReps
+                )
+
+                if (prResult.isAnyPR || repRangePRResult.isAnyPR) {
+                    updatedSet = updatedSet.copy(isPR = true)
+
+                    val exercise = exerciseRepository.getExerciseById(currentSet.exerciseId)
+                    val exerciseName = exercise?.name ?: "Exercise"
+
+                    _prEvents.emit(
+                        PREvent(
+                            setId = currentSet.id,
+                            exerciseName = exerciseName,
+                            weight = newWeight,
+                            reps = newReps,
+                            prResult = prResult,
+                            repRangePRResult = repRangePRResult
+                        )
+                    )
+                }
+            }
+        }
         workoutRepository.updateSet(updatedSet)
     }
 
@@ -94,30 +139,35 @@ class ActiveWorkoutSetManager @Inject constructor(
         var updatedSet = currentSet.copy(isCompleted = isCompleting)
         var isPRFound = false
 
-        if (isCompleting && currentSet.weight >= 0 && currentSet.reps > 0) {
-            val (prResult, repRangePRResult) = prDetectionUseCase.checkAndUpdatePRWithRepRange(
-                exerciseId = currentSet.exerciseId,
-                weight = currentSet.weight,
-                reps = currentSet.reps
-            )
-
-            if (prResult.isAnyPR || repRangePRResult.isAnyPR) {
-                isPRFound = true
-                updatedSet = updatedSet.copy(isPR = true)
-
-                val exercise = exerciseRepository.getExerciseById(currentSet.exerciseId)
-                val exerciseName = exercise?.name ?: "Exercise"
-
-                _prEvents.emit(
-                    PREvent(
-                        exerciseName = exerciseName,
-                        weight = currentSet.weight,
-                        reps = currentSet.reps,
-                        prResult = prResult,
-                        repRangePRResult = repRangePRResult
-                    )
+        if (isCompleting) {
+            if (currentSet.weight >= 0f && currentSet.reps > 0) {
+                val (prResult, repRangePRResult) = prDetectionUseCase.checkAndUpdatePRWithRepRange(
+                    exerciseId = currentSet.exerciseId,
+                    weight = currentSet.weight,
+                    reps = currentSet.reps
                 )
+
+                if (prResult.isAnyPR || repRangePRResult.isAnyPR) {
+                    isPRFound = true
+                    updatedSet = updatedSet.copy(isPR = true)
+
+                    val exercise = exerciseRepository.getExerciseById(currentSet.exerciseId)
+                    val exerciseName = exercise?.name ?: "Exercise"
+
+                    _prEvents.emit(
+                        PREvent(
+                            setId = currentSet.id,
+                            exerciseName = exerciseName,
+                            weight = currentSet.weight,
+                            reps = currentSet.reps,
+                            prResult = prResult,
+                            repRangePRResult = repRangePRResult
+                        )
+                    )
+                }
             }
+        } else {
+            updatedSet = updatedSet.copy(isPR = false)
         }
 
         workoutRepository.updateSet(updatedSet)

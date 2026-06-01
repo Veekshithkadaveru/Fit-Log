@@ -52,6 +52,12 @@ class ActiveWorkoutViewModel @Inject constructor(
 
     private val setUpdates = MutableSharedFlow<SetUpdateData>()
 
+    // Channel to process set completion toggles sequentially
+    private val setCompletionEvents = Channel<Int>(Channel.UNLIMITED)
+
+    // Map of setId -> last click timestamp to prevent rapid double-clicks on the same set
+    private val lastToggleTimestamps = mutableMapOf<Int, Long>()
+
     data class SetUpdateData(
         val setId: Int,
         val weight: Float? = null,
@@ -62,6 +68,8 @@ class ActiveWorkoutViewModel @Inject constructor(
         sessionManager.loadActiveWorkout(viewModelScope)
         setupDebouncing()
         setupEventCollection()
+        setupSetCompletionDebouncing()
+        observePreferences()
     }
     
     @OptIn(FlowPreview::class)
@@ -78,6 +86,13 @@ class ActiveWorkoutViewModel @Inject constructor(
                     reps = update.reps,
                     currentSet = currentSet
                 )
+
+                // If the set was updated and is no longer marked as a PR, remove it from session PRs
+                val updatedSetInDb = workoutRepository.getSetsForWorkoutOnce(currentWorkout.id).find { it.id == update.setId }
+                if (updatedSetInDb != null && !updatedSetInDb.isPR) {
+                    sessionManager.removeSessionPR(update.setId)
+                }
+
                 reloadContent(currentWorkout.id)
             }
             .launchIn(viewModelScope)
@@ -87,7 +102,7 @@ class ActiveWorkoutViewModel @Inject constructor(
         viewModelScope.launch {
             setManager.prEvents.collect { event ->
                 _prEvent.send(event)
-                sessionManager.incrementSessionPRCount()
+                sessionManager.addSessionPR(event)
             }
         }
     }
@@ -158,16 +173,9 @@ class ActiveWorkoutViewModel @Inject constructor(
         }
     }
 
-    // Channel to debounce set completion toggles
-    private val setCompletionEvents = Channel<Int>(Channel.CONFLATED)
 
-    init {
-        sessionManager.loadActiveWorkout(viewModelScope)
-        setupDebouncing()
-        setupEventCollection()
-        setupSetCompletionDebouncing()
-        observePreferences()
-    }
+
+
 
     private fun observePreferences() {
         viewModelScope.launch {
@@ -186,34 +194,42 @@ class ActiveWorkoutViewModel @Inject constructor(
         }
     }
 
-    @OptIn(FlowPreview::class)
     private fun setupSetCompletionDebouncing() {
-        setCompletionEvents.receiveAsFlow()
-            .debounce(300L) // Prevent double taps
-            .onEach { setId ->
-                val workout = uiState.value.currentWorkout ?: return@onEach
-                val set = workout.sets.find { it.id == setId } ?: return@onEach
-                
+        viewModelScope.launch {
+            for (setId in setCompletionEvents) {
+                val workout = uiState.value.currentWorkout ?: continue
+                val set = workout.sets.find { it.id == setId } ?: continue
+
                 val isPR = setManager.toggleSetCompleted(set)
-                
+
+                if (!isPR) {
+                    sessionManager.removeSessionPR(setId)
+                }
+
                 reloadContent(workout.id)
-                
+
                 if (!set.isCompleted) {
                     sessionManager.startRestTimer(restTimerDurationSeconds)
                 }
             }
-            .launchIn(viewModelScope)
+        }
     }
 
     fun toggleSetCompleted(setId: Int) {
-        viewModelScope.launch {
-            setCompletionEvents.send(setId)
+        val now = System.currentTimeMillis()
+        val lastClick = lastToggleTimestamps[setId] ?: 0L
+        if (now - lastClick > 300L) {
+            lastToggleTimestamps[setId] = now
+            viewModelScope.launch {
+                setCompletionEvents.send(setId)
+            }
         }
     }
 
     fun deleteSet(setId: Int) {
         viewModelScope.launch {
             setManager.deleteSet(setId)
+            sessionManager.removeSessionPR(setId)
             reloadContent()
         }
     }
