@@ -22,3 +22,6 @@ workoutlog_pro_phase_1_888bdf77.plan.md
 *.keystore
 *.pem
 *.pk8
+.idea
+.idea/deploymentTargetSelector.xml
+

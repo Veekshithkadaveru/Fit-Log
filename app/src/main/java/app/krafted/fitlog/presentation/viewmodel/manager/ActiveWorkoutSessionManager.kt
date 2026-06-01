@@ -7,6 +7,7 @@ import app.krafted.fitlog.domain.repository.RoutineRepository
 import app.krafted.fitlog.domain.repository.WorkoutRepository
 import app.krafted.fitlog.presentation.timer.RestTimerManager
 import app.krafted.fitlog.presentation.viewmodel.ActiveWorkoutUiState
+import app.krafted.fitlog.presentation.viewmodel.PREvent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -275,9 +276,22 @@ class ActiveWorkoutSessionManager @Inject constructor(
         _sessionState.value = _sessionState.value.copy(error = message)
     }
 
-    fun incrementSessionPRCount() {
-        val currentCount = _sessionState.value.sessionPRCount
-        _sessionState.value = _sessionState.value.copy(sessionPRCount = currentCount + 1)
+    fun addSessionPR(event: PREvent) {
+        val currentList = _sessionState.value.sessionPRs
+        val updatedList = currentList.filterNot { it.setId == event.setId } + event
+        _sessionState.value = _sessionState.value.copy(
+            sessionPRs = updatedList,
+            sessionPRCount = updatedList.size
+        )
+    }
+
+    fun removeSessionPR(setId: Int) {
+        val currentList = _sessionState.value.sessionPRs
+        val updatedList = currentList.filterNot { it.setId == setId }
+        _sessionState.value = _sessionState.value.copy(
+            sessionPRs = updatedList,
+            sessionPRCount = updatedList.size
+        )
     }
 
     fun setShowWorkoutSummary(show: Boolean) {
